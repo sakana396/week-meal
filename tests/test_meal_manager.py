@@ -5,7 +5,7 @@ from pathlib import Path
 from meal_manager import MealManager, NutritionInfo, OpenFoodFactsClient
 
 
-class StubNutritionClient:
+class StubOpenFoodFactsClient:
     def fetch_nutrition(self, food_name: str) -> NutritionInfo:
         if food_name == "banana":
             return NutritionInfo(calories=89, protein_g=1.1, fat_g=0.3, carbs_g=22.8)
@@ -15,7 +15,7 @@ class StubNutritionClient:
 class MealManagerTests(unittest.TestCase):
     def test_add_meal_and_totals(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=StubNutritionClient())
+            manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=StubOpenFoodFactsClient())
             manager.add_meal("breakfast", "banana", quantity=2)
 
             meals = manager.list_meals()

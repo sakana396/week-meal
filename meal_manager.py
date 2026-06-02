@@ -44,7 +44,7 @@ class OpenFoodFactsClient:
         request = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "week-meal/1.0 (+https://github.com/sakana396/week-meal)"
+                "User-Agent": "week-meal/1.0"
             },
         )
         try:
@@ -116,7 +116,10 @@ class MealManager:
     def _load_meals(self) -> list[MealEntry]:
         if not self.storage_path.exists():
             return []
-        raw = json.loads(self.storage_path.read_text(encoding="utf-8"))
+        try:
+            raw = json.loads(self.storage_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return []
         meals: list[MealEntry] = []
         for item in raw:
             meals.append(
