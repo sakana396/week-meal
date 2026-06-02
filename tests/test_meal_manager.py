@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from meal_manager import MealManager, NutritionInfo, OpenFoodFactsClient
 
 
-class StubNutritionClient:
+class FakeNutritionClient:
     def fetch_nutrition(self, food_name: str) -> NutritionInfo:
         if food_name == "banana":
             return NutritionInfo(calories=89, protein_g=1.1, fat_g=0.3, carbs_g=22.8)
@@ -16,7 +16,7 @@ class StubNutritionClient:
 class TestMealManager(unittest.TestCase):
     def test_add_meal_and_totals(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=StubNutritionClient())
+            manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=FakeNutritionClient())
             manager.add_meal("breakfast", "banana", quantity=2)
 
             meals = manager.list_meals()
@@ -29,6 +29,19 @@ class TestMealManager(unittest.TestCase):
             self.assertAlmostEqual(totals.protein_g, 2.2)
             self.assertAlmostEqual(totals.fat_g, 0.6)
             self.assertAlmostEqual(totals.carbs_g, 45.6)
+
+    def test_add_meal_rejects_non_positive_quantity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=FakeNutritionClient())
+            with self.assertRaises(ValueError):
+                manager.add_meal("dinner", "banana", quantity=0)
+
+    def test_list_meals_handles_corrupted_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            storage = Path(temp_dir) / "meals.json"
+            storage.write_text("{broken", encoding="utf-8")
+            manager = MealManager(storage, nutrition_client=FakeNutritionClient())
+            self.assertEqual(manager.list_meals(), [])
 
 
 class TestOpenFoodFactsClient(unittest.TestCase):

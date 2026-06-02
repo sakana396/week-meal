@@ -95,6 +95,8 @@ class MealManager:
         self.nutrition_client = nutrition_client or OpenFoodFactsClient()
 
     def add_meal(self, meal_type: str, food_name: str, quantity: float = 1.0) -> MealEntry:
+        if quantity <= 0:
+            raise ValueError("quantity must be greater than zero")
         nutrition = self.nutrition_client.fetch_nutrition(food_name)
         scaled = NutritionInfo(
             calories=nutrition.calories * quantity,
@@ -158,7 +160,7 @@ class MealManager:
 def _positive_float(raw_value: str) -> float:
     value = float(raw_value)
     if value <= 0:
-        raise argparse.ArgumentTypeError("quantity must be positive")
+        raise argparse.ArgumentTypeError("quantity must be greater than zero")
     return value
 
 
