@@ -6,8 +6,11 @@ import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from urllib.error import URLError
+
+
+USER_AGENT = "week-meal/1.0"
 
 
 @dataclass
@@ -27,6 +30,10 @@ class MealEntry:
     nutrition: NutritionInfo
 
 
+class NutritionClient(Protocol):
+    def fetch_nutrition(self, food_name: str) -> NutritionInfo: ...
+
+
 class OpenFoodFactsClient:
     BASE_URL = "https://world.openfoodfacts.org/cgi/search.pl"
 
@@ -44,7 +51,7 @@ class OpenFoodFactsClient:
         request = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "week-meal/1.0"
+                "User-Agent": USER_AGENT
             },
         )
         try:
@@ -82,7 +89,7 @@ class OpenFoodFactsClient:
 
 
 class MealManager:
-    def __init__(self, storage_path: Path, nutrition_client: OpenFoodFactsClient | None = None):
+    def __init__(self, storage_path: Path, nutrition_client: NutritionClient | None = None):
         self.storage_path = storage_path
         self.nutrition_client = nutrition_client or OpenFoodFactsClient()
 
@@ -150,7 +157,7 @@ class MealManager:
 def _positive_float(raw_value: str) -> float:
     value = float(raw_value)
     if value <= 0:
-        raise argparse.ArgumentTypeError("quantity must be positive")
+        raise argparse.ArgumentTypeError("quantity must be greater than zero")
     return value
 
 
