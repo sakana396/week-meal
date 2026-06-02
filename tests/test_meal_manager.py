@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from meal_manager import MealManager, NutritionInfo, OpenFoodFactsClient
 
@@ -31,21 +32,31 @@ class MealManagerTests(unittest.TestCase):
 
 
 class OpenFoodFactsClientTests(unittest.TestCase):
-    def test_extract_nutrition_with_missing_values(self) -> None:
-        client = OpenFoodFactsClient()
-        nutrition = client._extract_nutrition(
-            {"nutriments": {"energy-kcal_100g": "52", "proteins_100g": None, "fat_100g": "0.2"}}
+    @patch("meal_manager.urllib.request.urlopen")
+    def test_fetch_nutrition_handles_missing_values(self, mock_urlopen: MagicMock) -> None:
+        response = MagicMock()
+        response.read.return_value = (
+            b'{"products":[{"nutriments":{"energy-kcal_100g":"52","proteins_100g":null,"fat_100g":"0.2"}}]}'
         )
+        mock_urlopen.return_value.__enter__.return_value = response
+
+        client = OpenFoodFactsClient()
+        nutrition = client.fetch_nutrition("apple")
         self.assertEqual(nutrition.calories, 52.0)
         self.assertEqual(nutrition.protein_g, 0.0)
         self.assertEqual(nutrition.fat_g, 0.2)
         self.assertEqual(nutrition.carbs_g, 0.0)
 
-    def test_extract_nutrition_uses_fallback_keys(self) -> None:
-        client = OpenFoodFactsClient()
-        nutrition = client._extract_nutrition(
-            {"nutriments": {"energy-kcal": "100", "proteins": "2", "fat": "1", "carbohydrates": "20"}}
+    @patch("meal_manager.urllib.request.urlopen")
+    def test_fetch_nutrition_uses_fallback_keys(self, mock_urlopen: MagicMock) -> None:
+        response = MagicMock()
+        response.read.return_value = (
+            b'{"products":[{"nutriments":{"energy-kcal":"100","proteins":"2","fat":"1","carbohydrates":"20"}}]}'
         )
+        mock_urlopen.return_value.__enter__.return_value = response
+
+        client = OpenFoodFactsClient()
+        nutrition = client.fetch_nutrition("banana")
         self.assertEqual(nutrition.calories, 100.0)
         self.assertEqual(nutrition.protein_g, 2.0)
         self.assertEqual(nutrition.fat_g, 1.0)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import socket
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass
@@ -57,7 +58,7 @@ class OpenFoodFactsClient:
         try:
             with urllib.request.urlopen(request, timeout=10) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-        except (URLError, TimeoutError, json.JSONDecodeError):
+        except (URLError, socket.timeout, json.JSONDecodeError):
             return NutritionInfo(source="OpenFoodFacts(unavailable)")
 
         products = payload.get("products") or []
@@ -157,7 +158,7 @@ class MealManager:
 def _positive_float(raw_value: str) -> float:
     value = float(raw_value)
     if value <= 0:
-        raise argparse.ArgumentTypeError("quantity must be greater than zero")
+        raise argparse.ArgumentTypeError("quantity must be positive")
     return value
 
 
