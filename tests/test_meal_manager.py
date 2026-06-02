@@ -13,7 +13,7 @@ class StubNutritionClient:
         return NutritionInfo()
 
 
-class MealManagerTests(unittest.TestCase):
+class TestMealManager(unittest.TestCase):
     def test_add_meal_and_totals(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = MealManager(Path(temp_dir) / "meals.json", nutrition_client=StubNutritionClient())
@@ -31,7 +31,7 @@ class MealManagerTests(unittest.TestCase):
             self.assertAlmostEqual(totals.carbs_g, 45.6)
 
 
-class OpenFoodFactsClientTests(unittest.TestCase):
+class TestOpenFoodFactsClient(unittest.TestCase):
     @patch("meal_manager.urllib.request.urlopen")
     def test_fetch_nutrition_handles_missing_values(self, mock_urlopen: MagicMock) -> None:
         response = MagicMock()
