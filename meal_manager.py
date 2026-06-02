@@ -7,6 +7,7 @@ import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from urllib.error import URLError
 
 
 @dataclass
@@ -40,10 +41,16 @@ class OpenFoodFactsClient:
             }
         )
         url = f"{self.BASE_URL}?{query}"
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "week-meal/1.0 (+https://github.com/sakana396/week-meal)"
+            },
+        )
         try:
-            with urllib.request.urlopen(url, timeout=10) as response:
+            with urllib.request.urlopen(request, timeout=10) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-        except Exception:
+        except (URLError, TimeoutError, json.JSONDecodeError):
             return NutritionInfo(source="OpenFoodFacts(unavailable)")
 
         products = payload.get("products") or []
@@ -137,6 +144,13 @@ class MealManager:
         )
 
 
+def _positive_float(raw_value: str) -> float:
+    value = float(raw_value)
+    if value <= 0:
+        raise argparse.ArgumentTypeError("quantity must be positive")
+    return value
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="食事管理システム")
     parser.add_argument("--storage", default="meals.json", help="保存先JSONファイル")
@@ -145,7 +159,7 @@ def _build_parser() -> argparse.ArgumentParser:
     add = sub.add_parser("add", help="食事を追加する")
     add.add_argument("meal_type", help="breakfast/lunch/dinner/snack など")
     add.add_argument("food_name", help="食品名")
-    add.add_argument("--quantity", type=float, default=1.0, help="数量(倍率)")
+    add.add_argument("--quantity", type=_positive_float, default=1.0, help="数量(倍率)")
 
     sub.add_parser("list", help="食事一覧を表示")
     sub.add_parser("summary", help="栄養サマリを表示")
