@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -48,9 +49,13 @@ class TestOpenFoodFactsClient(unittest.TestCase):
     @patch("meal_manager.urllib.request.urlopen")
     def test_fetch_nutrition_handles_missing_values(self, mock_urlopen: MagicMock) -> None:
         response = MagicMock()
-        response.read.return_value = (
-            b'{"products":[{"nutriments":{"energy-kcal_100g":"52","proteins_100g":null,"fat_100g":"0.2"}}]}'
-        )
+        response.read.return_value = json.dumps(
+            {
+                "products": [
+                    {"nutriments": {"energy-kcal_100g": "52", "proteins_100g": None, "fat_100g": "0.2"}}
+                ]
+            }
+        ).encode("utf-8")
         mock_urlopen.return_value.__enter__.return_value = response
 
         client = OpenFoodFactsClient()
@@ -63,9 +68,13 @@ class TestOpenFoodFactsClient(unittest.TestCase):
     @patch("meal_manager.urllib.request.urlopen")
     def test_fetch_nutrition_uses_fallback_keys(self, mock_urlopen: MagicMock) -> None:
         response = MagicMock()
-        response.read.return_value = (
-            b'{"products":[{"nutriments":{"energy-kcal":"100","proteins":"2","fat":"1","carbohydrates":"20"}}]}'
-        )
+        response.read.return_value = json.dumps(
+            {
+                "products": [
+                    {"nutriments": {"energy-kcal": "100", "proteins": "2", "fat": "1", "carbohydrates": "20"}}
+                ]
+            }
+        ).encode("utf-8")
         mock_urlopen.return_value.__enter__.return_value = response
 
         client = OpenFoodFactsClient()
