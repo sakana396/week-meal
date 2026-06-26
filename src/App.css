@@ -1,0 +1,308 @@
+:root {
+  color: #17201b;
+  background: #f4f2ed;
+  font-family:
+    Inter, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  min-height: 100vh;
+  background:
+    linear-gradient(90deg, rgba(23, 32, 27, 0.04) 1px, transparent 1px),
+    #f4f2ed;
+  background-size: 28px 28px;
+}
+
+.browser-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+  border-right: 1px solid #d8d2c7;
+  background: #fffdfa;
+  min-width: 0;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, #2b7a57 0 50%, transparent 50%),
+    linear-gradient(315deg, #e8b44f 0 50%, #c84b31 50%);
+  box-shadow: inset 0 0 0 1px rgba(23, 32, 27, 0.18);
+  flex: 0 0 auto;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.app-title p,
+.food-id,
+.source-note,
+.result-meta,
+.food-category {
+  color: #6f6a60;
+}
+
+.search-field {
+  display: grid;
+  gap: 8px;
+  color: #3e473f;
+  font-size: 0.92rem;
+}
+
+.search-field input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cfc8bb;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #17201b;
+  background: #ffffff;
+  outline: none;
+}
+
+.search-field input:focus {
+  border-color: #2b7a57;
+  box-shadow: 0 0 0 3px rgba(43, 122, 87, 0.16);
+}
+
+.result-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.86rem;
+}
+
+.food-list {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.food-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid #ded8ce;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #17201b;
+  text-align: left;
+  cursor: pointer;
+}
+
+.food-row:hover,
+.food-row:focus-visible {
+  border-color: #2b7a57;
+  outline: none;
+}
+
+.food-row[data-active="true"] {
+  border-color: #2b7a57;
+  background: #edf5ef;
+}
+
+.food-name {
+  overflow-wrap: anywhere;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.food-category {
+  font-size: 0.82rem;
+}
+
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 42px clamp(24px, 5vw, 72px);
+  min-width: 0;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #d8d2c7;
+  padding-bottom: 24px;
+}
+
+.food-id {
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+h2 {
+  color: #17201b;
+  font-size: 2rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.category-pill {
+  flex: 0 0 auto;
+  border: 1px solid #d8d2c7;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #3e473f;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.nutrient-chart {
+  display: grid;
+  gap: 20px;
+  max-width: 980px;
+}
+
+.nutrient-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(160px, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.nutrient-label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nutrient-label span {
+  color: #3e473f;
+  font-weight: 700;
+}
+
+.nutrient-label strong {
+  color: #17201b;
+  font-size: 1.08rem;
+}
+
+.bar-track {
+  position: relative;
+  height: 28px;
+  overflow: hidden;
+  border: 1px solid #d6d0c6;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 7px;
+  transition: width 180ms ease;
+}
+
+.tone-energy {
+  background: #c84b31;
+}
+
+.tone-protein {
+  background: #2b7a57;
+}
+
+.tone-fat {
+  background: #d28d24;
+}
+
+.tone-carb {
+  background: #356fa8;
+}
+
+.tone-fiber {
+  background: #769943;
+}
+
+.tone-salt {
+  background: #6d6376;
+}
+
+.source-note {
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid #d8d2c7;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .browser-panel {
+    max-height: 48vh;
+    border-right: 0;
+    border-bottom: 1px solid #d8d2c7;
+    padding: 20px;
+  }
+
+  .detail-panel {
+    padding: 24px 20px 32px;
+  }
+
+  .detail-header {
+    display: grid;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+  }
+
+  .category-pill {
+    width: fit-content;
+  }
+
+  .nutrient-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .bar-track {
+    height: 24px;
+  }
+}
