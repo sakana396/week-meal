@@ -4,7 +4,42 @@ export type NutrientKey =
   | "fatG"
   | "carbohydrateG"
   | "fiberG"
-  | "saltEquivalentG";
+  | "saltEquivalentG"
+  | "sodiumMg"
+  | "potassiumMg"
+  | "calciumMg"
+  | "magnesiumMg"
+  | "phosphorusMg"
+  | "ironMg"
+  | "zincMg"
+  | "copperMg"
+  | "manganeseMg"
+  | "iodineUg"
+  | "seleniumUg"
+  | "chromiumUg"
+  | "molybdenumUg"
+  | "retinolUg"
+  | "alphaCaroteneUg"
+  | "betaCaroteneUg"
+  | "betaCryptoxanthinUg"
+  | "betaCaroteneEquivalentUg"
+  | "vitaminAUg"
+  | "vitaminDUg"
+  | "alphaTocopherolMg"
+  | "betaTocopherolMg"
+  | "gammaTocopherolMg"
+  | "deltaTocopherolMg"
+  | "vitaminKUg"
+  | "vitaminB1Mg"
+  | "vitaminB2Mg"
+  | "niacinMg"
+  | "niacinEquivalentMg"
+  | "vitaminB6Mg"
+  | "vitaminB12Ug"
+  | "folateUg"
+  | "pantothenicAcidMg"
+  | "biotinUg"
+  | "vitaminCMg";
 
 export type NutrientsPer100g = Record<NutrientKey, number | null>;
 
@@ -20,5 +55,14 @@ export type NutrientDefinition = {
   label: string;
   unit: string;
   maxValue: number;
-  tone: "energy" | "protein" | "fat" | "carb" | "fiber" | "salt";
+  group: "basic" | "vitamin" | "mineral";
+  tone:
+    | "energy"
+    | "protein"
+    | "fat"
+    | "carb"
+    | "fiber"
+    | "salt"
+    | "vitamin"
+    | "mineral";
 };

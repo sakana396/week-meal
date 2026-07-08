@@ -38,6 +38,41 @@ NUTRIENT_IDENTIFIERS = {
     "carbohydrateG": "CHOCDF-",
     "fiberG": "FIB-",
     "saltEquivalentG": "NACL_EQ",
+    "sodiumMg": "NA",
+    "potassiumMg": "K",
+    "calciumMg": "CA",
+    "magnesiumMg": "MG",
+    "phosphorusMg": "P",
+    "ironMg": "FE",
+    "zincMg": "ZN",
+    "copperMg": "CU",
+    "manganeseMg": "MN",
+    "iodineUg": "ID",
+    "seleniumUg": "SE",
+    "chromiumUg": "CR",
+    "molybdenumUg": "MO",
+    "retinolUg": "RETOL",
+    "alphaCaroteneUg": "CARTA",
+    "betaCaroteneUg": "CARTB",
+    "betaCryptoxanthinUg": "CRYPXB",
+    "betaCaroteneEquivalentUg": "CARTBEQ",
+    "vitaminAUg": "VITA_RAE",
+    "vitaminDUg": "VITD",
+    "alphaTocopherolMg": "TOCPHA",
+    "betaTocopherolMg": "TOCPHB",
+    "gammaTocopherolMg": "TOCPHG",
+    "deltaTocopherolMg": "TOCPHD",
+    "vitaminKUg": "VITK",
+    "vitaminB1Mg": "THIA",
+    "vitaminB2Mg": "RIBF",
+    "niacinMg": "NIA",
+    "niacinEquivalentMg": "NE",
+    "vitaminB6Mg": "VITB6A",
+    "vitaminB12Ug": "VITB12",
+    "folateUg": "FOL",
+    "pantothenicAcidMg": "PANTAC",
+    "biotinUg": "BIOT",
+    "vitaminCMg": "VITC",
 }
 
 
@@ -121,7 +156,11 @@ def convert_foods(input_path: Path) -> list[dict[str, Any]]:
         rows = read_sheet_rows(xlsx, "xl/worksheets/sheet1.xml")
 
     identifier_row = rows[11]
-    identifier_to_column = {identifier: column for column, identifier in identifier_row.items()}
+    identifier_to_column = {
+        identifier.strip(): column
+        for column, identifier in identifier_row.items()
+        if identifier.strip()
+    }
     nutrient_columns = {
         key: identifier_to_column[identifier]
         for key, identifier in NUTRIENT_IDENTIFIERS.items()
