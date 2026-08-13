@@ -1,11 +1,18 @@
 import { useMemo, useState } from "react";
 import foodsJson from "./data/foods.json";
 import {
+  foodCategoryGroupAliases,
+  foodGroupAliases,
+  foodRepresentativePatterns,
+} from "./data/foodDisplayNames";
+import {
   basicNutrientDefinitions,
   nutrientDefinitions,
   sourceLabel,
   vitaminMineralDefinitions,
 } from "./data/nutrients";
+import { foodShelf, foodShelves, type FoodShelf } from "./data/foodShelves";
+import { supermarketFoodPriorities } from "./data/supermarketFoods";
 import type { FoodItem, NutrientDefinition, NutrientKey } from "./types";
 import "./App.css";
 
@@ -13,11 +20,24 @@ const baseFoods = foodsJson as FoodItem[];
 const maxVisibleFoods = 80;
 
 type Screen = "home" | "register" | "foods" | "detail";
-type ManualCategory = "野菜" | "魚" | "肉" | "その他";
+type RegisterCategory = "すべて" | FoodShelf;
+type RegisterMode = "simple" | "detailed";
+
+type RegisteredFood = FoodItem & {
+  amountG: number;
+  officialName?: string;
+};
+
+type FoodGroup = {
+  key: string;
+  name: string;
+  foods: FoodItem[];
+  supermarketPriority: number | null;
+};
 
 type ManualFoodForm = {
   name: string;
-  category: ManualCategory;
+  category: FoodShelf;
   nutrientsPer100g: Record<NutrientKey, string>;
 };
 
@@ -26,15 +46,7 @@ type NutrientTarget = {
   target: number;
 };
 
-const manualCategories: ManualCategory[] = ["野菜", "魚", "肉", "その他"];
-
-const categoryMatchers: Record<ManualCategory, (food: FoodItem) => boolean> = {
-  野菜: (food) => food.category === "野菜類",
-  魚: (food) => food.category === "魚介類",
-  肉: (food) => food.category === "肉類",
-  その他: (food) =>
-    !["野菜類", "魚介類", "肉類"].includes(food.category),
-};
+const registerCategories: RegisterCategory[] = ["すべて", ...foodShelves];
 
 function emptyManualNutrients() {
   return Object.fromEntries(
@@ -47,6 +59,128 @@ const initialManualForm: ManualFoodForm = {
   category: "野菜",
   nutrientsPer100g: emptyManualNutrients(),
 };
+
+const separateFoodForms: Array<{
+  pattern: RegExp;
+  label: (name: string) => string;
+}> = [
+  { pattern: /^かぼちゃ いり/, label: () => "かぼちゃの種" },
+  { pattern: /フライドポテト/, label: () => "フライドポテト" },
+  { pattern: /から揚げ/, label: (name) => `${name.replace(/肉$/, "")}のから揚げ` },
+  { pattern: /天ぷら/, label: (name) => `${name}の天ぷら` },
+  { pattern: /(?:^|\s)フライ(?:\s|$)/, label: (name) => `${name}のフライ` },
+  { pattern: /漬物|塩漬|ぬかみそ漬/, label: (name) => `${name}の漬物` },
+  { pattern: /缶詰/, label: (name) => `${name}（缶詰）` },
+  { pattern: /(?:^|\s)(?:乾|乾燥)(?:\s|$)/, label: (name) => `${name}（乾燥）` },
+];
+
+function foodPresentation(officialName: string, category?: string) {
+  const nameWithoutHierarchy = officialName
+    .replace(/^(?:＜[^＞]+＞\s*)+/, "")
+    .trim();
+  const classificationMatch = nameWithoutHierarchy.match(/^（([^）]+)）\s*(.+)$/);
+  const classificationLabel = classificationMatch?.[1];
+  const nameWithoutFamily = classificationMatch?.[2] ?? nameWithoutHierarchy;
+  const [specificName = officialName, ...specificDetailParts] =
+    nameWithoutFamily.split(/\s+/);
+  const familyName = classificationLabel?.endsWith("類")
+    ? classificationLabel.replace(/類$/, "")
+    : undefined;
+  const groupedName = familyName || specificName;
+  const categoryAlias = category
+    ? foodCategoryGroupAliases[`${category}:${groupedName}`]
+    : undefined;
+  const baseName = categoryAlias || foodGroupAliases[groupedName] || groupedName;
+  const separateForm = separateFoodForms.find(({ pattern }) =>
+    pattern.test(nameWithoutFamily),
+  );
+  const name = separateForm?.label(baseName) ?? baseName;
+  const detailParts = baseName !== specificName
+    ? [specificName, ...specificDetailParts]
+    : specificDetailParts;
+  const details = detailParts
+    .map((part) => part.replace(/^［(.+)］$/, "$1"))
+    .join("・");
+
+  return { name, details };
+}
+
+function representativeFood(group: FoodGroup) {
+  const preferredPatterns = foodRepresentativePatterns[group.name] ?? [];
+  const preferredFood = preferredPatterns
+    .map((pattern) => group.foods.find((food) => food.name.includes(pattern)))
+    .find(Boolean);
+
+  if (preferredFood) {
+    return preferredFood;
+  }
+
+  const preparationPriority = [
+    /(?:^|\s)生(?:\s|$)/,
+    /(?:^|\s)冷凍(?:\s|$)/,
+    /(?:^|\s)ゆで(?:\s|$)/,
+    /(?:^|\s)蒸し(?:\s|$)/,
+    /(?:^|\s)焼き(?:\s|$)/,
+  ];
+
+  return [...group.foods].sort((left, right) => {
+    const leftPriority = preparationPriority.findIndex((pattern) =>
+      pattern.test(left.name),
+    );
+    const rightPriority = preparationPriority.findIndex((pattern) =>
+      pattern.test(right.name),
+    );
+    return (leftPriority < 0 ? preparationPriority.length : leftPriority) -
+      (rightPriority < 0 ? preparationPriority.length : rightPriority);
+  })[0];
+}
+
+function groupFoods(foods: FoodItem[]) {
+  const groups = new Map<string, FoodGroup>();
+
+  for (const food of foods) {
+    const { name } = foodPresentation(food.name, food.category);
+    const key = `${food.category}:${name}`;
+    const group = groups.get(key);
+
+    if (group) {
+      group.foods.push(food);
+    } else {
+      groups.set(key, { key, name, foods: [food], supermarketPriority: null });
+    }
+  }
+
+  return [...groups.values()];
+}
+
+function supermarketPriority(name: string) {
+  const target = normalizeSearchText(name);
+  const priority = supermarketFoodPriorities.findIndex((foodName) =>
+    target === normalizeSearchText(foodName),
+  );
+
+  return priority >= 0 ? priority : null;
+}
+
+function prioritizeSupermarketFoods(groups: FoodGroup[]) {
+  return groups
+    .map((group) => ({
+      ...group,
+      supermarketPriority: supermarketPriority(group.name),
+    }))
+    .sort((left, right) => {
+      if (left.supermarketPriority === null && right.supermarketPriority === null) {
+        return left.name.localeCompare(right.name, "ja-JP");
+      }
+      if (left.supermarketPriority === null) {
+        return 1;
+      }
+      if (right.supermarketPriority === null) {
+        return -1;
+      }
+      return left.supermarketPriority - right.supermarketPriority;
+    });
+}
 
 const nutrientTargets: NutrientTarget[] = [
   { key: "energyKcal", target: 650 },
@@ -116,7 +250,7 @@ function parseManualValue(value: string) {
   return Math.round(parsed * 100) / 100;
 }
 
-function aggregateNutrients(items: FoodItem[]) {
+function aggregateNutrients(items: RegisteredFood[]) {
   return Object.fromEntries(
     nutrientDefinitions.map((definition) => {
       let total = 0;
@@ -125,7 +259,7 @@ function aggregateNutrients(items: FoodItem[]) {
       for (const item of items) {
         const value = item.nutrientsPer100g[definition.key];
         if (value !== null && value !== undefined) {
-          total += value;
+          total += value * (item.amountG / 100);
           hasValue = true;
         }
       }
@@ -138,8 +272,12 @@ function aggregateNutrients(items: FoodItem[]) {
 function App() {
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
   const [query, setQuery] = useState("");
+  const [registerQuery, setRegisterQuery] = useState("");
+  const [registerMode, setRegisterMode] = useState<RegisterMode>("simple");
+  const [registerCategory, setRegisterCategory] =
+    useState<RegisterCategory>("すべて");
   const [selectedFoodId, setSelectedFoodId] = useState(baseFoods[0]?.id ?? "");
-  const [manualFoods, setManualFoods] = useState<FoodItem[]>([]);
+  const [manualFoods, setManualFoods] = useState<RegisteredFood[]>([]);
   const [manualForm, setManualForm] = useState<ManualFoodForm>(initialManualForm);
 
   const filteredFoods = useMemo(() => {
@@ -155,13 +293,53 @@ function App() {
   }, [query]);
 
   const visibleFoods = filteredFoods.slice(0, maxVisibleFoods);
-  const registerCandidateFoods = useMemo(
+  const registerFoods = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(registerQuery);
+    const categoryFoods =
+      registerCategory === "すべて"
+        ? baseFoods
+        : baseFoods.filter((food) => foodShelf(food) === registerCategory);
+    return normalizedQuery
+      ? categoryFoods.filter((food) => {
+          const presentation = foodPresentation(food.name, food.category);
+          const target = normalizeSearchText(
+            `${food.name}${presentation.name}${presentation.details}${food.category}`,
+          );
+          return target.includes(normalizedQuery);
+        })
+      : categoryFoods;
+  }, [registerCategory, registerQuery]);
+
+  const registerFoodGroups = useMemo(() => {
+    const groups = groupFoods(registerFoods);
+    const normalizedQuery = normalizeSearchText(registerQuery);
+    return normalizedQuery ? groups : prioritizeSupermarketFoods(groups);
+  }, [registerFoods, registerQuery]);
+  const detailedRegisterFoods = useMemo(
     () =>
-      baseFoods
-        .filter(categoryMatchers[manualForm.category])
-        .slice(0, maxVisibleFoods),
-    [manualForm.category],
+      [...registerFoods].sort((left, right) => {
+        if (!registerQuery.trim()) {
+          const leftPriority = supermarketPriority(
+            foodPresentation(left.name, left.category).name,
+          );
+          const rightPriority = supermarketPriority(
+            foodPresentation(right.name, right.category).name,
+          );
+          if (leftPriority !== null || rightPriority !== null) {
+            if (leftPriority === null) return 1;
+            if (rightPriority === null) return -1;
+            if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+          }
+        }
+        return left.name.localeCompare(right.name, "ja-JP");
+      }),
+    [registerFoods, registerQuery],
   );
+  const visibleRegisterGroups = registerFoodGroups.slice(0, maxVisibleFoods);
+  const visibleDetailedFoods = detailedRegisterFoods.slice(0, maxVisibleFoods);
+  const visibleCommonFoodCount = visibleRegisterGroups.filter(
+    (group) => group.supermarketPriority !== null,
+  ).length;
   const selectedFood =
     manualFoods.find((food) => food.id === selectedFoodId) ??
     baseFoods.find((food) => food.id === selectedFoodId) ??
@@ -190,16 +368,31 @@ function App() {
     setSelectedFoodId(foodId);
   }
 
-  function registerExistingFood(food: FoodItem) {
-    const registeredFood: FoodItem = {
-      ...food,
-      id: `registered-${food.id}-${Date.now()}`,
-      category: `登録 / ${food.category}`,
+  function registerFood(selectedFood: FoodItem) {
+    if (!selectedFood) {
+      return;
+    }
+
+    const presentation = foodPresentation(selectedFood.name, selectedFood.category);
+    const registeredFood: RegisteredFood = {
+      ...selectedFood,
+      id: `registered-${selectedFood.id}-${Date.now()}`,
+      name: presentation.name,
+      officialName: selectedFood.name,
+      amountG: 100,
+      category: `登録 / ${selectedFood.category}`,
     };
 
     setManualFoods((current) => [registeredFood, ...current]);
     setSelectedFoodId(registeredFood.id);
     setActiveScreen("home");
+  }
+
+  function registerExistingFood(group: FoodGroup) {
+    const selectedFood = representativeFood(group);
+    if (selectedFood) {
+      registerFood(selectedFood);
+    }
   }
 
   function updateManualNutrient(key: NutrientKey, value: string) {
@@ -231,7 +424,7 @@ function App() {
       ) as FoodItem["nutrientsPer100g"],
     };
 
-    setManualFoods((current) => [food, ...current]);
+    setManualFoods((current) => [{ ...food, amountG: 100 }, ...current]);
     setSelectedFoodId(food.id);
     setManualForm(initialManualForm);
     setActiveScreen("home");
@@ -293,7 +486,7 @@ function App() {
             {manualFoods.length === 0 ? (
               <section className="notice-panel">
                 <h3>登録食材がありません</h3>
-                <p>食材登録画面から手入力した食材だけを、ホームの栄養サマリに表示します。</p>
+                <p>食材登録画面で食材を押すと、栄養サマリに反映されます。</p>
               </section>
             ) : (
               <div className="registered-list" aria-label="登録食材">
@@ -308,7 +501,11 @@ function App() {
                     type="button"
                   >
                     <span className="food-name">{food.name}</span>
-                    <span className="food-category">{food.category}</span>
+                    <span className="food-category">
+                      {food.officialName && food.officialName !== food.name
+                        ? food.officialName
+                        : food.category}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -417,21 +614,55 @@ function App() {
         )}
 
         {activeScreen === "register" && (
-          <form className="screen-stack" onSubmit={addManualFood} aria-label="食材登録画面">
+          <div className="screen-stack" aria-label="食材登録画面">
             <header className="screen-header">
               <div>
                 <p className="food-id">食材登録</p>
                 <h2>食材を選ぶ</h2>
               </div>
-              <span className="category-pill">{manualForm.category}</span>
+              <span className="category-pill">文科省データ / 100g</span>
             </header>
 
-            <div className="category-picker" aria-label="カテゴリ選択">
-              {manualCategories.map((category) => (
+            <section className="register-mode-panel" aria-label="入力モード">
+              <div>
+                <strong>入力モード</strong>
+                <span>
+                  {registerMode === "simple"
+                    ? "一般的な食材名から、すぐに登録します"
+                    : "文科省データを食品番号ごとに選びます"}
+                </span>
+              </div>
+              <div className="register-mode-switch" role="group" aria-label="入力モード選択">
                 <button
-                  data-active={manualForm.category === category}
+                  aria-pressed={registerMode === "simple"}
+                  data-active={registerMode === "simple"}
+                  onClick={() => setRegisterMode("simple")}
+                  type="button"
+                >
+                  簡易
+                </button>
+                <button
+                  aria-pressed={registerMode === "detailed"}
+                  data-active={registerMode === "detailed"}
+                  onClick={() => setRegisterMode("detailed")}
+                  type="button"
+                >
+                  詳細
+                </button>
+              </div>
+            </section>
+
+            <div className="category-picker" aria-label="スーパーの棚を選択">
+              {registerCategories.map((category) => (
+                <button
+                  data-active={registerCategory === category}
                   key={category}
-                  onClick={() => setManualForm((current) => ({ ...current, category }))}
+                  onClick={() => {
+                    setRegisterCategory(category);
+                    if (category !== "すべて") {
+                      setManualForm((current) => ({ ...current, category }));
+                    }
+                  }}
                   type="button"
                 >
                   {category}
@@ -441,24 +672,97 @@ function App() {
 
             <section className="section-stack">
               <div className="section-heading">
-                <h3>{manualForm.category}の食材</h3>
-                <p>{registerCandidateFoods.length.toLocaleString("ja-JP")} 件表示</p>
+                <h3>1. 食材を検索</h3>
+                <p>
+                  {(registerMode === "simple"
+                    ? registerFoodGroups.length
+                    : detailedRegisterFoods.length
+                  ).toLocaleString("ja-JP")} 種類
+                  {(registerMode === "simple"
+                    ? registerFoodGroups.length
+                    : detailedRegisterFoods.length) > maxVisibleFoods
+                    ? ` / 先頭${maxVisibleFoods}件を表示`
+                    : ""}
+                </p>
               </div>
-              <div className="ingredient-name-list" aria-label="食材名一覧">
-                {registerCandidateFoods.map((food) => (
-                  <button
-                    className="ingredient-name-button"
-                    key={food.id}
-                    onClick={() => registerExistingFood(food)}
-                    type="button"
-                  >
-                    {food.name}
-                  </button>
-                ))}
-              </div>
+
+              {!registerQuery.trim() && registerMode === "simple" && (
+                <p className="priority-note">
+                  スーパーで見つけやすい食材を先に表示しています
+                  {visibleCommonFoodCount > 0
+                    ? `（優先表示 ${visibleCommonFoodCount}種類）`
+                    : ""}
+                </p>
+              )}
+
+              {registerMode === "detailed" && (
+                <p className="priority-note">
+                  正式名称・状態・食品番号を確認して、使うデータを直接選べます
+                </p>
+              )}
+
+              <label className="search-field">
+                <span>食材名</span>
+                <input
+                  type="search"
+                  value={registerQuery}
+                  onChange={(event) => setRegisterQuery(event.target.value)}
+                  placeholder="例: 玉ねぎ、じゃがいも、鶏肉"
+                />
+              </label>
+
+              {registerMode === "simple" && visibleRegisterGroups.length > 0 ? (
+                <div className="ingredient-name-list" aria-label="食材名一覧">
+                  {visibleRegisterGroups.map((group) => (
+                      <button
+                        className="ingredient-name-button"
+                        key={group.key}
+                        onClick={() => registerExistingFood(group)}
+                        type="button"
+                      >
+                        <span className="ingredient-title">
+                          <strong>{group.name}</strong>
+                          {group.supermarketPriority !== null && !registerQuery.trim() && (
+                            <span className="common-food-badge">よくある</span>
+                          )}
+                        </span>
+                        <small>タップして登録</small>
+                      </button>
+                    ))}
+                </div>
+              ) : registerMode === "detailed" && visibleDetailedFoods.length > 0 ? (
+                <div className="ingredient-name-list" aria-label="文科省食品データ一覧">
+                  {visibleDetailedFoods.map((food) => {
+                    const presentation = foodPresentation(food.name, food.category);
+                    const isCommon = supermarketPriority(presentation.name) !== null;
+                    return (
+                      <button
+                        className="ingredient-name-button detailed-food-button"
+                        key={food.id}
+                        onClick={() => registerFood(food)}
+                        type="button"
+                      >
+                        <span className="ingredient-title">
+                          <strong>{presentation.name}</strong>
+                          {isCommon && !registerQuery.trim() && (
+                            <span className="common-food-badge">よくある</span>
+                          )}
+                        </span>
+                        <span>{food.name}</span>
+                        <small>食品番号 {food.id} / {food.category}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="empty-result">
+                  <strong>該当する食材がありません</strong>
+                  <span>検索語やカテゴリを変えてください。</span>
+                </div>
+              )}
             </section>
 
-            <section className="section-stack">
+            <form className="section-stack" onSubmit={addManualFood}>
               <div className="section-heading">
                 <h3>手入力で追加</h3>
                 <p>一覧にない食材</p>
@@ -467,12 +771,32 @@ function App() {
               <label className="form-field">
                 <span>食材名</span>
                 <input
+                  required
                   value={manualForm.name}
                   onChange={(event) =>
                     setManualForm((current) => ({ ...current, name: event.target.value }))
                   }
                   placeholder="例: 自家製スープ"
                 />
+              </label>
+
+              <label className="form-field">
+                <span>カテゴリ</span>
+                <select
+                  value={manualForm.category}
+                  onChange={(event) =>
+                    setManualForm((current) => ({
+                      ...current,
+                      category: event.target.value as FoodShelf,
+                    }))
+                  }
+                >
+                  {foodShelves.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <div className="nutrient-input-grid">
@@ -488,6 +812,7 @@ function App() {
                         updateManualNutrient(definition.key, event.target.value)
                       }
                       placeholder="未入力ならデータなし"
+                      step="any"
                       type="number"
                       value={manualForm.nutrientsPer100g[definition.key]}
                     />
@@ -506,8 +831,8 @@ function App() {
                   入力をクリア
                 </button>
               </div>
-            </section>
-          </form>
+            </form>
+          </div>
         )}
 
         {activeScreen === "detail" && (

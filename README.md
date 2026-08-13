@@ -11,7 +11,12 @@ weekmeal は、食品ごとの主要栄養素を可視化する Web アプリで
 - 横棒グラフによる主要栄養素の比較
 - 文科省データから生成した食品 JSON の同梱
 
-今後の画面構成メモは [docs/screen-design.md](docs/screen-design.md) にまとめています。
+画面に関する資料:
+
+- [画面遷移図](docs/screen-flow.md)
+- [画面設計メモ](docs/screen-design.md)
+- [スーパーマーケットの売場分類・運営に関する参考資料](docs/references/supermarket-shelves.md)
+- [データ設計](docs/data-design.md)
 
 表示している栄養素:
 

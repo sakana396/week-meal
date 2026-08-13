@@ -17,7 +17,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -152,7 +153,8 @@ h3 {
 }
 
 .search-field input,
-.form-field input {
+.form-field input,
+.form-field select {
   width: 100%;
   min-height: 44px;
   border: 1px solid #cfc8bb;
@@ -164,7 +166,8 @@ h3 {
 }
 
 .search-field input:focus,
-.form-field input:focus {
+.form-field input:focus,
+.form-field select:focus {
   border-color: #2b7a57;
   box-shadow: 0 0 0 3px rgba(43, 122, 87, 0.16);
 }
@@ -209,6 +212,8 @@ h3 {
 }
 
 .ingredient-name-button {
+  display: grid;
+  gap: 5px;
   min-height: 44px;
   border: 1px solid #ded8ce;
   border-radius: 8px;
@@ -217,15 +222,190 @@ h3 {
   color: #17201b;
   text-align: left;
   overflow-wrap: anywhere;
-  font-weight: 700;
   line-height: 1.35;
 }
 
+.ingredient-name-button small,
+.variant-button small,
+.empty-result span {
+  color: #6f6a60;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.priority-note {
+  border-left: 4px solid #2b7a57;
+  padding: 8px 12px;
+  color: #536057;
+  background: #edf5ef;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.register-mode-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #d8d2c7;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.register-mode-panel > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.register-mode-panel span {
+  color: #6f6a60;
+  font-size: 0.86rem;
+}
+
+.register-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(72px, 1fr));
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 4px;
+  border-radius: 9px;
+  background: #e9e4da;
+}
+
+.register-mode-switch button {
+  min-height: 38px;
+  border-color: transparent;
+  background: transparent;
+  font-weight: 700;
+}
+
+.register-mode-switch button[data-active="true"] {
+  border-color: #2b7a57;
+  color: #ffffff;
+  background: #2b7a57;
+}
+
+.detailed-food-button {
+  min-height: 92px;
+}
+
+.detailed-food-button > span:not(.ingredient-title) {
+  color: #3e473f;
+  font-size: 0.82rem;
+}
+
+.ingredient-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.common-food-badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 3px 7px;
+  color: #256246;
+  background: #dceee2;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .ingredient-name-button:hover,
-.ingredient-name-button:focus-visible {
+.ingredient-name-button:focus-visible,
+.ingredient-name-button[data-active="true"] {
   border-color: #2b7a57;
   background: #edf5ef;
   outline: none;
+}
+
+.selection-panel {
+  border: 1px solid #b9cdbf;
+  border-radius: 10px;
+  padding: 20px;
+  background: #f4faf5;
+}
+
+.variant-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 8px;
+  max-height: 32vh;
+  overflow: auto;
+}
+
+.variant-button {
+  display: grid;
+  gap: 4px;
+  min-height: 64px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #17201b;
+  background: #ffffff;
+  text-align: left;
+}
+
+.variant-button:hover,
+.variant-button:focus-visible,
+.variant-button[data-active="true"] {
+  border-color: #2b7a57;
+  outline: none;
+}
+
+.variant-button[data-active="true"] {
+  box-shadow: inset 4px 0 #2b7a57;
+  background: #edf5ef;
+}
+
+.amount-register-row {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.amount-field {
+  width: min(220px, 100%);
+}
+
+.register-button,
+.primary-button {
+  min-height: 44px;
+  border: 1px solid #2b7a57;
+  border-radius: 8px;
+  padding: 0 18px;
+  color: #ffffff;
+  background: #2b7a57;
+  font-weight: 700;
+}
+
+.register-button:hover,
+.register-button:focus-visible {
+  background: #226447;
+  outline: none;
+}
+
+.register-button:disabled {
+  border-color: #aaa59c;
+  color: #f4f2ed;
+  background: #aaa59c;
+  cursor: not-allowed;
+}
+
+.empty-result {
+  display: grid;
+  gap: 6px;
+  border: 1px dashed #cfc8bb;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.manual-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 16px;
 }
 
 .food-row {
@@ -395,7 +575,7 @@ h3 {
 
 .category-picker {
   display: grid;
-  grid-template-columns: repeat(4, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
@@ -583,8 +763,13 @@ h3 {
   }
 
   .screen-header,
-  .section-heading {
+  .section-heading,
+  .register-mode-panel {
     display: grid;
+  }
+
+  .register-mode-switch {
+    width: 100%;
   }
 
   h2 {
@@ -599,10 +784,17 @@ h3 {
   .summary-grid,
   .action-grid,
   .nutrient-input-grid,
+  .manual-meta-grid,
   .registered-list,
   .ingredient-name-list,
+  .variant-list,
   .micro-grid {
     grid-template-columns: 1fr;
+  }
+
+  .amount-register-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .category-picker {
