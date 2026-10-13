@@ -20,7 +20,9 @@
 |---|---|---|---|---|---|
 | TC-NFR-08-01 | NFR-08 / DES-PKG-05 | lint の設定がある | `src/core/` のファイルで `react` を import して `npm run lint` | `no-restricted-imports` の誤りになる（#2 で手動確認） | 異常 |
 | TC-NFR-08-02 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` のファイルで `Date.now()` を使って `npm run lint` | `no-restricted-properties` の誤りになる（#2 で手動確認） | 異常 |
-| TC-NFR-10-01 | NFR-10 / DES-DEV-04 | 同上 | `any` を書いて `npm run lint` | `@typescript-eslint/no-explicit-any` の誤りになる | 異常 |
+| TC-NFR-10-01 | NFR-10 / DES-DEV-04 | 同上 | `any` を書いて `npm run lint` | `@typescript-eslint/no-explicit-any` の誤りになる（#2 で手動確認） | 異常 |
+| TC-NFR-08-03 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` で `.tsx` からの react の import、下の階層からの `../../App`・`../ui/*` の import、`globalThis.localStorage`、引数なしの `new Date()`、動的 `import("react")`、`import("react").FC` を書いて `npm run lint` | すべて誤りになる。`../data/*` の import と `new Date(0)` は誤りにならない（#2 で手動確認） | 異常 |
+| TC-QA-02-01 | QA-02 / DES-DEV-02 | 網羅率の閾値 80% | テストのない関数を `src/core/` に置いて `npm run test:coverage` | 終了コードが 0 以外になる（#2 で手動確認） | 異常 |
 | TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
 | TC-FR-ING-05-01 | FR-ING-05 / DES-CAT-01 | — | 「＜魚類＞ （あじ類） まあじ 皮つき 生」 | 食材名「あじ」、詳細「まあじ・皮つき・生」 | 正常 |
 | TC-FR-ING-05-02 | FR-ING-05 / DES-CAT-01 | 別名「たまねぎ→玉ねぎ」 | 「（たまねぎ類） たまねぎ りん茎 生」 | 食材名「玉ねぎ」 | 正常 |

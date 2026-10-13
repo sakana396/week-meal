@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       // 網羅率は計算ロジックだけを対象にする（DES-DEV-02、NFR-09）
-      include: ["src/core/**/*.ts"],
+      include: ["src/core/**/*.{ts,tsx}"],
       exclude: ["src/core/**/*.test.ts"],
       thresholds: {
         statements: 80,
