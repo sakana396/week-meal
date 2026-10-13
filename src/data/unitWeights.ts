@@ -26,6 +26,7 @@ export type UnitWeight = {
 const estimate = "概算（一般的な市販品の重さ。本人の査閲待ち）";
 
 export const unitWeights: Record<string, UnitWeight> = {
+  がんもどき: { unit: "枚", purchaseG: 100, source: estimate },
   玉ねぎ: { unit: "個", purchaseG: 200, source: estimate },
   にんじん: { unit: "本", purchaseG: 150, source: estimate },
   じゃがいも: { unit: "個", purchaseG: 150, source: estimate },
@@ -169,18 +170,12 @@ export const unitWeights: Record<string, UnitWeight> = {
     source: estimate,
     note: "10 個入り、殻つき",
   },
-  うなぎ: {
-    unit: "尾",
-    purchaseG: 150,
-    refusePct: 0,
-    source: estimate,
-    note: "開いたもの",
-  },
+  うなぎ: { unit: "尾", purchaseG: 150, source: estimate, note: "かば焼" },
   うめの漬物: {
     unit: "パック",
     purchaseG: 150,
     source: estimate,
-    note: "種つき",
+    note: "梅干し、種つき",
   },
   かき: {
     unit: "パック",
@@ -307,7 +302,7 @@ export const unitWeights: Record<string, UnitWeight> = {
   ゆりね: { unit: "個", purchaseG: 70, source: estimate },
   ラズベリー: { unit: "パック", purchaseG: 100, source: estimate },
   らっかせい: { unit: "袋", purchaseG: 100, source: estimate, note: "殻つき" },
-  らっきょう: { unit: "袋", purchaseG: 300, source: estimate },
+  らっきょう: { unit: "袋", purchaseG: 200, source: estimate, note: "甘酢漬" },
   ルッコラ: { unit: "袋", purchaseG: 50, source: estimate },
   わかさぎ: { unit: "パック", purchaseG: 150, source: estimate },
   わかめ: { unit: "袋", purchaseG: 100, source: estimate, note: "湯通し塩蔵" },

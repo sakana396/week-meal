@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import selection from "../../scripts/food-selection.json";
-import { groupFoods } from "../core/catalog";
+import { groupFoods, isRegistrable } from "../core/catalog";
 import type { FoodItem } from "../types";
 import { foodRepresentativePatterns } from "./foodDisplayNames";
 import { foodShelfOverrides } from "./foodShelfOverrides";
@@ -54,16 +54,28 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     expect(missing).toEqual([]);
   });
 
-  it("TC-NFR-11-03 代表食品の指定は、食品データの食品に当てはまる", () => {
+  it("TC-NFR-11-03 代表食品の指定は、同じ食材名にまとまる食品に当てはまる", () => {
+    const groups = groupFoods(foods);
     const unmatched = Object.entries(foodRepresentativePatterns).flatMap(
-      ([name, patterns]) =>
-        patterns
+      ([name, patterns]) => {
+        const members = groups
+          .filter((group) => group.name === name)
+          .flatMap((group) => group.foods);
+        return patterns
           .filter(
-            (pattern) => !foods.some((food) => food.name.includes(pattern)),
+            (pattern) => !members.some((food) => food.name.includes(pattern)),
           )
-          .map((pattern) => `${name}: ${pattern}`),
+          .map((pattern) => `${name}: ${pattern}`);
+      },
     );
     expect(unmatched).toEqual([]);
+  });
+
+  it("TC-NFR-11-06 登録の一覧の食材名は重複しない（目安重量のキーが一意に決まる）", () => {
+    const names = groupFoods(foods)
+      .filter((group) => group.foods.some(isRegistrable))
+      .map((group) => group.name);
+    expect(names.length).toBe(new Set(names).size);
   });
 
   it("TC-NFR-11-04 よくある食材は、すべて食品データの食材名として存在する", () => {
