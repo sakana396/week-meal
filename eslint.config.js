@@ -43,7 +43,8 @@ export default tseslint.config(
                 "**/ui/**",
                 "**/*.css",
               ],
-              message: "src/core から画面のモジュールを import しない（NFR-08）",
+              message:
+                "src/core から画面のモジュールを import しない（NFR-08）",
             },
           ],
         },
