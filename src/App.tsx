@@ -292,6 +292,7 @@ function App() {
       id: `manual-${crypto.randomUUID()}`,
       name,
       category: `手入力 / ${manualForm.category}`,
+      refusePct: null,
       nutrientsPer100g: Object.fromEntries(
         nutrientDefinitions.map((definition) => [
           definition.key,

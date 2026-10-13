@@ -47,6 +47,8 @@ export type FoodItem = {
   id: string;
   name: string;
   category: string;
+  /** 廃棄率（%）。成分表の REFUSE 列（DES-FDB-03） */
+  refusePct: number | null;
   nutrientsPer100g: NutrientsPer100g;
 };
 
