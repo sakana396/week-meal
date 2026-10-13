@@ -111,7 +111,7 @@ npm run dev:docker
 
 ## 栄養データの再生成
 
-`src/data/foods.json` は、文部科学省の Excel データから生成しています。
+`src/data/foods.json` は、文部科学省の Excel データから、自炊向けの食材だけを絞り込んで生成しています（約 1,200 件）。絞り込む食品は `scripts/food-selection.json`（食品番号と正式名称の一覧）で管理します。
 
 まず、食品成分表の Excel ファイルを `/tmp/mext-food.xlsx` に保存します。
 
@@ -125,7 +125,9 @@ curl -L -o /tmp/mext-food.xlsx "https://www.mext.go.jp/content/20260327-mxt_kags
 npm run convert:mext
 ```
 
-このコマンドは `scripts/convert-mext-foods.py` を使い、`src/data/foods.json` を更新します。
+このコマンドは `scripts/convert-mext-foods.py` を使い、`scripts/food-selection.json` にある食品だけを、廃棄率（`refusePct`）とともに `src/data/foods.json` へ書き出します。定義に成分表にない食品番号があると、誤りで終了します。
+
+食品を足すときは、`scripts/food-selection.json` に食品番号と正式名称を 1 行足してから変換し直し、`npm test` で整合性テストが通ることを確かめます。
 
 ## ディレクトリ構成
 
@@ -133,12 +135,17 @@ npm run convert:mext
 src/
   App.tsx              画面本体
   App.css              画面スタイル
+  core/                計算のロジック（React に依存しない純粋な関数）
+    catalog.ts         表示名のまとめ・登録対象の判定
   data/
     foods.json         食品データ
     nutrients.ts       表示する栄養素定義
+    staples.ts         主食の代表食品
+    integrity.test.ts  定義データの整合性テスト
   types.ts             食品・栄養素の型定義
 scripts/
   convert-mext-foods.py  文科省 Excel から JSON を生成するスクリプト
+  food-selection.json    食品データに含める食品の一覧
 ```
 
 ## データ出典

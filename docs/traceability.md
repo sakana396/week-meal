@@ -11,9 +11,9 @@
 | FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts | 実装済み |
 | FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜08 | src/core/catalog.ts | 実装済み |
 | FR-ING-06 | #3 | DES-CAT-01 | TC-FR-ING-06-01〜03 | src/core/catalog.ts | 実装済み |
-| FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜05 | src/core/catalog.ts | 一部実装（#3: 判定関数） |
-| FR-FDB-01 | #4 | DES-FDB-01, 02 | | | 未着手 |
-| FR-FDB-02 | #4 | DES-FDB-01, 02 | | | 未着手 |
+| FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜05 | src/core/catalog.ts, scripts/food-selection.json | 一部実装（#3: 判定関数、#4: 食品データから除外） |
+| FR-FDB-01 | #4 | DES-FDB-01, 02 | TC-FR-FDB-01-01 | scripts/food-selection.json, src/data/foods.json | 実装済み |
+| FR-FDB-02 | #4 | DES-FDB-01, 02 | TC-FR-FDB-02-01〜04 | scripts/convert-mext-foods.py | 実装済み |
 | FR-QTY-01 | #5 | DES-QTY-02 | | | 未着手 |
 | FR-QTY-02 | #5 | DES-QTY-01, 02 | | | 未着手 |
 | FR-QTY-03 | #5 | DES-QTY-02 | | | 未着手 |
@@ -38,7 +38,7 @@
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
-| NFR-11 | #4, #5 | DES-FDB-04 | | | 未着手 |
+| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜04 | src/data/integrity.test.ts | 一部実装（#4） |
 | NFR-15 | #7 | DES-NUT-01〜04 | | | 未着手 |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
