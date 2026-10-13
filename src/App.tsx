@@ -283,6 +283,17 @@ function aggregateNutrients(items: RegisteredFood[]) {
   ) as FoodItem["nutrientsPer100g"];
 }
 
+let localIdCounter = 0;
+
+/**
+ * 登録した食材の ID を作る。crypto.randomUUID は HTTPS か localhost でしか
+ * 使えず、スマートフォンから LAN 経由（http）で開くと失敗するため使わない。
+ */
+function localId(prefix: string) {
+  localIdCounter += 1;
+  return `${prefix}-${Date.now()}-${localIdCounter}`;
+}
+
 function App() {
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
   const [query, setQuery] = useState("");
@@ -399,7 +410,7 @@ function App() {
     );
     const registeredFood: RegisteredFood = {
       ...selectedFood,
-      id: `registered-${selectedFood.id}-${crypto.randomUUID()}`,
+      id: localId(`registered-${selectedFood.id}`),
       name: presentation.name,
       officialName: selectedFood.name,
       amountG: 100,
@@ -436,7 +447,7 @@ function App() {
     }
 
     const food: FoodItem = {
-      id: `manual-${crypto.randomUUID()}`,
+      id: localId("manual"),
       name,
       category: `手入力 / ${manualForm.category}`,
       nutrientsPer100g: Object.fromEntries(
