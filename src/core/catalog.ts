@@ -19,6 +19,15 @@ const separateFoodForms: Array<{
   pattern: RegExp;
   label: (name: string) => string;
 }> = [
+  // 大豆製品は、成分表の小分類でスーパーの別の商品に分ける（FR-ING-06）
+  { pattern: /^だいず ［納豆類］/, label: () => "納豆" },
+  { pattern: /^だいず ［豆腐・油揚げ類］ (?:絹)?生揚げ/, label: () => "厚揚げ" },
+  {
+    pattern: /^だいず ［豆腐・油揚げ類］ (?:油揚げ|がんもどき)/,
+    label: () => "油揚げ",
+  },
+  { pattern: /^だいず ［豆腐・油揚げ類］/, label: () => "豆腐" },
+  { pattern: /^だいず ［その他］ 豆乳/, label: () => "豆乳" },
   { pattern: /^かぼちゃ いり/, label: () => "かぼちゃの種" },
   { pattern: /フライドポテト/, label: () => "フライドポテト" },
   {
