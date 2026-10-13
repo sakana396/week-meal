@@ -8,9 +8,9 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-03 | #3 | DES-CAT-06 | TC-FR-ING-03-01〜03 | src/core/catalog.ts | 実装済み（検索の正規化） |
-| FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts | 実装済み |
-| FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜08 | src/core/catalog.ts | 実装済み |
-| FR-ING-06 | #3 | DES-CAT-01 | TC-FR-ING-06-01〜03 | src/core/catalog.ts | 実装済み |
+| FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
+| FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜10 | src/core/catalog.ts（まとめ・代表食品）, src/App.tsx（押して登録） | 実装済み（まとめ・代表食品。画面は IT02 で E2E） |
+| FR-ING-06 | #3 | DES-CAT-01 | TC-FR-ING-06-01〜10 | src/core/catalog.ts | 実装済み |
 | FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜05 | src/core/catalog.ts, scripts/food-selection.json | 一部実装（#3: 判定関数、#4: 食品データから除外） |
 | FR-FDB-01 | #4 | DES-FDB-01, 02 | TC-FR-FDB-01-01 | scripts/food-selection.json, src/data/foods.json | 実装済み |
 | FR-FDB-02 | #4 | DES-FDB-01, 02 | TC-FR-FDB-02-01〜04 | scripts/convert-mext-foods.py | 実装済み |
