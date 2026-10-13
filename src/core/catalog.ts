@@ -3,7 +3,7 @@ import {
   foodGroupAliases,
   foodRepresentativePatterns,
 } from "../data/foodDisplayNames";
-import { foodShelf } from "../data/foodShelves";
+import { foodShelf, type FoodShelf } from "../data/foodShelves";
 import { supermarketFoodPriorities } from "../data/supermarketFoods";
 import type { FoodItem } from "../types";
 
@@ -141,7 +141,7 @@ export function supermarketPriority(name: string) {
   return priority >= 0 ? priority : null;
 }
 
-/** よくある食材を先に、それ以外を五十音順に並べる（DES-CAT-04）。 */
+/** よくある食材を先に、それ以外を日本語の localeCompare の順に並べる（DES-CAT-04）。 */
 export function prioritizeSupermarketFoods(groups: FoodGroup[]) {
   return groups
     .map((group) => ({
@@ -174,7 +174,7 @@ export function normalizeSearchText(value: string) {
 }
 
 /** 登録の一覧に出さない棚（長く使う物。主食は設定で扱う） */
-const nonRegistrableShelves = new Set(["米・パン・麺", "調味料"]);
+const nonRegistrableShelves = new Set<FoodShelf>(["米・パン・麺", "調味料"]);
 
 /**
  * 食品を登録の一覧に出してよいかを返す（DES-CAT-05、FR-ING-09）。

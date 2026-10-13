@@ -67,6 +67,48 @@ describe("foodPresentation（DES-CAT-01）", () => {
       "魚介類",
       "まぐろ（缶詰）",
     ],
+    [
+      "TC-FR-ING-06-04 かぼちゃの種は別の食材名にする",
+      "かぼちゃ いり 味付け",
+      "種実類",
+      "かぼちゃの種",
+    ],
+    [
+      "TC-FR-ING-06-05 天ぷらは別の食材名にする",
+      "なす 果実 天ぷら",
+      "野菜類",
+      "なすの天ぷら",
+    ],
+    [
+      "TC-FR-ING-06-06 フライは別の食材名にする",
+      "とうもろこし ジャイアントコーン フライ 味付け",
+      "種実類",
+      "とうもろこしのフライ",
+    ],
+    [
+      "TC-FR-ING-06-07 「フライ」が語の一部（フライ用）なら分けない（境界）",
+      "なす 果実 フライ用 生",
+      "野菜類",
+      "なす",
+    ],
+    [
+      "TC-FR-ING-06-08 漬物は別の食材名にする",
+      "かぶ 漬物 塩漬 根 皮つき",
+      "野菜類",
+      "かぶの漬物",
+    ],
+    [
+      "TC-FR-ING-06-09 乾燥品は別の食材名にする",
+      "おおむぎ 押麦 乾",
+      "穀類",
+      "おおむぎ（乾燥）",
+    ],
+    [
+      "TC-FR-ING-06-10 「乾」が語の一部（乾パン）なら乾燥品にしない（境界）",
+      "こむぎ ［パン類］ 乾パン",
+      "穀類",
+      "こむぎ",
+    ],
   ])("%s", (_title, officialName, category, name) => {
     expect(foodPresentation(officialName, category).name).toBe(name);
   });
@@ -100,6 +142,26 @@ describe("groupFoods・representativeFood（DES-CAT-02, 03）", () => {
       food("3", "（さば類） まさば 生", "魚介類"),
     ]);
     expect(representativeFood(group).id).toBe("3");
+  });
+
+  it.each([
+    [
+      "TC-FR-ING-05-09 生がなければ、冷凍をゆで・焼きより優先する",
+      ["まさば 焼き", "まさば ゆで", "まさば 冷凍"],
+      "3",
+    ],
+    [
+      "TC-FR-ING-05-10 ゆでがなければ、蒸しを焼きより優先する",
+      ["まさば 焼き", "まさば 蒸し"],
+      "2",
+    ],
+  ])("%s", (_title, names, expectedId) => {
+    const [group] = groupFoods(
+      names.map((name, index) =>
+        food(String(index + 1), `（さば類） ${name}`, "魚介類"),
+      ),
+    );
+    expect(representativeFood(group).id).toBe(expectedId);
   });
 
   it("TC-FR-ING-05-08 状態の表記がなければ、先頭の食品を選ぶ（境界）", () => {
