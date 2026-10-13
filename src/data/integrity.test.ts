@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import selection from "../../scripts/food-selection.json";
 import { groupFoods } from "../core/catalog";
 import type { FoodItem } from "../types";
-import { foodRepresentativePatterns } from "./foodDisplayNames";
+import {
+  foodCategoryGroupAliases,
+  foodGroupAliases,
+  foodRepresentativePatterns,
+} from "./foodDisplayNames";
 import { foodShelfOverrides } from "./foodShelfOverrides";
 import foodsJson from "./foods.json";
 import { stapleFoodIds } from "./staples";
@@ -70,5 +74,20 @@ describe("食品データの整合性（DES-FDB-04）", () => {
       (name) => !groupNames.has(name),
     );
     expect(missing).toEqual([]);
+  });
+
+  it("TC-NFR-11-07 表示名の別名は、食品データの食品に当てはまる", () => {
+    const missingGroupAliases = Object.keys(foodGroupAliases).filter(
+      (alias) => !foods.some((food) => food.name.includes(alias)),
+    );
+    const missingCategoryAliases = Object.keys(foodCategoryGroupAliases).filter(
+      (key) => {
+        const [category, alias] = key.split(":");
+        return !foods.some(
+          (food) => food.category === category && food.name.includes(alias),
+        );
+      },
+    );
+    expect([...missingGroupAliases, ...missingCategoryAliases]).toEqual([]);
   });
 });
