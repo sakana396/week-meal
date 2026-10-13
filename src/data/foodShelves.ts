@@ -74,7 +74,10 @@ export function foodShelf(food: FoodItem): FoodShelf {
   if (/冷凍/.test(food.name)) return "冷凍食品";
   if (isPreparedFood(food)) return "惣菜";
   if (isVegetable(food)) return "野菜";
-  if (food.category === "果実類" && /^(?:うめ|アボカド)(?:\s|$)/.test(food.name)) {
+  if (
+    food.category === "果実類" &&
+    /^(?:うめ|アボカド)(?:\s|$)/.test(food.name)
+  ) {
     return "野菜";
   }
   if (food.category === "果実類") return "果物";

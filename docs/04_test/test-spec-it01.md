@@ -18,6 +18,10 @@
 
 | ID | 対象（要求・設計） | 前提 | 入力・操作 | 期待結果 | 種別 |
 |---|---|---|---|---|---|
+| TC-NFR-08-01 | NFR-08 / DES-PKG-05 | lint の設定がある | `src/core/` のファイルで `react` を import して `npm run lint` | `no-restricted-imports` の誤りになる（#2 で手動確認） | 異常 |
+| TC-NFR-08-02 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` のファイルで `Date.now()` を使って `npm run lint` | `no-restricted-properties` の誤りになる（#2 で手動確認） | 異常 |
+| TC-NFR-10-01 | NFR-10 / DES-DEV-04 | 同上 | `any` を書いて `npm run lint` | `@typescript-eslint/no-explicit-any` の誤りになる | 異常 |
+| TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
 
 ## 3. 変更履歴
 

@@ -38,8 +38,7 @@ p {
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   min-height: 100vh;
   background:
-    linear-gradient(90deg, rgba(23, 32, 27, 0.04) 1px, transparent 1px),
-    #f4f2ed;
+    linear-gradient(90deg, rgba(23, 32, 27, 0.04) 1px, transparent 1px), #f4f2ed;
   background-size: 28px 28px;
 }
 

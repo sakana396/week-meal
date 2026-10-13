@@ -17,17 +17,31 @@
     "prepreview": "npm run check:node",
     "preview": "vite preview",
     "docker:install": "docker run --rm -u 1000:1000 -v \"$PWD:/app\" -w /app node:22 npm install",
-    "convert:mext": "python3 scripts/convert-mext-foods.py /tmp/mext-food.xlsx src/data/foods.json"
+    "convert:mext": "python3 scripts/convert-mext-foods.py /tmp/mext-food.xlsx src/data/foods.json",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "^5.0.4",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16"
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.0.16",
+    "vitest": "^5.0.4"
   }
 }

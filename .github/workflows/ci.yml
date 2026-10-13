@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: 型検査
+        run: npm run typecheck
+      - name: lint
+        run: npm run lint
+      - name: フォーマット確認
+        run: npm run format:check
+      - name: 単体テストと網羅率
+        run: npm run test:coverage
+      - name: ビルド
+        run: npm run build

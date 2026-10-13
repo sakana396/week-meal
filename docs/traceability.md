@@ -35,11 +35,11 @@
 | FR-UI-01 | #9 | DES-UI-01 | | | 未着手 |
 | FR-UI-07 | #9 | DES-UI-01 | | | 未着手 |
 | NFR-07 | #9 | DES-UI-01 | | | 未着手 |
-| NFR-08 | #2 | DES-PKG-01, 05 | | | 未着手 |
-| NFR-09 | #2 | DES-DEV-02 | | | 未着手 |
-| NFR-10 | #2 | DES-DEV-04 | | | 未着手 |
+| NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01, 02 | eslint.config.js | 実装済み |
+| NFR-09 | #2 | DES-DEV-02 | （各 Issue の網羅率） | vite.config.ts | 実装済み（閾値の設定） |
+| NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
 | NFR-11 | #4, #5 | DES-FDB-04 | | | 未着手 |
 | NFR-15 | #7 | DES-NUT-01〜04 | | | 未着手 |
-| QA-01 | #2 | DES-DEV-03 | | | 未着手 |
-| QA-02 | #2 | DES-DEV-02 | | | 未着手 |
+| QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
+| QA-02 | #2 | DES-DEV-02 | （各 Issue の網羅率） | vite.config.ts | 実装済み |
 | QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | | | 未着手 |
