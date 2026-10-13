@@ -38,7 +38,7 @@
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
-| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜05 | src/data/integrity.test.ts | 実装済み |
+| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜04, 07 | src/data/integrity.test.ts | 一部実装（#4） |
 | NFR-15 | #7 | DES-NUT-01〜04 | TC-FR-NUT-01-01, 02-01, 04-01, TC-FR-STP-03-01 | src/core/nutrition.test.ts | 実装済み |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
