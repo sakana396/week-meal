@@ -27,6 +27,13 @@ const estimate = "概算（一般的な市販品の重さ。本人の査閲待�
 
 export const unitWeights: Record<string, UnitWeight> = {
   がんもどき: { unit: "枚", purchaseG: 100, source: estimate },
+  こんぶ: { unit: "袋", purchaseG: 30, source: estimate, note: "乾物" },
+  "かつお（缶詰）": {
+    unit: "缶",
+    purchaseG: 70,
+    source: estimate,
+    note: "ツナ缶",
+  },
   玉ねぎ: { unit: "個", purchaseG: 200, source: estimate },
   にんじん: { unit: "本", purchaseG: 150, source: estimate },
   じゃがいも: { unit: "個", purchaseG: 150, source: estimate },
