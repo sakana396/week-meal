@@ -556,6 +556,48 @@ h3 {
   background: #fff4ef;
 }
 
+/* 偏りの判定結果（DES-UI-01）。不足・過剰は色だけでなく文字でも示す（NFR-07） */
+.balance-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.balance-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: #ffffff;
+  color: #3e473f;
+  font-weight: 700;
+}
+
+.balance-status {
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: #ffffff;
+  font-size: 0.8rem;
+}
+
+.balance-list li[data-status="low"] .balance-status {
+  background: #c84b31;
+}
+
+.balance-list li[data-status="high"] .balance-status {
+  background: #8a5a00;
+}
+
+.balance-note {
+  margin: 0;
+  color: #5b665c;
+  font-size: 0.88rem;
+}
+
 .shortfall-list {
   display: flex;
   flex-wrap: wrap;

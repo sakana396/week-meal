@@ -4,6 +4,7 @@ import type { FoodItem } from "../types";
 import {
   analyzeBasket,
   defaultAnalysisData,
+  sensitivity,
   type RegisteredItem,
 } from "./analyze";
 import { groupFoods, representativeFood } from "./catalog";
@@ -123,5 +124,44 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     expect(Object.values(defaultAnalysisData.stapleFoods).every(Boolean)).toBe(
       true,
     );
+  });
+});
+
+describe("sensitivity（DES-ANL-02）", () => {
+  it("TC-H-02-01 倍率 1 なら、どの食材をずらしても判定は変わらない（境界）", () => {
+    expect(sensitivity(basket, defaultProfile, 1)).toEqual([]);
+  });
+
+  it("TC-H-02-02 1 つの食材を大きくずらすと、その食材の名前つきで判定の変化を返す", () => {
+    // 野菜が少ない買い物で、にんじんを 20 倍にするとビタミン A などが変わる
+    const items = [
+      item("豚肉"),
+      item("鶏卵", 6),
+      item("にんじん"),
+      item("牛乳"),
+    ];
+    const changes = sensitivity(items, defaultProfile, 20);
+    expect(changes.length).toBeGreaterThan(0);
+    expect(
+      changes.every(
+        (change) =>
+          change.displayName === "にんじん" || change.before !== change.after,
+      ),
+    ).toBe(true);
+    expect(changes.some((change) => change.displayName === "にんじん")).toBe(
+      true,
+    );
+  });
+
+  it("TC-H-02-03 もとの買い物を判定できないときは空の配列（境界）", () => {
+    expect(sensitivity(basket.slice(0, 1), defaultProfile, 1.3)).toEqual([]);
+  });
+
+  it("TC-H-02-04 目安重量のない食材はずらさない", () => {
+    const unknown = { ...item("キャベツ"), displayName: "目安重量のない食材" };
+    const changes = sensitivity([...basket, unknown], defaultProfile, 20);
+    expect(
+      changes.some((change) => change.displayName === "目安重量のない食材"),
+    ).toBe(false);
   });
 });
