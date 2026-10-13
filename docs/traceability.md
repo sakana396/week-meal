@@ -38,8 +38,8 @@
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
-| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜04, 07 | src/data/integrity.test.ts | 一部実装（#4） |
+| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜07 | src/data/integrity.test.ts | 実装済み |
 | NFR-15 | #7 | DES-NUT-01〜04 | | | 未着手 |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
-| QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | TC-FR-QTY-02-05 | src/data/unitWeights.ts, src/data/dietaryReference.ts | 実装済み |
+| QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | TC-FR-QTY-02-05、査閲（基準値の出典: REV-007） | src/data/unitWeights.ts, src/data/dietaryReference.ts | 実装済み |
