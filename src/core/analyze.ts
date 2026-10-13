@@ -31,7 +31,12 @@ export type RegisteredItem = {
 export const minimumItemCount = 3;
 
 export type AnalysisResult =
-  | { kind: "insufficient"; itemCount: number }
+  | {
+      kind: "insufficient";
+      /** tooFewItems: 品目が足りない、noEnergy: 品目はあるがエネルギーが 0 */
+      reason: "tooFewItems" | "noEnergy";
+      itemCount: number;
+    }
   | {
       kind: "judged";
       results: BalanceResult[];
@@ -71,7 +76,11 @@ export function analyzeBasket(
     (item) => !item.usedUp && Number.isFinite(item.count) && item.count > 0,
   );
   if (active.length < minimumItemCount) {
-    return { kind: "insufficient", itemCount: active.length };
+    return {
+      kind: "insufficient",
+      reason: "tooFewItems",
+      itemCount: active.length,
+    };
   }
 
   const approximateItems: string[] = [];
@@ -81,13 +90,19 @@ export function analyzeBasket(
       data.unitWeights[item.displayName],
       item.count,
     );
-    if (amount.approximate) approximateItems.push(item.displayName);
+    if (amount.approximate && !approximateItems.includes(item.displayName)) {
+      approximateItems.push(item.displayName);
+    }
     return { food: item.food, grams: amount.grams };
   });
 
   const nonStapleEnergy = sumNutrients(basket).energyKcal?.amount ?? 0;
   if (nonStapleEnergy <= 0) {
-    return { kind: "insufficient", itemCount: active.length };
+    return {
+      kind: "insufficient",
+      reason: "noEnergy",
+      itemCount: active.length,
+    };
   }
 
   const stapleFood =

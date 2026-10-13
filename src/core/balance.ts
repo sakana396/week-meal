@@ -104,6 +104,14 @@ export const balanceTargets: BalanceTarget[] = [
 export const lowSufficiency = 0.7;
 export const highSufficiency = 1.3;
 
+/**
+ * 判定の前に小数第 6 位で丸める。ちょうど 70%・130%・範囲の端の値が、
+ * 浮動小数点の誤差で境目の反対側に落ちないようにする（REV-007）。
+ */
+function roundForJudgement(value: number) {
+  return Math.round(value * 1e6) / 1e6;
+}
+
 export type BalanceStatus = "low" | "ok" | "high" | "unknown";
 
 /** 栄養素 1 つの判定結果（DES-BAL-04） */
@@ -151,7 +159,7 @@ export function judgeBalance(
           coverage,
         };
       }
-      const pct = pfc[pfcKeys[rule.range]];
+      const pct = roundForJudgement(pfc[pfcKeys[rule.range]]);
       const status: BalanceStatus =
         pct < range[0] ? "low" : pct > range[1] ? "high" : "ok";
       return {
@@ -177,7 +185,9 @@ export function judgeBalance(
     }
     const referencePer1000kcal =
       (reference[rule.reference] / reference.energyKcal) * 1000;
-    const sufficiency = ratio.per1000kcal / referencePer1000kcal;
+    const sufficiency = roundForJudgement(
+      ratio.per1000kcal / referencePer1000kcal,
+    );
     const status: BalanceStatus =
       rule.kind === "lower"
         ? sufficiency < lowSufficiency

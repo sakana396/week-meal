@@ -60,7 +60,9 @@ export type DailyReference = {
 export const dietaryReferenceSource = {
   title: "「日本人の食事摂取基準（2025年版）」策定検討会報告書（厚生労働省）",
   url: "https://www.mhlw.go.jp/stf/newpage_44138.html",
+  /** 厚生労働省の公表ページの日付。値は正誤表（令和7年3月25日）を反映した版の PDF で確かめた */
   publishedAt: "2024-10-11",
+  erratum: "正誤表 令和7年3月25日（成人の上記の値に関わる訂正はなし）",
 } as const;
 
 export const dietaryReference: Record<Sex, Record<AgeGroup, DailyReference>> = {
