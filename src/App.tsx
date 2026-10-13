@@ -814,6 +814,17 @@ function BalancePanel({
 }: {
   analysis: ReturnType<typeof analyzeBasket>;
 }) {
+  if (analysis.kind === "insufficient" && analysis.reason === "noEnergy") {
+    return (
+      <section className="notice-panel" aria-label="栄養バランスの判定">
+        <h3>判定できません</h3>
+        <p>
+          登録した食材にエネルギーのデータがないため、栄養の割合を計算できません。
+        </p>
+      </section>
+    );
+  }
+
   if (analysis.kind === "insufficient") {
     return (
       <section className="notice-panel" aria-label="栄養バランスの判定">

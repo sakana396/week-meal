@@ -170,6 +170,7 @@ describe("sensitivity（DES-ANL-02）", () => {
       changes.some((change) => change.displayName === "目安重量のない食材"),
     ).toBe(false);
   });
+});
 
 describe("analyzeBasket の概算の食材名（DES-ANL-01）", () => {
   it("TC-FR-QTY-05-04 同じ食材名を 2 回登録しても、概算の食材名は 1 つだけ返す", () => {
