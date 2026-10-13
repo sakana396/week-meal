@@ -30,6 +30,7 @@ describe("analyzeBasket（DES-ANL-01）", () => {
   it("TC-FR-BAL-05-01 主食を除いて 3 品目未満なら判定しない", () => {
     expect(analyzeBasket(basket.slice(0, 2), defaultProfile)).toEqual({
       kind: "insufficient",
+      reason: "tooFewItems",
       itemCount: 2,
     });
   });
@@ -49,6 +50,7 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     ];
     expect(analyzeBasket(items, defaultProfile)).toEqual({
       kind: "insufficient",
+      reason: "tooFewItems",
       itemCount: 2,
     });
   });
@@ -106,7 +108,11 @@ describe("analyzeBasket（DES-ANL-01）", () => {
         nutrientsPer100g: { ...entry.food.nutrientsPer100g, energyKcal: 0 },
       },
     }));
-    expect(analyzeBasket(zero, defaultProfile).kind).toBe("insufficient");
+    expect(analyzeBasket(zero, defaultProfile)).toEqual({
+      kind: "insufficient",
+      reason: "noEnergy",
+      itemCount: 4,
+    });
   });
 
   it("TC-FR-STP-03-08 主食の代表食品がなければ、主食なしで判定する（異常）", () => {
@@ -123,5 +129,15 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     expect(Object.values(defaultAnalysisData.stapleFoods).every(Boolean)).toBe(
       true,
     );
+  });
+});
+
+describe("analyzeBasket の概算の食材名（DES-ANL-01）", () => {
+  it("TC-FR-QTY-05-04 同じ食材名を 2 回登録しても、概算の食材名は 1 つだけ返す", () => {
+    const unknown = { ...item("キャベツ"), displayName: "目安重量のない食材" };
+    const result = analyzeBasket([...basket, unknown, unknown], defaultProfile);
+    expect(result.kind === "judged" && result.approximateItems).toEqual([
+      "目安重量のない食材",
+    ]);
   });
 });

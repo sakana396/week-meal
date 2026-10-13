@@ -206,13 +206,56 @@ describe("judgeBalance（DES-BAL-04）", () => {
   });
 
   it("TC-FR-BAL-01-03 実際の基準値（男性 30〜49 歳）を 1,000 kcal あたりに直して比べる", () => {
-    // 鉄 7.5 ÷ 2750 × 1000 = 2.727mg/1000kcal。1.88 ÷ 2.727 = 0.69 は不足
+    // 鉄 7.5 ÷ 2750 × 1000 = 2.727mg/1000kcal。1.88 ÷ 2.727 = 0.689 は不足
     const male = referenceFor({ sex: "male", ageGroup: "30-49" });
     const result = resultOf(
       judgeBalance(ratiosWith({ ironMg: 1.88 }), balancedPfc, male),
       "ironMg",
     );
     expect(result?.status).toBe("low");
-    expect(result?.sufficiency).toBeCloseTo(1.88 / ((7.5 / 2750) * 1000), 10);
+    expect(result?.sufficiency).toBeCloseTo(1.88 / ((7.5 / 2750) * 1000), 6);
+  });
+
+  it.each([
+    // 鉄・男性 50〜64 歳: 7.0 ÷ 2650 × 1000 × 0.7。丸めないと 0.69999999999999998 になる組み合わせ
+    [
+      "TC-FR-BAL-02-06 実際の基準値でちょうど 70% は不足にしない（鉄・男性 50〜64 歳、境界・誤差）",
+      "male",
+      "50-64",
+      "ironMg",
+      7.0,
+      2650,
+      0.7,
+    ],
+    [
+      "TC-FR-BAL-02-07 実際の基準値でちょうど 70% は不足にしない（カリウム・未選択 30〜49 歳、境界・誤差）",
+      "unspecified",
+      "30-49",
+      "potassiumMg",
+      2800,
+      2400,
+      0.7,
+    ],
+    [
+      "TC-FR-BAL-03-06 実際の基準値でちょうど 130% は過剰にしない（食塩・男性 18〜29 歳、境界・誤差）",
+      "male",
+      "18-29",
+      "saltEquivalentG",
+      7.5,
+      2600,
+      1.3,
+    ],
+  ] as const)("%s", (_title, sex, ageGroup, key, daily, energy, rate) => {
+    const per1000 = (daily / energy) * 1000 * rate;
+    const result = resultOf(
+      judgeBalance(
+        ratiosWith({ [key]: per1000 }),
+        balancedPfc,
+        referenceFor({ sex, ageGroup }),
+      ),
+      key,
+    );
+    expect(result?.status).toBe("ok");
+    expect(result?.sufficiency).toBe(rate);
   });
 });
