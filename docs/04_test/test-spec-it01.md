@@ -25,6 +25,20 @@
 | TC-NFR-08-03 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` で `.tsx` からの react の import、下の階層からの `../../App`・`../ui/*` の import、`globalThis.localStorage`、引数なしの `new Date()`、動的 `import("react")`、`import("react").FC` を書いて `npm run lint` | すべて誤りになる。`../data/*` の import と `new Date(0)` は誤りにならない（#2 で手動確認） | 異常 |
 | TC-QA-02-01 | QA-02 / DES-DEV-02 | 網羅率の閾値 80% | テストのない関数を `src/core/` に置いて `npm run test:coverage` | 終了コードが 0 以外になる（#2 で手動確認） | 異常 |
 | TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
+| TC-FR-QTY-01-01 | FR-QTY-01 / DES-QTY-02 | 目安重量あり・なし | 個数 0 | 0g | 境界 |
+| TC-FR-QTY-01-02 | FR-QTY-01 / DES-QTY-02 | 同上 | 個数 −1 | 0g | 異常 |
+| TC-FR-QTY-01-03 | FR-QTY-01 / DES-QTY-02 | 同上 | 個数 NaN | 0g | 異常 |
+| TC-FR-QTY-01-04 | FR-QTY-01 / DES-QTY-02 | 同上 | 個数 Infinity | 0g | 異常 |
+| TC-FR-QTY-02-01 | FR-QTY-02 / DES-QTY-02 | 購入時 1,200g、廃棄率 15% | 個数 1 | 1 × 1200 × 0.85 = 1,020g | 正常 |
+| TC-FR-QTY-02-02 | FR-QTY-02 / DES-QTY-02 | 同上 | 個数 3 | 3 × 1200 × 0.85 = 3,060g | 正常 |
+| TC-FR-QTY-02-03 | FR-QTY-02 / DES-QTY-02 | 同上 | 個数 0.5 | 0.5 × 1200 × 0.85 = 510g | 境界 |
+| TC-FR-QTY-02-04 | FR-QTY-02 / DES-QTY-01 | — | よくある食材の食材名 | すべて目安重量がある | 正常 |
+| TC-FR-QTY-02-05 | FR-QTY-02 / DES-QTY-01 | — | すべての目安重量 | 重さが正、廃棄率の上書きが 0 以上 100 未満、出典が空でない | 異常 |
+| TC-FR-QTY-03-01 | FR-QTY-03 / DES-QTY-02 | 代表食品の廃棄率 55%、目安重量の上書き 0%、購入時 80g | 個数 2 | 2 × 80 × 1 = 160g（上書きを優先） | 正常 |
+| TC-FR-QTY-03-02 | FR-QTY-03 / DES-QTY-02 | 代表食品の廃棄率 null、購入時 1,200g | 個数 1 | 1,200g（0% とみなす） | 境界 |
+| TC-FR-QTY-05-01 | FR-QTY-05 / DES-QTY-02 | 目安重量なし | 個数 1 | 100g、概算 | 正常 |
+| TC-FR-QTY-05-02 | FR-QTY-05 / DES-QTY-02 | 目安重量なし | 個数 2.5 | 250g、概算 | 正常 |
+| TC-NFR-11-05 | NFR-11 / DES-FDB-04 | — | 目安重量の食材名 | すべて食品データの食材名として存在する | 正常 |
 | TC-FR-FDB-01-01 | FR-FDB-01 / DES-FDB-01, 02, 04 | 変換し直した食品データ | 食品データと絞り込みの定義の食品番号を比べる | 一致する（1,187 件） | 正常 |
 | TC-FR-FDB-02-01 | FR-FDB-02 / DES-FDB-01, 04 | 同上 | 定義の正式名称と食品データの正式名称を比べる | 一致する | 正常 |
 | TC-FR-FDB-02-02 | FR-FDB-02 / DES-FDB-02, 03 | 同上 | すべての食品の `refusePct` を調べる | 0〜100 の数値または null | 境界 |

@@ -7,6 +7,7 @@ import { foodShelfOverrides } from "./foodShelfOverrides";
 import foodsJson from "./foods.json";
 import { stapleFoodIds } from "./staples";
 import { supermarketFoodPriorities } from "./supermarketFoods";
+import { unitWeights } from "./unitWeights";
 
 // 定義データが食品データにあるものだけを参照していることを確かめる（DES-FDB-04、NFR-11）
 const foods = foodsJson as FoodItem[];
@@ -70,5 +71,30 @@ describe("食品データの整合性（DES-FDB-04）", () => {
       (name) => !groupNames.has(name),
     );
     expect(missing).toEqual([]);
+  });
+
+  it("TC-NFR-11-05 目安重量の食材名は、すべて食品データの食材名として存在する", () => {
+    const missing = Object.keys(unitWeights).filter(
+      (name) => !groupNames.has(name),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("TC-FR-QTY-02-04 よくある食材には、すべて目安重量がある", () => {
+    const missing = supermarketFoodPriorities.filter(
+      (name) => !(name in unitWeights),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("TC-FR-QTY-02-05 目安重量は正の重さで、廃棄率の上書きは 0〜100 の範囲にある", () => {
+    const invalid = Object.entries(unitWeights).filter(
+      ([, weight]) =>
+        !(weight.purchaseG > 0) ||
+        (weight.refusePct !== undefined &&
+          (weight.refusePct < 0 || weight.refusePct >= 100)) ||
+        weight.source.length === 0,
+    );
+    expect(invalid).toEqual([]);
   });
 });
