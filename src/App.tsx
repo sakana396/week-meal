@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
 import foodsJson from "./data/foods.json";
 import {
-  foodCategoryGroupAliases,
-  foodGroupAliases,
-  foodRepresentativePatterns,
-} from "./data/foodDisplayNames";
+  foodPresentation,
+  groupFoods,
+  normalizeSearchText,
+  prioritizeSupermarketFoods,
+  representativeFood,
+  supermarketPriority,
+  type FoodGroup,
+} from "./core/catalog";
 import {
   basicNutrientDefinitions,
   nutrientDefinitions,
@@ -12,7 +16,6 @@ import {
   vitaminMineralDefinitions,
 } from "./data/nutrients";
 import { foodShelf, foodShelves, type FoodShelf } from "./data/foodShelves";
-import { supermarketFoodPriorities } from "./data/supermarketFoods";
 import type { FoodItem, NutrientDefinition, NutrientKey } from "./types";
 import "./App.css";
 
@@ -26,13 +29,6 @@ type RegisterMode = "simple" | "detailed";
 type RegisteredFood = FoodItem & {
   amountG: number;
   officialName?: string;
-};
-
-type FoodGroup = {
-  key: string;
-  name: string;
-  foods: FoodItem[];
-  supermarketPriority: number | null;
 };
 
 type ManualFoodForm = {
@@ -60,142 +56,6 @@ const initialManualForm: ManualFoodForm = {
   nutrientsPer100g: emptyManualNutrients(),
 };
 
-const separateFoodForms: Array<{
-  pattern: RegExp;
-  label: (name: string) => string;
-}> = [
-  { pattern: /^かぼちゃ いり/, label: () => "かぼちゃの種" },
-  { pattern: /フライドポテト/, label: () => "フライドポテト" },
-  {
-    pattern: /から揚げ/,
-    label: (name) => `${name.replace(/肉$/, "")}のから揚げ`,
-  },
-  { pattern: /天ぷら/, label: (name) => `${name}の天ぷら` },
-  { pattern: /(?:^|\s)フライ(?:\s|$)/, label: (name) => `${name}のフライ` },
-  { pattern: /漬物|塩漬|ぬかみそ漬/, label: (name) => `${name}の漬物` },
-  { pattern: /缶詰/, label: (name) => `${name}（缶詰）` },
-  {
-    pattern: /(?:^|\s)(?:乾|乾燥)(?:\s|$)/,
-    label: (name) => `${name}（乾燥）`,
-  },
-];
-
-function foodPresentation(officialName: string, category?: string) {
-  const nameWithoutHierarchy = officialName
-    .replace(/^(?:＜[^＞]+＞\s*)+/, "")
-    .trim();
-  const classificationMatch =
-    nameWithoutHierarchy.match(/^（([^）]+)）\s*(.+)$/);
-  const classificationLabel = classificationMatch?.[1];
-  const nameWithoutFamily = classificationMatch?.[2] ?? nameWithoutHierarchy;
-  const [specificName = officialName, ...specificDetailParts] =
-    nameWithoutFamily.split(/\s+/);
-  const familyName = classificationLabel?.endsWith("類")
-    ? classificationLabel.replace(/類$/, "")
-    : undefined;
-  const groupedName = familyName || specificName;
-  const categoryAlias = category
-    ? foodCategoryGroupAliases[`${category}:${groupedName}`]
-    : undefined;
-  const baseName =
-    categoryAlias || foodGroupAliases[groupedName] || groupedName;
-  const separateForm = separateFoodForms.find(({ pattern }) =>
-    pattern.test(nameWithoutFamily),
-  );
-  const name = separateForm?.label(baseName) ?? baseName;
-  const detailParts =
-    baseName !== specificName
-      ? [specificName, ...specificDetailParts]
-      : specificDetailParts;
-  const details = detailParts
-    .map((part) => part.replace(/^［(.+)］$/, "$1"))
-    .join("・");
-
-  return { name, details };
-}
-
-function representativeFood(group: FoodGroup) {
-  const preferredPatterns = foodRepresentativePatterns[group.name] ?? [];
-  const preferredFood = preferredPatterns
-    .map((pattern) => group.foods.find((food) => food.name.includes(pattern)))
-    .find(Boolean);
-
-  if (preferredFood) {
-    return preferredFood;
-  }
-
-  const preparationPriority = [
-    /(?:^|\s)生(?:\s|$)/,
-    /(?:^|\s)冷凍(?:\s|$)/,
-    /(?:^|\s)ゆで(?:\s|$)/,
-    /(?:^|\s)蒸し(?:\s|$)/,
-    /(?:^|\s)焼き(?:\s|$)/,
-  ];
-
-  return [...group.foods].sort((left, right) => {
-    const leftPriority = preparationPriority.findIndex((pattern) =>
-      pattern.test(left.name),
-    );
-    const rightPriority = preparationPriority.findIndex((pattern) =>
-      pattern.test(right.name),
-    );
-    return (
-      (leftPriority < 0 ? preparationPriority.length : leftPriority) -
-      (rightPriority < 0 ? preparationPriority.length : rightPriority)
-    );
-  })[0];
-}
-
-function groupFoods(foods: FoodItem[]) {
-  const groups = new Map<string, FoodGroup>();
-
-  for (const food of foods) {
-    const { name } = foodPresentation(food.name, food.category);
-    const key = `${food.category}:${name}`;
-    const group = groups.get(key);
-
-    if (group) {
-      group.foods.push(food);
-    } else {
-      groups.set(key, { key, name, foods: [food], supermarketPriority: null });
-    }
-  }
-
-  return [...groups.values()];
-}
-
-function supermarketPriority(name: string) {
-  const target = normalizeSearchText(name);
-  const priority = supermarketFoodPriorities.findIndex(
-    (foodName) => target === normalizeSearchText(foodName),
-  );
-
-  return priority >= 0 ? priority : null;
-}
-
-function prioritizeSupermarketFoods(groups: FoodGroup[]) {
-  return groups
-    .map((group) => ({
-      ...group,
-      supermarketPriority: supermarketPriority(group.name),
-    }))
-    .sort((left, right) => {
-      if (
-        left.supermarketPriority === null &&
-        right.supermarketPriority === null
-      ) {
-        return left.name.localeCompare(right.name, "ja-JP");
-      }
-      if (left.supermarketPriority === null) {
-        return 1;
-      }
-      if (right.supermarketPriority === null) {
-        return -1;
-      }
-      return left.supermarketPriority - right.supermarketPriority;
-    });
-}
-
 const nutrientTargets: NutrientTarget[] = [
   { key: "energyKcal", target: 650 },
   { key: "proteinG", target: 20 },
@@ -217,13 +77,6 @@ function formatValue(value: number | null, unit: string) {
   return `${value.toLocaleString("ja-JP", {
     maximumFractionDigits: 2,
   })} ${unit}`;
-}
-
-function normalizeSearchText(value: string) {
-  return value
-    .toLocaleLowerCase("ja-JP")
-    .replace(/\s+/g, "")
-    .replace(/\u3000/g, "");
 }
 
 function nutrientPercent(value: number | null, definition: NutrientDefinition) {
