@@ -147,13 +147,13 @@ describe("sensitivity（DES-ANL-02）", () => {
       item("牛乳"),
     ];
     const changes = sensitivity(items, defaultProfile, 20);
-    expect(changes.length).toBeGreaterThan(0);
-    expect(
-      changes.every(
-        (change) =>
-          change.displayName === "にんじん" || change.before !== change.after,
-      ),
-    ).toBe(true);
+    // にんじん（炭水化物が多く脂質が少ない）を 20 倍にすると、炭水化物の不足が解消する
+    expect(changes).toContainEqual({
+      displayName: "にんじん",
+      key: "carbohydrateG",
+      before: "low",
+      after: "ok",
+    });
     expect(changes.some((change) => change.displayName === "にんじん")).toBe(
       true,
     );
@@ -178,6 +178,66 @@ describe("analyzeBasket の概算の食材名（DES-ANL-01）", () => {
     const result = analyzeBasket([...basket, unknown, unknown], defaultProfile);
     expect(result.kind === "judged" && result.approximateItems).toEqual([
       "目安重量のない食材",
+    ]);
+  });
+});
+
+describe("仮説 H-02 の記録（docs/iterations/it01/retrospective.md）", () => {
+  const baskets: Record<string, RegisteredItem[]> = {
+    "A 野菜多め": [
+      item("キャベツ"),
+      item("にんじん", 3),
+      item("玉ねぎ", 3),
+      item("豚肉"),
+      item("鶏卵", 6),
+      item("豆腐"),
+      item("納豆"),
+    ],
+    "B 肉中心": [
+      item("鶏肉", 2),
+      item("豚肉"),
+      item("牛肉"),
+      item("玉ねぎ", 2),
+      item("もやし"),
+      item("鶏卵", 10),
+    ],
+    "C 魚と野菜": [
+      item("さけ・ます", 2),
+      item("さば"),
+      item("ほうれんそう"),
+      item("トマト", 3),
+      item("ブロッコリー"),
+      item("牛乳"),
+      item("ヨーグルト"),
+      item("バナナ", 3),
+    ],
+    "D 少なめ": [
+      item("もやし", 2),
+      item("豆腐"),
+      item("納豆"),
+      item("鶏卵", 6),
+    ],
+  };
+
+  it("TC-H-02-05 4 つの買い物で目安重量を 1 つずつ ±30% ずらすと、判定が変わるのは B の鶏卵 −30% のビタミン A だけ", () => {
+    const changes = Object.entries(baskets).flatMap(([name, items]) =>
+      [1.3, 0.7].flatMap((factor) =>
+        sensitivity(items, defaultProfile, factor).map((change) => ({
+          name,
+          factor,
+          ...change,
+        })),
+      ),
+    );
+    expect(changes).toEqual([
+      {
+        name: "B 肉中心",
+        factor: 0.7,
+        displayName: "鶏卵",
+        key: "vitaminAUg",
+        before: "ok",
+        after: "low",
+      },
     ]);
   });
 });

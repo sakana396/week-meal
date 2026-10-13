@@ -153,8 +153,11 @@ export function sensitivity(
     };
     const scaled = analyzeBasket(items, profile, { ...data, unitWeights });
     if (scaled.kind !== "judged") return [];
-    return base.results.flatMap((result, index) => {
-      const after = scaled.results[index].status;
+    const scaledStatus = new Map(
+      scaled.results.map((result) => [result.key, result.status]),
+    );
+    return base.results.flatMap((result) => {
+      const after = scaledStatus.get(result.key) ?? "unknown";
       return after === result.status
         ? []
         : [

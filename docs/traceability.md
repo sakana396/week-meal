@@ -11,7 +11,7 @@
 | FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
 | FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜10 | src/core/catalog.ts（まとめ・代表食品）, src/App.tsx（押して登録） | 実装済み（まとめ・代表食品。画面は IT02 で E2E） |
 | FR-ING-06 | #3, #5 | DES-CAT-01 | TC-FR-ING-06-01〜20 | src/core/catalog.ts | 実装済み |
-| FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜06 | src/core/catalog.ts, scripts/food-selection.json, src/App.tsx | 実装済み |
+| FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07 | src/core/catalog.ts, scripts/food-selection.json, src/App.tsx | 実装済み（判定・データ。画面は手動確認待ち、IT02 で E2E） |
 | FR-FDB-01 | #4 | DES-FDB-01, 02 | TC-FR-FDB-01-01 | scripts/food-selection.json, src/data/foods.json | 実装済み |
 | FR-FDB-02 | #4 | DES-FDB-01, 02 | TC-FR-FDB-02-01〜04 | scripts/convert-mext-foods.py | 実装済み |
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |
@@ -32,9 +32,9 @@
 | FR-BAL-03 | #8 | DES-BAL-04 | TC-FR-BAL-03-01〜06 | src/core/balance.ts | 実装済み |
 | FR-BAL-04 | #8 | DES-BAL-03 | TC-FR-BAL-04-01 | src/core/balance.ts | 実装済み |
 | FR-BAL-05 | #8 | DES-BAL-05 | TC-FR-BAL-05-01〜03 | src/core/analyze.ts | 実装済み（判定。画面の表示は #9） |
-| FR-UI-01 | #9 | DES-UI-01 | TC-FR-UI-01-01, 02 | src/App.tsx（BalancePanel） | 実装済み（IT01 の暫定表示） |
-| FR-UI-07 | #9 | DES-UI-01 | TC-FR-UI-01-01 | src/App.tsx（BalancePanel） | 実装済み |
-| NFR-07 | #9 | DES-UI-01 | TC-FR-UI-01-01 | src/App.tsx, src/App.css | 実装済み |
+| FR-UI-01 | #9 | DES-UI-01 | TC-FR-UI-01-01, 02 | src/App.tsx（BalancePanel） | 実装済み（IT01 の暫定表示。画面は手動確認待ち、IT02 で E2E） |
+| FR-UI-07 | #9 | DES-UI-01 | TC-FR-UI-01-01 | src/App.tsx（BalancePanel） | 実装済み（画面は手動確認待ち、IT02 で E2E） |
+| NFR-07 | #9 | DES-UI-01 | TC-FR-UI-01-01 | src/App.tsx, src/App.css | 実装済み（画面は手動確認待ち、IT02 で E2E） |
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |

@@ -6,6 +6,7 @@ import {
   normalizeSearchText,
   prioritizeSupermarketFoods,
   isRegistrable,
+  registrableShelves,
   representativeFood,
   supermarketPriority,
   type FoodGroup,
@@ -16,9 +17,9 @@ import {
   sourceLabel,
   vitaminMineralDefinitions,
 } from "./data/nutrients";
-import { foodShelf, foodShelves, type FoodShelf } from "./data/foodShelves";
+import { foodShelf, type FoodShelf } from "./data/foodShelves";
 import type { FoodItem, NutrientDefinition, NutrientKey } from "./types";
-import { analyzeBasket } from "./core/analyze";
+import { analyzeBasket, type AnalysisResult } from "./core/analyze";
 import type { BalanceResult } from "./core/balance";
 import { defaultProfile } from "./core/profile";
 import "./App.css";
@@ -46,7 +47,12 @@ type NutrientTarget = {
   target: number;
 };
 
-const registerCategories: RegisterCategory[] = ["すべて", ...foodShelves];
+const registerCategories: RegisterCategory[] = [
+  "すべて",
+  ...registrableShelves,
+];
+// 米・パン・麺・調味料・油は登録の一覧に出さない（FR-ING-09）
+const registrableFoods = baseFoods.filter(isRegistrable);
 
 function emptyManualNutrients() {
   return Object.fromEntries(
@@ -153,8 +159,6 @@ function App() {
   const visibleFoods = filteredFoods.slice(0, maxVisibleFoods);
   const registerFoods = useMemo(() => {
     const normalizedQuery = normalizeSearchText(registerQuery);
-    // 米・パン・麺・調味料・油は登録の一覧に出さない（FR-ING-09）
-    const registrableFoods = baseFoods.filter(isRegistrable);
     const categoryFoods =
       registerCategory === "すべて"
         ? registrableFoods
@@ -346,6 +350,8 @@ function App() {
               </span>
             </header>
 
+            <BalancePanel analysis={analysis} />
+
             {manualFoods.length === 0 ? (
               <section className="notice-panel">
                 <h3>登録食材がありません</h3>
@@ -375,8 +381,6 @@ function App() {
                 ))}
               </div>
             )}
-
-            <BalancePanel analysis={analysis} />
 
             <section className="action-grid" aria-label="画面遷移">
               <button type="button" onClick={() => setActiveScreen("register")}>
@@ -640,7 +644,7 @@ function App() {
                     }))
                   }
                 >
-                  {foodShelves.map((category) => (
+                  {registrableShelves.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
@@ -809,11 +813,7 @@ function nutrientLabel(key: NutrientKey) {
  * ホームに偏りの判定結果を出す（DES-UI-01、FR-UI-01, 07、NFR-07）。
  * 不足・過剰は色だけでなく文字でも示す。
  */
-function BalancePanel({
-  analysis,
-}: {
-  analysis: ReturnType<typeof analyzeBasket>;
-}) {
+function BalancePanel({ analysis }: { analysis: AnalysisResult }) {
   if (analysis.kind === "insufficient" && analysis.reason === "noEnergy") {
     return (
       <section className="notice-panel" aria-label="栄養バランスの判定">
@@ -857,7 +857,11 @@ function BalancePanel({
       aria-label="栄養バランスの判定"
     >
       <h3>
-        {flagged.length > 0 ? "偏りがあります" : "目立った偏りはありません"}
+        {flagged.length > 0
+          ? "偏りがあります"
+          : unknown.length > 0
+            ? "判定できた栄養素には、目立った偏りはありません"
+            : "目立った偏りはありません"}
       </h3>
       {flagged.length > 0 && (
         <ul className="balance-list">
