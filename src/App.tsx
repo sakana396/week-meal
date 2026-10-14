@@ -5,6 +5,8 @@ import {
   groupFoods,
   normalizeSearchText,
   prioritizeSupermarketFoods,
+  isRegistrable,
+  registrableShelves,
   representativeFood,
   supermarketPriority,
   type FoodGroup,
@@ -15,8 +17,11 @@ import {
   sourceLabel,
   vitaminMineralDefinitions,
 } from "./data/nutrients";
-import { foodShelf, foodShelves, type FoodShelf } from "./data/foodShelves";
+import { foodShelf, type FoodShelf } from "./data/foodShelves";
 import type { FoodItem, NutrientDefinition, NutrientKey } from "./types";
+import { analyzeBasket, type AnalysisResult } from "./core/analyze";
+import type { BalanceResult } from "./core/balance";
+import { defaultProfile } from "./core/profile";
 import "./App.css";
 
 const baseFoods = foodsJson as FoodItem[];
@@ -42,7 +47,12 @@ type NutrientTarget = {
   target: number;
 };
 
-const registerCategories: RegisterCategory[] = ["すべて", ...foodShelves];
+const registerCategories: RegisterCategory[] = [
+  "すべて",
+  ...registrableShelves,
+];
+// 米・パン・麺・調味料・油は登録の一覧に出さない（FR-ING-09）
+const registrableFoods = baseFoods.filter(isRegistrable);
 
 function emptyManualNutrients() {
   return Object.fromEntries(
@@ -87,14 +97,6 @@ function nutrientPercent(value: number | null, definition: NutrientDefinition) {
   return Math.min(100, Math.max(0, (value / definition.maxValue) * 100));
 }
 
-function targetPercent(value: number | null, target: number) {
-  if (value === null || target <= 0) {
-    return 0;
-  }
-
-  return Math.min(100, Math.max(0, (value / target) * 100));
-}
-
 function nutrientStatus(value: number | null, target: number) {
   if (value === null) {
     return "unknown";
@@ -115,25 +117,6 @@ function parseManualValue(value: string) {
   }
 
   return Math.round(parsed * 100) / 100;
-}
-
-function aggregateNutrients(items: RegisteredFood[]) {
-  return Object.fromEntries(
-    nutrientDefinitions.map((definition) => {
-      let total = 0;
-      let hasValue = false;
-
-      for (const item of items) {
-        const value = item.nutrientsPer100g[definition.key];
-        if (value !== null && value !== undefined) {
-          total += value * (item.amountG / 100);
-          hasValue = true;
-        }
-      }
-
-      return [definition.key, hasValue ? Math.round(total * 100) / 100 : null];
-    }),
-  ) as FoodItem["nutrientsPer100g"];
 }
 
 let localIdCounter = 0;
@@ -178,8 +161,10 @@ function App() {
     const normalizedQuery = normalizeSearchText(registerQuery);
     const categoryFoods =
       registerCategory === "すべて"
-        ? baseFoods
-        : baseFoods.filter((food) => foodShelf(food) === registerCategory);
+        ? registrableFoods
+        : registrableFoods.filter(
+            (food) => foodShelf(food) === registerCategory,
+          );
     return normalizedQuery
       ? categoryFoods.filter((food) => {
           const presentation = foodPresentation(food.name, food.category);
@@ -227,26 +212,20 @@ function App() {
     baseFoods.find((food) => food.id === selectedFoodId) ??
     visibleFoods[0] ??
     baseFoods[0];
-  const registeredNutrients = useMemo(
-    () => aggregateNutrients(manualFoods),
+  // 登録した食材は個数 1 で数え、設定は初期値を使う（IT01 の暫定、DES-UI-01）
+  const analysis = useMemo(
+    () =>
+      analyzeBasket(
+        manualFoods.map((food) => ({
+          food,
+          displayName: food.name,
+          count: 1,
+          usedUp: false,
+        })),
+        defaultProfile,
+      ),
     [manualFoods],
   );
-
-  const lowNutrients = nutrientTargets
-    .map((target) => {
-      const definition = nutrientDefinitions.find(
-        (item) => item.key === target.key,
-      );
-      if (!definition) {
-        return null;
-      }
-
-      const value = registeredNutrients[target.key] ?? null;
-      return nutrientStatus(value, target.target) === "low"
-        ? { definition, value, target: target.target }
-        : null;
-    })
-    .filter(Boolean);
 
   function selectFood(foodId: string) {
     setSelectedFoodId(foodId);
@@ -364,17 +343,21 @@ function App() {
             <header className="screen-header">
               <div>
                 <p className="food-id">ホーム</p>
-                <h2>登録食材の栄養サマリ</h2>
+                <h2>買った食材の栄養バランス</h2>
               </div>
               <span className="category-pill">
                 登録 {manualFoods.length.toLocaleString("ja-JP")} 件
               </span>
             </header>
 
+            <BalancePanel analysis={analysis} />
+
             {manualFoods.length === 0 ? (
               <section className="notice-panel">
                 <h3>登録食材がありません</h3>
-                <p>食材登録画面で食材を押すと、栄養サマリに反映されます。</p>
+                <p>
+                  食材登録画面で食材を押すと、栄養バランスの判定に反映されます。
+                </p>
               </section>
             ) : (
               <div className="registered-list" aria-label="登録食材">
@@ -399,40 +382,6 @@ function App() {
               </div>
             )}
 
-            <div className="summary-grid" aria-label="登録食材の栄養サマリ">
-              {nutrientTargets.map((target) => {
-                const definition = nutrientDefinitions.find(
-                  (item) => item.key === target.key,
-                );
-                if (!definition) {
-                  return null;
-                }
-
-                const value = registeredNutrients[target.key] ?? null;
-                const status = nutrientStatus(value, target.target);
-                return (
-                  <article
-                    className="summary-card"
-                    data-status={status}
-                    key={target.key}
-                  >
-                    <span>{definition.label}</span>
-                    <strong>{formatValue(value, definition.unit)}</strong>
-                    <div className="mini-track">
-                      <span
-                        style={{
-                          width: `${targetPercent(value, target.target)}%`,
-                        }}
-                      />
-                    </div>
-                    <small>
-                      目安 {formatValue(target.target, definition.unit)}
-                    </small>
-                  </article>
-                );
-              })}
-            </div>
-
             <section className="action-grid" aria-label="画面遷移">
               <button type="button" onClick={() => setActiveScreen("register")}>
                 食材を登録
@@ -443,27 +392,6 @@ function App() {
               <button type="button" onClick={() => setActiveScreen("detail")}>
                 選択中の詳細を見る
               </button>
-            </section>
-
-            <section
-              className="notice-panel"
-              data-alert={lowNutrients.length > 0}
-            >
-              <h3>足りないところ</h3>
-              {lowNutrients.length > 0 ? (
-                <div className="shortfall-list">
-                  {lowNutrients.map((item) =>
-                    item ? (
-                      <span key={item.definition.key}>
-                        {item.definition.label}:{" "}
-                        {formatValue(item.value, item.definition.unit)}
-                      </span>
-                    ) : null,
-                  )}
-                </div>
-              ) : (
-                <p>基本栄養素は目安に近い状態です。</p>
-              )}
             </section>
           </div>
         )}
@@ -716,7 +644,7 @@ function App() {
                     }))
                   }
                 >
-                  {foodShelves.map((category) => (
+                  {registrableShelves.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
@@ -864,6 +792,112 @@ function App() {
         )}
       </section>
     </main>
+  );
+}
+
+const statusLabels: Record<BalanceResult["status"], string> = {
+  low: "不足",
+  ok: "適正",
+  high: "過剰",
+  unknown: "不明",
+};
+
+function nutrientLabel(key: NutrientKey) {
+  return (
+    nutrientDefinitions.find((definition) => definition.key === key)?.label ??
+    key
+  );
+}
+
+/**
+ * ホームに偏りの判定結果を出す（DES-UI-01、FR-UI-01, 07、NFR-07）。
+ * 不足・過剰は色だけでなく文字でも示す。
+ */
+function BalancePanel({ analysis }: { analysis: AnalysisResult }) {
+  if (analysis.kind === "insufficient" && analysis.reason === "noEnergy") {
+    return (
+      <section className="notice-panel" aria-label="栄養バランスの判定">
+        <h3>判定できません</h3>
+        <p>
+          登録した食材にエネルギーのデータがないため、栄養の割合を計算できません。
+        </p>
+      </section>
+    );
+  }
+
+  if (analysis.kind === "insufficient") {
+    return (
+      <section className="notice-panel" aria-label="栄養バランスの判定">
+        <h3>判定にはあと少し食材が必要です</h3>
+        <p>
+          主食を除いて 3 品目以上登録すると、栄養の偏りを判定します（いま{" "}
+          {analysis.itemCount} 品目）。
+        </p>
+      </section>
+    );
+  }
+
+  const flagged = analysis.results.filter(
+    (result) => result.status === "low" || result.status === "high",
+  );
+  const unknown = analysis.results.filter(
+    (result) => result.status === "unknown",
+  );
+  const partial = analysis.results.filter(
+    (result) =>
+      result.status !== "unknown" &&
+      result.coverage !== null &&
+      result.coverage < 1,
+  );
+
+  return (
+    <section
+      className="notice-panel"
+      data-alert={flagged.length > 0}
+      aria-label="栄養バランスの判定"
+    >
+      <h3>
+        {flagged.length > 0
+          ? "偏りがあります"
+          : unknown.length > 0
+            ? "判定できた栄養素には、目立った偏りはありません"
+            : "目立った偏りはありません"}
+      </h3>
+      {flagged.length > 0 && (
+        <ul className="balance-list">
+          {flagged.map((result) => (
+            <li key={result.key} data-status={result.status}>
+              <span className="balance-status">
+                {statusLabels[result.status]}
+              </span>
+              {nutrientLabel(result.key)}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="balance-note">
+        買った食材の傾向です。食べた量や摂取量ではありません（主食はご飯・中盛りとして計算しています）。
+      </p>
+      {analysis.approximateItems.length > 0 && (
+        <p className="balance-note">
+          {analysis.approximateItems.join("・")} は 1 つ 100g
+          の概算で数えています。
+        </p>
+      )}
+      {partial.length > 0 && (
+        <p className="balance-note">
+          一部の食材に
+          {partial.map((result) => nutrientLabel(result.key)).join("・")}
+          のデータがないため、データのある食材だけで判定しています。
+        </p>
+      )}
+      {unknown.length > 0 && (
+        <p className="balance-note">
+          {unknown.map((result) => nutrientLabel(result.key)).join("・")}{" "}
+          はデータがなく判定できません。
+        </p>
+      )}
+    </section>
   );
 }
 

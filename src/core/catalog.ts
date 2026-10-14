@@ -3,7 +3,7 @@ import {
   foodGroupAliases,
   foodRepresentativePatterns,
 } from "../data/foodDisplayNames";
-import { foodShelf, type FoodShelf } from "../data/foodShelves";
+import { foodShelf, foodShelves, type FoodShelf } from "../data/foodShelves";
 import { supermarketFoodPriorities } from "../data/supermarketFoods";
 import type { FoodItem } from "../types";
 
@@ -181,7 +181,15 @@ export function normalizeSearchText(value: string) {
 }
 
 /** 登録の一覧に出さない棚（長く使う物。主食は設定で扱う） */
-const nonRegistrableShelves = new Set<FoodShelf>(["米・パン・麺", "調味料"]);
+export const nonRegistrableShelves = new Set<FoodShelf>([
+  "米・パン・麺",
+  "調味料",
+]);
+
+/** 登録画面と手入力で選べる棚（長く使う物の棚を除く。FR-ING-09） */
+export const registrableShelves = foodShelves.filter(
+  (shelf) => !nonRegistrableShelves.has(shelf),
+);
 
 /**
  * 食品を登録の一覧に出してよいかを返す（DES-CAT-05、FR-ING-09）。
