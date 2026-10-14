@@ -1,7 +1,7 @@
 # 設計書（反復 1）: 計算の核とデータ
 
 - 文書 ID: DES-IT01
-- 版: 0.2（採用。IT01 の振り返りで本人が確認）
+- 版: 0.2（採用。自動マージの条件 4 により、エージェントの判断で採用。REV-009。本人には IT02 の振り返りで提示する）
 - 作成日: 2026-10-14
 - 対象: [反復 1 計画書](../iterations/it01/plan.md) の範囲
 - 根拠: [SRS-001](../02_requirements/srs.md)、[ADR-0001](../adr/0001-tech-stack.md)、[ADR-0002](../adr/0002-food-data.md)、[ADR-0003](../adr/0003-balance-calculation.md)
@@ -140,7 +140,7 @@ type NutrientTotal = { amount: number; coveredEnergyKcal: number } | null;
 | DES-NUT-03 | `nutrientRatios(totals, totalEnergyKcal)` | 栄養素ごとに 1,000 kcal あたりの量とカバー率を返す（ADR-0003 の 2） | FR-NUT-02, 03, 05 |
 | DES-NUT-04 | `pfcRatio(ratios)` | たんぱく質・脂質・炭水化物のエネルギー比率（ADR-0003 の 3）。データが欠けた食材があっても母数がずれないよう、1,000 kcal あたりの量から求める（REV-009） | FR-NUT-04 |
 
-主食の比率: `small = 0.3`、`medium = 0.4`、`large = 0.5`、`none = 0`。
+主食の比率（`stapleShares`）: `small = 0.3`、`medium = 0.4`、`large = 0.5`。主食なし（`Profile.staple` が `none`）のときは主食を足さない。
 
 ### 3.4 偏りの判定（DES-BAL、`core/balance.ts`）
 
@@ -173,7 +173,7 @@ analyzeBasket(items: RegisteredItem[], profile: Profile, data?: AnalysisData) //
 | ID | 内容 | 要求 |
 |---|---|---|
 | DES-ANL-01 | `usedUp` の食材を除き（FR-ING-11 の土台）、量を換算し、主食を足し、集計して判定する | FR-NUT-06, FR-BAL-05 |
-| DES-ANL-02 | 感度分析 `sensitivity(items, profile, factor)`: 食材を 1 つずつ選び、その目安重量だけを `factor` 倍したときに判定が変わる栄養素を返す（仮説 H-02）。すべてを同じ倍率にしても割合は変わらない（FR-NUT-03）ため。目安重量のない食材はずらさない（REV-009） | — |
+| DES-ANL-02 | 感度分析 `sensitivity(items, profile, factor, data?): SensitivityChange[]`（`{ displayName, key, before, after }`）: 食材を 1 つずつ選び、その目安重量だけを `factor` 倍したときに判定が変わる栄養素を返す（仮説 H-02）。すべてを同じ倍率にしても割合は変わらない（FR-NUT-03）ため。目安重量のない食材はずらさない（REV-009） | — |
 
 ### 3.6 画面（IT01 の暫定、DES-UI-01）
 
