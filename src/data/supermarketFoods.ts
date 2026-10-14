@@ -74,6 +74,11 @@ export const supermarketFoodPriorities = [
   "ヨーグルト",
   "乳酸菌飲料",
   "チーズ",
+  "豆腐",
+  "納豆",
+  "油揚げ",
+  "厚揚げ",
+  "豆乳",
   "だいず",
 
   // 果物
