@@ -1,7 +1,7 @@
 # 設計書（反復 1）: 計算の核とデータ
 
 - 文書 ID: DES-IT01
-- 版: 0.1（承認待ち）
+- 版: 0.2（採用。IT01 の振り返りで本人が確認）
 - 作成日: 2026-10-14
 - 対象: [反復 1 計画書](../iterations/it01/plan.md) の範囲
 - 根拠: [SRS-001](../02_requirements/srs.md)、[ADR-0001](../adr/0001-tech-stack.md)、[ADR-0002](../adr/0002-food-data.md)、[ADR-0003](../adr/0003-balance-calculation.md)
@@ -67,9 +67,11 @@ flowchart TB
 ```ts
 // src/data/unitWeights.ts
 export type UnitWeight = {
-  unit: string;      // 本、玉、パック など
-  purchaseG: number; // 購入時の 1 単位の重さ（廃棄部分を含む）
-  source: string;    // 出典、または「概算」（QA-09）
+  unit: string;        // 本、玉、パック など
+  purchaseG: number;   // 購入時の 1 単位の重さ（廃棄部分を含む）
+  refusePct?: number;  // 買うときの形の廃棄率。切り身・むき身など、代表食品と形が違うときだけ書く（REV-009）
+  source: string;      // 出典、または「概算」（QA-09）
+  note?: string;       // 買うときの形などの補足
 };
 export const unitWeights: Record<string, UnitWeight>; // キーは登録一覧の表示名
 ```
@@ -93,7 +95,7 @@ export type DailyReference = {
   potassiumMgMin: number;                   // 目標量（下限）
 };
 export const dietaryReference: Record<Sex, Record<AgeGroup, DailyReference>>;
-export const dietaryReferenceSource: string; // 資料名・URL・表番号（QA-09）
+export const dietaryReferenceSource: { title: string; url: string; publishedAt: string; erratum: string }; // 表ごとのページはコメント（QA-09、REV-009）
 ```
 
 値は一次資料（厚生労働省の報告書）で確かめたものだけを入れる。
@@ -106,11 +108,11 @@ export const dietaryReferenceSource: string; // 資料名・URL・表番号（QA
 
 | ID | 関数 | 内容 | 要求 |
 |---|---|---|---|
-| DES-CAT-01 | `foodPresentation(officialName, category)` | 正式名称から表示名と詳細を求める（既存の規則のまま） | FR-ING-05, 06 |
+| DES-CAT-01 | `foodPresentation(officialName, category)` | 正式名称から表示名と詳細を求める。既存の規則に加え、大豆製品は成分表の小分類で豆腐・納豆・油揚げ・厚揚げ・豆乳・高野豆腐・がんもどき・豆腐竹輪・豆腐ように分ける（REV-009） | FR-ING-05, 06 |
 | DES-CAT-02 | `groupFoods(foods)` | 表示名でまとめる | FR-ING-05 |
 | DES-CAT-03 | `representativeFood(group)` | 代表食品（指定 → 生 → 冷凍 → ゆで → 蒸し → 焼き の順）を選ぶ | FR-ING-05 |
 | DES-CAT-04 | `prioritizeSupermarketFoods(groups)` | よくある食材を先に並べる | FR-ING-04 |
-| DES-CAT-05 | `isRegistrable(food)` | 棚が「米・パン・麺」「調味料」、または分類が「油脂類」なら false | FR-ING-09 |
+| DES-CAT-05 | `isRegistrable(food)`、`registrableShelves` | 棚が「米・パン・麺」「調味料」、または分類が「油脂類」なら false。登録画面と手入力で選べる棚はこの 2 つを除いた 12 種 | FR-ING-09 |
 | DES-CAT-06 | `normalizeSearchText(text)` | 検索用の正規化 | FR-ING-03 |
 
 ### 3.2 量の換算（DES-QTY-02、`core/quantity.ts`）
@@ -120,7 +122,7 @@ edibleGrams(food: FoodItem, unitWeight: UnitWeight | undefined, count: number)
   : { grams: number; approximate: boolean }
 ```
 
-- 目安重量があるとき: `count × purchaseG × (1 − (refusePct ?? 0) ÷ 100)`、`approximate = false`
+- 目安重量があるとき: `count × purchaseG × (1 − 廃棄率 ÷ 100)`、`approximate = false`。廃棄率は目安重量の `refusePct` → 代表食品の `refusePct` → 0 の順に使う。成分表に買うときの形の食品があるときは、上書きより代表食品の指定を優先する
 - ないとき: `count × 100`、`approximate = true`（FR-QTY-05）
 - `count` が 0 以下・有限でないときは `grams = 0`
 
@@ -136,7 +138,7 @@ type NutrientTotal = { amount: number; coveredEnergyKcal: number } | null;
 | DES-NUT-01 | `sumNutrients(items)` | 栄養素ごとに、データのある食材だけで `grams ÷ 100 × 成分値` を合計し、その食材のエネルギーの合計も持つ。全食材でデータがなければ null | FR-NUT-01, 05 |
 | DES-NUT-02 | `stapleItem(stapleFood, share, nonStapleEnergyKcal)` | ADR-0003 の 1 の式で主食の BasketItem を作る。`share = 0` やエネルギーが 0 なら null | FR-STP-03 |
 | DES-NUT-03 | `nutrientRatios(totals, totalEnergyKcal)` | 栄養素ごとに 1,000 kcal あたりの量とカバー率を返す（ADR-0003 の 2） | FR-NUT-02, 03, 05 |
-| DES-NUT-04 | `pfcRatio(totals)` | たんぱく質・脂質・炭水化物のエネルギー比率（ADR-0003 の 3） | FR-NUT-04 |
+| DES-NUT-04 | `pfcRatio(ratios)` | たんぱく質・脂質・炭水化物のエネルギー比率（ADR-0003 の 3）。データが欠けた食材があっても母数がずれないよう、1,000 kcal あたりの量から求める（REV-009） | FR-NUT-04 |
 
 主食の比率: `small = 0.3`、`medium = 0.4`、`large = 0.5`、`none = 0`。
 
@@ -146,12 +148,13 @@ type NutrientTotal = { amount: number; coveredEnergyKcal: number } | null;
 |---|---|---|---|
 | DES-BAL-02 | `referenceFor(profile)` | 性別・年齢区分の基準値を返す。未選択は男女の平均（ADR-0003 の 4） | FR-BAL-01, FR-STP-04 |
 | DES-BAL-03 | `balanceTargets` | 判定する 14 種と、その規則（`pfcRange` / `upper` / `lower`）の定義（ADR-0003 の 5） | FR-BAL-04 |
-| DES-BAL-04 | `judgeBalance(ratios, pfc, reference)` | 栄養素ごとに `{ key, status: "low" \| "ok" \| "high" \| "unknown", sufficiency, coverage }` を返す。不足は 70% 未満、過剰は 130% 超 | FR-BAL-01〜03 |
+| DES-BAL-04 | `judgeBalance(ratios, pfc \| null, reference)` | 栄養素ごとに `{ key, status: "low" \| "ok" \| "high" \| "unknown", sufficiency, pfcPct, pfcRange, coverage }` を返す。不足は 70% 未満、過剰は 130% 超。浮動小数点の誤差で境目の反対側に落ちないよう、充足率と PFC% は判定の前に小数第 6 位で丸める（REV-009） | FR-BAL-01〜03 |
 | DES-BAL-05 | 最低限の量 | 主食を除く食材が 3 品目未満なら、`judgeBalance` を呼ばず `insufficient` を返す | FR-BAL-05 |
 
 ### 3.5 全体の組み立て（DES-ANL、`core/analyze.ts`）
 
 ```ts
+// core/profile.ts（balance.ts と analyze.ts の両方から使う。REV-009）
 type Profile = {                               // DES-STP-01
   sex: "male" | "female" | "unspecified";
   ageGroup: AgeGroup;
@@ -162,15 +165,15 @@ const defaultProfile: Profile = { sex: "unspecified", ageGroup: "30-49", staple:
 
 type RegisteredItem = { food: FoodItem; displayName: string; count: number; usedUp: boolean };
 
-analyzeBasket(items: RegisteredItem[], profile: Profile)
-  : { kind: "insufficient"; itemCount: number }
-  | { kind: "judged"; results: BalanceResult[]; pfc: Pfc; approximateItems: string[] }
+analyzeBasket(items: RegisteredItem[], profile: Profile, data?: AnalysisData) // data はテストで定義データを差し替える
+  : { kind: "insufficient"; reason: "tooFewItems" | "noEnergy"; itemCount: number }
+  | { kind: "judged"; results: BalanceResult[]; pfc: Pfc | null; approximateItems: string[] }
 ```
 
 | ID | 内容 | 要求 |
 |---|---|---|
 | DES-ANL-01 | `usedUp` の食材を除き（FR-ING-11 の土台）、量を換算し、主食を足し、集計して判定する | FR-NUT-06, FR-BAL-05 |
-| DES-ANL-02 | 感度分析 `sensitivity(items, profile, factor)`: 目安重量を `factor` 倍したときに判定が変わる栄養素を返す（仮説 H-02） | — |
+| DES-ANL-02 | 感度分析 `sensitivity(items, profile, factor)`: 食材を 1 つずつ選び、その目安重量だけを `factor` 倍したときに判定が変わる栄養素を返す（仮説 H-02）。すべてを同じ倍率にしても割合は変わらない（FR-NUT-03）ため。目安重量のない食材はずらさない（REV-009） | — |
 
 ### 3.6 画面（IT01 の暫定、DES-UI-01）
 
@@ -206,3 +209,4 @@ analyzeBasket(items: RegisteredItem[], profile: Profile)
 | 版 | 日付 | 内容 |
 |---|---|---|
 | 0.1 | 2026-10-14 | 初版 |
+| 0.2 | 2026-10-14 | REV-009 で採用した設計への提案 8 件を反映 |
