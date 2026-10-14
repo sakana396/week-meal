@@ -128,4 +128,23 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     );
     expect([...missingGroupAliases, ...missingCategoryAliases]).toEqual([]);
   });
+
+  it("TC-FR-FDB-01-02 乾物・粉類（SRS v0.2 の TBD-10）が、登録できる食材名として食品データにある", () => {
+    const names = [
+      "でん粉",
+      "はるさめ（乾燥）",
+      "あずき（乾燥）",
+      "ひよこまめ（乾燥）",
+      "ぎんだら",
+      "しょうがの漬物",
+      "かぶの漬物",
+      "かんきつ（缶詰）",
+    ];
+    const registrable = new Set(
+      groupFoods(foods)
+        .filter((group) => group.foods.some(isRegistrable))
+        .map((group) => group.name),
+    );
+    expect(names.filter((name) => !registrable.has(name))).toEqual([]);
+  });
 });
