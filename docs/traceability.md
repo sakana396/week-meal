@@ -20,14 +20,14 @@
 | FR-QTY-05 | #5 | DES-QTY-02 | TC-FR-QTY-05-01, 02 | src/core/quantity.ts | 実装済み |
 | FR-QTY-06 | #5 | DES-QTY-02 | （査閲: グラムを入力させる引数がない） | src/core/quantity.ts | 実装済み |
 | FR-STP-03 | #7 | DES-NUT-02, DES-STP-01 | | | 未着手 |
-| FR-STP-04 | #6 | DES-BAL-02 | | | 未着手 |
+| FR-STP-04 | #6 | DES-BAL-02 | TC-FR-STP-04-01〜05 | src/core/balance.ts, src/core/profile.ts | 実装済み（計算。設定画面は IT02） |
 | FR-NUT-01 | #7 | DES-NUT-01 | | | 未着手 |
 | FR-NUT-02 | #7 | DES-NUT-03 | | | 未着手 |
 | FR-NUT-03 | #7 | DES-NUT-03 | | | 未着手 |
 | FR-NUT-04 | #7 | DES-NUT-04 | | | 未着手 |
 | FR-NUT-05 | #7 | DES-NUT-01, 03 | | | 未着手 |
 | FR-NUT-06 | #8 | DES-ANL-01 | | | 未着手 |
-| FR-BAL-01 | #6, #8 | DES-BAL-01, 02, 04 | | | 未着手 |
+| FR-BAL-01 | #6, #8 | DES-BAL-01, 02, 04 | TC-FR-BAL-01-01 | src/data/dietaryReference.ts | 一部実装（#6: 基準値データ） |
 | FR-BAL-02 | #8 | DES-BAL-04 | | | 未着手 |
 | FR-BAL-03 | #8 | DES-BAL-04 | | | 未着手 |
 | FR-BAL-04 | #8 | DES-BAL-03 | | | 未着手 |
@@ -42,4 +42,4 @@
 | NFR-15 | #7 | DES-NUT-01〜04 | | | 未着手 |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
-| QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | TC-FR-QTY-02-05 | src/data/unitWeights.ts | 一部実装（#5: 目安重量） |
+| QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | TC-FR-QTY-02-05、査閲（基準値の出典: REV-007） | src/data/unitWeights.ts, src/data/dietaryReference.ts | 実装済み |

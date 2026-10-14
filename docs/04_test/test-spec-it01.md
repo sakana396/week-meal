@@ -25,6 +25,12 @@
 | TC-NFR-08-03 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` で `.tsx` からの react の import、下の階層からの `../../App`・`../ui/*` の import、`globalThis.localStorage`、引数なしの `new Date()`、動的 `import("react")`、`import("react").FC` を書いて `npm run lint` | すべて誤りになる。`../data/*` の import と `new Date(0)` は誤りにならない（#2 で手動確認） | 異常 |
 | TC-QA-02-01 | QA-02 / DES-DEV-02 | 網羅率の閾値 80% | テストのない関数を `src/core/` に置いて `npm run test:coverage` | 終了コードが 0 以外になる（#2 で手動確認） | 異常 |
 | TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
+| TC-FR-STP-04-01 | FR-STP-04 / DES-BAL-02 | — | 男性・30〜49 歳 | エネルギー 2,750 kcal、食塩 7.5g、鉄 7.5mg | 正常 |
+| TC-FR-STP-04-02 | FR-STP-04 / DES-BAL-02 | — | 女性・75 歳以上 | エネルギー 1,750 kcal、食塩 6.5g、鉄 5.5mg | 境界 |
+| TC-FR-STP-04-03 | FR-STP-04 / DES-BAL-02 | — | 男性・18〜29 歳 | エネルギー 2,600 kcal、食塩 7.5g、鉄 7.0mg | 境界 |
+| TC-FR-STP-04-04 | FR-STP-04 / DES-BAL-02 | — | 未選択・30〜49 歳 | 男女の平均（エネルギー (2750+2050)/2 = 2,400、食塩 7.0、鉄 6.75） | 正常 |
+| TC-FR-STP-04-05 | FR-STP-04 / DES-BAL-02, DES-STP-01 | — | 初期値の設定 | エネルギー 2,400 kcal | 正常 |
+| TC-FR-BAL-01-01 | FR-BAL-01 / DES-BAL-01 | — | すべての性別・年齢区分の基準値 | 値がすべて正、範囲の下限 ≦ 上限 | 異常 |
 | TC-FR-QTY-01-01 | FR-QTY-01 / DES-QTY-02 | 目安重量あり・なし | 個数 0 | 0g | 境界 |
 | TC-FR-QTY-01-02 | FR-QTY-01 / DES-QTY-02 | 同上 | 個数 −1 | 0g | 異常 |
 | TC-FR-QTY-01-03 | FR-QTY-01 / DES-QTY-02 | 同上 | 個数 NaN | 0g | 異常 |
