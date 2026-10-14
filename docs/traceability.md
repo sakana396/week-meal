@@ -64,12 +64,12 @@
 | FR-UI-06 | #27, #28 | DES-UI-22, 41 | | | 未着手 |
 | FR-UI-08 | #26 | DES-UI-24 | | | 未着手 |
 | FR-UI-09 | #29 | DES-UI-23 | | | 未着手 |
-| FR-SYS-01 | #25, #26 | DES-STO-01〜04, DES-UI-13 | | | 未着手 |
+| FR-SYS-01 | #24, #25, #26 | DES-STO-01〜04, DES-UI-13 | TC-FR-SYS-01-01〜04 | src/core/basket.ts, src/core/storage.ts | 一部実装（#25: 読み書きの関数。localStorage は #26） |
 | FR-SYS-02 | #26 | DES-UI-13 | | | 未着手 |
 | IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | | | 未着手 |
 | NFR-01 | #30 | DES-E2E-03 | | | 未着手 |
 | NFR-02 | #30 | DES-E2E-03 | | | 未着手 |
-| NFR-12 | #25, #27, #30 | DES-STO-02, 03, DES-E2E-04 | | | 未着手 |
-| NFR-13 | #25 | DES-STO-04 | | | 未着手 |
+| NFR-12 | #25, #27, #30 | DES-STO-02, 03, DES-E2E-04 | TC-NFR-12-01〜13 | src/core/storage.ts | 一部実装（#25: 読み込み。画面の表示は #27） |
+| NFR-13 | #25 | DES-STO-04 | TC-NFR-12-03〜06 | src/core/storage.ts | 実装済み（版番号の検査と移行の仕組み。移行の関数は版 2 から） |
 | NFR-14 | #26 | DES-UI-13 | | | 未着手 |
 | QA-03 | #30 | DES-E2E-01〜06 | | | 未着手 |
