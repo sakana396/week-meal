@@ -11,8 +11,8 @@
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
 | 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.1 確定 |
-| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.1 承認 |
-| 反復 | 反復 1（計算の核とデータ）計画書 | [iterations/it01/plan.md](iterations/it01/plan.md) | v0.2 承認 |
+| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.2 承認 |
+| 反復 | 反復 1（計算の核とデータ）計画書 | [iterations/it01/plan.md](iterations/it01/plan.md) | v0.3 承認 |
 | 要求 | ユースケース記述・図 | [02_requirements/use-cases.md](02_requirements/use-cases.md) | v0.1（反復 1 の範囲） |
 | 設計 | 技術スタック ADR | [adr/0001-tech-stack.md](adr/0001-tech-stack.md) | 承認待ち |
 | 設計 | 食品データ ADR | [adr/0002-food-data.md](adr/0002-food-data.md) | 承認待ち |
