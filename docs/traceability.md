@@ -49,6 +49,10 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-01 | #24, #26 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜04 | src/core/basket.ts | 一部実装（#24: 状態。画面は #26） |
+| FR-ING-08 | #24, #26 | DES-BSK-04, DES-UI-35 | TC-FR-ING-08-01〜05 | src/core/basket.ts | 一部実装（#24: 状態。画面は #26） |
+| FR-QTY-01 | #24 | DES-BSK-01 | TC-FR-ING-01-01, 02 | src/core/basket.ts | 一部実装（#24: 登録時は個数 1。画面は #27） |
+| FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
+| FR-NUT-06 | #24 | DES-BSK-07 | TC-FR-NUT-06-03 | src/core/basket.ts | 実装済み（IT01 の analyzeBasket と合わせて） |
 | FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | TC-FR-ING-10-01〜06 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-11-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-12-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
