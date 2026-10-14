@@ -17,7 +17,7 @@
     "prepreview": "npm run check:node",
     "preview": "vite preview",
     "docker:install": "docker run --rm -u 1000:1000 -v \"$PWD:/app\" -w /app node:22 npm install",
-    "convert:mext": "python3 scripts/convert-mext-foods.py /tmp/mext-food.xlsx src/data/foods.json",
+    "convert:mext": "python3 scripts/convert-mext-foods.py /tmp/mext-food.xlsx src/data/foods.json --select scripts/food-selection.json",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "format": "prettier --write .",

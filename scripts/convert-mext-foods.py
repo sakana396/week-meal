@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -165,6 +166,7 @@ def convert_foods(input_path: Path) -> list[dict[str, Any]]:
         key: identifier_to_column[identifier]
         for key, identifier in NUTRIENT_IDENTIFIERS.items()
     }
+    refuse_column = identifier_to_column["REFUSE"]
 
     foods: list[dict[str, Any]] = []
     for row in rows[12:]:
@@ -184,6 +186,8 @@ def convert_foods(input_path: Path) -> list[dict[str, Any]]:
                 "id": food_id,
                 "name": name,
                 "category": CATEGORIES.get(group_code, "未分類"),
+                # 廃棄率（%）。目安重量から可食部を求めるのに使う（DES-FDB-02）
+                "refusePct": parse_numeric(row.get(refuse_column)),
                 "nutrientsPer100g": nutrients,
             }
         )
@@ -191,16 +195,45 @@ def convert_foods(input_path: Path) -> list[dict[str, Any]]:
     return foods
 
 
-def main() -> None:
-    if len(sys.argv) != 3:
+def load_selection(selection_path: Path) -> list[str]:
+    """絞り込みの定義から食品番号の一覧を読む（DES-FDB-01）。"""
+    entries = json.loads(selection_path.read_text(encoding="utf-8"))
+    return [str(entry["id"]) for entry in entries]
+
+
+def select_foods(
+    foods: list[dict[str, Any]], selected_ids: list[str]
+) -> list[dict[str, Any]]:
+    """定義にある食品だけを残す。定義にあって成分表にない食品番号は誤りにする（DES-FDB-02）。"""
+    known_ids = {food["id"] for food in foods}
+    missing = [food_id for food_id in selected_ids if food_id not in known_ids]
+    if missing:
         raise SystemExit(
-            "Usage: python3 scripts/convert-mext-foods.py INPUT.xlsx OUTPUT.json"
+            "絞り込みの定義に、成分表にない食品番号があります: " + ", ".join(missing)
         )
 
-    input_path = Path(sys.argv[1])
-    output_path = Path(sys.argv[2])
-    foods = convert_foods(input_path)
+    wanted = set(selected_ids)
+    return [food for food in foods if food["id"] in wanted]
 
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="文科省の食品成分表（Excel）から食品データ（JSON）を作る"
+    )
+    parser.add_argument("input", type=Path, help="成分表の Excel ファイル")
+    parser.add_argument("output", type=Path, help="出力する JSON ファイル")
+    parser.add_argument(
+        "--select",
+        type=Path,
+        help="絞り込みの定義（食品番号の一覧の JSON）。省略すると全件を出力する",
+    )
+    args = parser.parse_args()
+
+    foods = convert_foods(args.input)
+    if args.select:
+        foods = select_foods(foods, load_selection(args.select))
+
+    output_path = args.output
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(foods, ensure_ascii=False, indent=2) + "\n",
