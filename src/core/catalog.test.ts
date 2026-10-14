@@ -4,6 +4,7 @@ import {
   foodPresentation,
   groupFoods,
   isRegistrable,
+  registrableShelves,
   normalizeSearchText,
   prioritizeSupermarketFoods,
   representativeFood,
@@ -291,5 +292,14 @@ describe("isRegistrable（DES-CAT-05）", () => {
     ],
   ])("%s", (_title, name, category, expected) => {
     expect(isRegistrable(food("x", name, category))).toBe(expected);
+  });
+});
+
+describe("registrableShelves（DES-CAT-05）", () => {
+  it("TC-FR-ING-09-07 登録画面と手入力で選べる棚に、米・パン・麺と調味料は入らない", () => {
+    expect(registrableShelves).not.toContain("米・パン・麺");
+    expect(registrableShelves).not.toContain("調味料");
+    expect(registrableShelves).toContain("野菜");
+    expect(registrableShelves).toHaveLength(12);
   });
 });

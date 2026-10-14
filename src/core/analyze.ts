@@ -118,3 +118,56 @@ export function analyzeBasket(
   const results = judgeBalance(ratios, pfc, referenceFor(profile));
   return { kind: "judged", results, pfc, approximateItems };
 }
+
+/** 感度分析の結果: ずらした食材と、判定が変わった栄養素（DES-ANL-02） */
+export type SensitivityChange = {
+  displayName: string;
+  key: BalanceResult["key"];
+  before: BalanceResult["status"];
+  after: BalanceResult["status"];
+};
+
+/**
+ * 食材を 1 つずつ選び、その食材の目安重量（購入時の重さ）だけを factor 倍したときに
+ * 判定が変わる栄養素を返す（DES-ANL-02、仮説 H-02）。
+ * すべての食材を同じ倍率にしても割合は変わらない（FR-NUT-03）ので、1 つずつずらす。
+ * 目安重量がない食材はずらさない。もとの買い物を判定できないときは空の配列を返す。
+ */
+export function sensitivity(
+  items: RegisteredItem[],
+  profile: Profile,
+  factor: number,
+  data: AnalysisData = defaultAnalysisData,
+): SensitivityChange[] {
+  const base = analyzeBasket(items, profile, data);
+  if (base.kind !== "judged") return [];
+
+  const names = [...new Set(items.map((item) => item.displayName))].filter(
+    (name) => data.unitWeights[name],
+  );
+  return names.flatMap((name) => {
+    const weight = data.unitWeights[name];
+    const unitWeights = {
+      ...data.unitWeights,
+      [name]: { ...weight, purchaseG: weight.purchaseG * factor },
+    };
+    const scaled = analyzeBasket(items, profile, { ...data, unitWeights });
+    if (scaled.kind !== "judged") return [];
+    const scaledStatus = new Map(
+      scaled.results.map((result) => [result.key, result.status]),
+    );
+    return base.results.flatMap((result) => {
+      const after = scaledStatus.get(result.key) ?? "unknown";
+      return after === result.status
+        ? []
+        : [
+            {
+              displayName: name,
+              key: result.key,
+              before: result.status,
+              after,
+            },
+          ];
+    });
+  });
+}
