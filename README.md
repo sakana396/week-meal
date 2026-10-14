@@ -68,6 +68,18 @@ Node.js 18 のまま実行すると Vite が起動できません。
 npm run dev:docker
 ```
 
+## 検証コマンド
+
+```bash
+npm run typecheck      # 型検査
+npm run lint           # ESLint
+npm run format:check   # Prettier の確認（npm run format で整形）
+npm test               # 単体テスト（Vitest）
+npm run test:coverage  # 単体テストと網羅率（src/core が対象、命令網羅率 80% 以上）
+```
+
+プッシュとプルリクエストごとに、GitHub Actions で同じ検証とビルドを実行します。
+
 ## ビルド
 
 ```bash

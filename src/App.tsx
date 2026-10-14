@@ -66,19 +66,26 @@ const separateFoodForms: Array<{
 }> = [
   { pattern: /^かぼちゃ いり/, label: () => "かぼちゃの種" },
   { pattern: /フライドポテト/, label: () => "フライドポテト" },
-  { pattern: /から揚げ/, label: (name) => `${name.replace(/肉$/, "")}のから揚げ` },
+  {
+    pattern: /から揚げ/,
+    label: (name) => `${name.replace(/肉$/, "")}のから揚げ`,
+  },
   { pattern: /天ぷら/, label: (name) => `${name}の天ぷら` },
   { pattern: /(?:^|\s)フライ(?:\s|$)/, label: (name) => `${name}のフライ` },
   { pattern: /漬物|塩漬|ぬかみそ漬/, label: (name) => `${name}の漬物` },
   { pattern: /缶詰/, label: (name) => `${name}（缶詰）` },
-  { pattern: /(?:^|\s)(?:乾|乾燥)(?:\s|$)/, label: (name) => `${name}（乾燥）` },
+  {
+    pattern: /(?:^|\s)(?:乾|乾燥)(?:\s|$)/,
+    label: (name) => `${name}（乾燥）`,
+  },
 ];
 
 function foodPresentation(officialName: string, category?: string) {
   const nameWithoutHierarchy = officialName
     .replace(/^(?:＜[^＞]+＞\s*)+/, "")
     .trim();
-  const classificationMatch = nameWithoutHierarchy.match(/^（([^）]+)）\s*(.+)$/);
+  const classificationMatch =
+    nameWithoutHierarchy.match(/^（([^）]+)）\s*(.+)$/);
   const classificationLabel = classificationMatch?.[1];
   const nameWithoutFamily = classificationMatch?.[2] ?? nameWithoutHierarchy;
   const [specificName = officialName, ...specificDetailParts] =
@@ -90,14 +97,16 @@ function foodPresentation(officialName: string, category?: string) {
   const categoryAlias = category
     ? foodCategoryGroupAliases[`${category}:${groupedName}`]
     : undefined;
-  const baseName = categoryAlias || foodGroupAliases[groupedName] || groupedName;
+  const baseName =
+    categoryAlias || foodGroupAliases[groupedName] || groupedName;
   const separateForm = separateFoodForms.find(({ pattern }) =>
     pattern.test(nameWithoutFamily),
   );
   const name = separateForm?.label(baseName) ?? baseName;
-  const detailParts = baseName !== specificName
-    ? [specificName, ...specificDetailParts]
-    : specificDetailParts;
+  const detailParts =
+    baseName !== specificName
+      ? [specificName, ...specificDetailParts]
+      : specificDetailParts;
   const details = detailParts
     .map((part) => part.replace(/^［(.+)］$/, "$1"))
     .join("・");
@@ -130,8 +139,10 @@ function representativeFood(group: FoodGroup) {
     const rightPriority = preparationPriority.findIndex((pattern) =>
       pattern.test(right.name),
     );
-    return (leftPriority < 0 ? preparationPriority.length : leftPriority) -
-      (rightPriority < 0 ? preparationPriority.length : rightPriority);
+    return (
+      (leftPriority < 0 ? preparationPriority.length : leftPriority) -
+      (rightPriority < 0 ? preparationPriority.length : rightPriority)
+    );
   })[0];
 }
 
@@ -155,8 +166,8 @@ function groupFoods(foods: FoodItem[]) {
 
 function supermarketPriority(name: string) {
   const target = normalizeSearchText(name);
-  const priority = supermarketFoodPriorities.findIndex((foodName) =>
-    target === normalizeSearchText(foodName),
+  const priority = supermarketFoodPriorities.findIndex(
+    (foodName) => target === normalizeSearchText(foodName),
   );
 
   return priority >= 0 ? priority : null;
@@ -169,7 +180,10 @@ function prioritizeSupermarketFoods(groups: FoodGroup[]) {
       supermarketPriority: supermarketPriority(group.name),
     }))
     .sort((left, right) => {
-      if (left.supermarketPriority === null && right.supermarketPriority === null) {
+      if (
+        left.supermarketPriority === null &&
+        right.supermarketPriority === null
+      ) {
         return left.name.localeCompare(right.name, "ja-JP");
       }
       if (left.supermarketPriority === null) {
@@ -209,7 +223,7 @@ function normalizeSearchText(value: string) {
   return value
     .toLocaleLowerCase("ja-JP")
     .replace(/\s+/g, "")
-    .replace(/　/g, "");
+    .replace(/\u3000/g, "");
 }
 
 function nutrientPercent(value: number | null, definition: NutrientDefinition) {
@@ -269,6 +283,17 @@ function aggregateNutrients(items: RegisteredFood[]) {
   ) as FoodItem["nutrientsPer100g"];
 }
 
+let localIdCounter = 0;
+
+/**
+ * 登録した食材の ID を作る。crypto.randomUUID は HTTPS か localhost でしか
+ * 使えず、スマートフォンから LAN 経由（http）で開くと失敗するため使わない。
+ */
+function localId(prefix: string) {
+  localIdCounter += 1;
+  return `${prefix}-${Date.now()}-${localIdCounter}`;
+}
+
 function App() {
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
   const [query, setQuery] = useState("");
@@ -278,7 +303,8 @@ function App() {
     useState<RegisterCategory>("すべて");
   const [selectedFoodId, setSelectedFoodId] = useState(baseFoods[0]?.id ?? "");
   const [manualFoods, setManualFoods] = useState<RegisteredFood[]>([]);
-  const [manualForm, setManualForm] = useState<ManualFoodForm>(initialManualForm);
+  const [manualForm, setManualForm] =
+    useState<ManualFoodForm>(initialManualForm);
 
   const filteredFoods = useMemo(() => {
     const normalizedQuery = normalizeSearchText(query);
@@ -287,7 +313,9 @@ function App() {
     }
 
     return baseFoods.filter((food) => {
-      const target = normalizeSearchText(`${food.id}${food.name}${food.category}`);
+      const target = normalizeSearchText(
+        `${food.id}${food.name}${food.category}`,
+      );
       return target.includes(normalizedQuery);
     });
   }, [query]);
@@ -328,7 +356,8 @@ function App() {
           if (leftPriority !== null || rightPriority !== null) {
             if (leftPriority === null) return 1;
             if (rightPriority === null) return -1;
-            if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+            if (leftPriority !== rightPriority)
+              return leftPriority - rightPriority;
           }
         }
         return left.name.localeCompare(right.name, "ja-JP");
@@ -352,7 +381,9 @@ function App() {
 
   const lowNutrients = nutrientTargets
     .map((target) => {
-      const definition = nutrientDefinitions.find((item) => item.key === target.key);
+      const definition = nutrientDefinitions.find(
+        (item) => item.key === target.key,
+      );
       if (!definition) {
         return null;
       }
@@ -373,10 +404,13 @@ function App() {
       return;
     }
 
-    const presentation = foodPresentation(selectedFood.name, selectedFood.category);
+    const presentation = foodPresentation(
+      selectedFood.name,
+      selectedFood.category,
+    );
     const registeredFood: RegisteredFood = {
       ...selectedFood,
-      id: `registered-${selectedFood.id}-${Date.now()}`,
+      id: localId(`registered-${selectedFood.id}`),
       name: presentation.name,
       officialName: selectedFood.name,
       amountG: 100,
@@ -413,7 +447,7 @@ function App() {
     }
 
     const food: FoodItem = {
-      id: `manual-${Date.now()}`,
+      id: localId("manual"),
       name,
       category: `手入力 / ${manualForm.category}`,
       nutrientsPer100g: Object.fromEntries(
@@ -523,13 +557,23 @@ function App() {
                 const value = registeredNutrients[target.key] ?? null;
                 const status = nutrientStatus(value, target.target);
                 return (
-                  <article className="summary-card" data-status={status} key={target.key}>
+                  <article
+                    className="summary-card"
+                    data-status={status}
+                    key={target.key}
+                  >
                     <span>{definition.label}</span>
                     <strong>{formatValue(value, definition.unit)}</strong>
                     <div className="mini-track">
-                      <span style={{ width: `${targetPercent(value, target.target)}%` }} />
+                      <span
+                        style={{
+                          width: `${targetPercent(value, target.target)}%`,
+                        }}
+                      />
                     </div>
-                    <small>目安 {formatValue(target.target, definition.unit)}</small>
+                    <small>
+                      目安 {formatValue(target.target, definition.unit)}
+                    </small>
                   </article>
                 );
               })}
@@ -547,14 +591,18 @@ function App() {
               </button>
             </section>
 
-            <section className="notice-panel" data-alert={lowNutrients.length > 0}>
+            <section
+              className="notice-panel"
+              data-alert={lowNutrients.length > 0}
+            >
               <h3>足りないところ</h3>
               {lowNutrients.length > 0 ? (
                 <div className="shortfall-list">
                   {lowNutrients.map((item) =>
                     item ? (
                       <span key={item.definition.key}>
-                        {item.definition.label}: {formatValue(item.value, item.definition.unit)}
+                        {item.definition.label}:{" "}
+                        {formatValue(item.value, item.definition.unit)}
                       </span>
                     ) : null,
                   )}
@@ -591,7 +639,11 @@ function App() {
               <span>表示 {visibleFoods.length.toLocaleString("ja-JP")} 件</span>
             </div>
 
-            <div className="food-browser-list" role="listbox" aria-label="食品一覧">
+            <div
+              className="food-browser-list"
+              role="listbox"
+              aria-label="食品一覧"
+            >
               {visibleFoods.map((food) => (
                 <button
                   className="food-row"
@@ -632,7 +684,11 @@ function App() {
                     : "文科省データを食品番号ごとに選びます"}
                 </span>
               </div>
-              <div className="register-mode-switch" role="group" aria-label="入力モード選択">
+              <div
+                className="register-mode-switch"
+                role="group"
+                aria-label="入力モード選択"
+              >
                 <button
                   aria-pressed={registerMode === "simple"}
                   data-active={registerMode === "simple"}
@@ -677,7 +733,8 @@ function App() {
                   {(registerMode === "simple"
                     ? registerFoodGroups.length
                     : detailedRegisterFoods.length
-                  ).toLocaleString("ja-JP")} 種類
+                  ).toLocaleString("ja-JP")}{" "}
+                  種類
                   {(registerMode === "simple"
                     ? registerFoodGroups.length
                     : detailedRegisterFoods.length) > maxVisibleFoods
@@ -714,27 +771,36 @@ function App() {
               {registerMode === "simple" && visibleRegisterGroups.length > 0 ? (
                 <div className="ingredient-name-list" aria-label="食材名一覧">
                   {visibleRegisterGroups.map((group) => (
-                      <button
-                        className="ingredient-name-button"
-                        key={group.key}
-                        onClick={() => registerExistingFood(group)}
-                        type="button"
-                      >
-                        <span className="ingredient-title">
-                          <strong>{group.name}</strong>
-                          {group.supermarketPriority !== null && !registerQuery.trim() && (
+                    <button
+                      className="ingredient-name-button"
+                      key={group.key}
+                      onClick={() => registerExistingFood(group)}
+                      type="button"
+                    >
+                      <span className="ingredient-title">
+                        <strong>{group.name}</strong>
+                        {group.supermarketPriority !== null &&
+                          !registerQuery.trim() && (
                             <span className="common-food-badge">よくある</span>
                           )}
-                        </span>
-                        <small>タップして登録</small>
-                      </button>
-                    ))}
+                      </span>
+                      <small>タップして登録</small>
+                    </button>
+                  ))}
                 </div>
-              ) : registerMode === "detailed" && visibleDetailedFoods.length > 0 ? (
-                <div className="ingredient-name-list" aria-label="文科省食品データ一覧">
+              ) : registerMode === "detailed" &&
+                visibleDetailedFoods.length > 0 ? (
+                <div
+                  className="ingredient-name-list"
+                  aria-label="文科省食品データ一覧"
+                >
                   {visibleDetailedFoods.map((food) => {
-                    const presentation = foodPresentation(food.name, food.category);
-                    const isCommon = supermarketPriority(presentation.name) !== null;
+                    const presentation = foodPresentation(
+                      food.name,
+                      food.category,
+                    );
+                    const isCommon =
+                      supermarketPriority(presentation.name) !== null;
                     return (
                       <button
                         className="ingredient-name-button detailed-food-button"
@@ -749,7 +815,9 @@ function App() {
                           )}
                         </span>
                         <span>{food.name}</span>
-                        <small>食品番号 {food.id} / {food.category}</small>
+                        <small>
+                          食品番号 {food.id} / {food.category}
+                        </small>
                       </button>
                     );
                   })}
@@ -774,7 +842,10 @@ function App() {
                   required
                   value={manualForm.name}
                   onChange={(event) =>
-                    setManualForm((current) => ({ ...current, name: event.target.value }))
+                    setManualForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
                   }
                   placeholder="例: 自家製スープ"
                 />
@@ -852,15 +923,22 @@ function App() {
               </div>
               <div className="nutrient-chart" aria-label="基本栄養素">
                 {basicNutrientDefinitions.map((definition) => {
-                  const target = nutrientTargets.find((item) => item.key === definition.key);
-                  const value = selectedFood.nutrientsPer100g[definition.key] ?? null;
+                  const target = nutrientTargets.find(
+                    (item) => item.key === definition.key,
+                  );
+                  const value =
+                    selectedFood.nutrientsPer100g[definition.key] ?? null;
                   const width = nutrientPercent(value, definition);
                   const status = target
                     ? nutrientStatus(value, target.target)
                     : "unknown";
 
                   return (
-                    <div className="nutrient-row" data-status={status} key={definition.key}>
+                    <div
+                      className="nutrient-row"
+                      data-status={status}
+                      key={definition.key}
+                    >
                       <div className="nutrient-label">
                         <span>{definition.label}</span>
                         <strong>{formatValue(value, definition.unit)}</strong>
@@ -878,7 +956,11 @@ function App() {
                         />
                       </div>
                       <span className="status-badge">
-                        {status === "low" ? "不足気味" : status === "ok" ? "目安内" : "未入力"}
+                        {status === "low"
+                          ? "不足気味"
+                          : status === "ok"
+                            ? "目安内"
+                            : "未入力"}
                       </span>
                     </div>
                   );
@@ -893,20 +975,29 @@ function App() {
               </div>
               <div className="micro-grid">
                 {vitaminMineralDefinitions.map((definition) => {
-                  const value = selectedFood.nutrientsPer100g[definition.key] ?? null;
+                  const value =
+                    selectedFood.nutrientsPer100g[definition.key] ?? null;
                   return (
                     <article
                       className="micro-card"
                       data-status={value === null ? "unknown" : "ok"}
                       key={definition.key}
                     >
-                      <span>{definition.group === "vitamin" ? "ビタミン" : "ミネラル"}</span>
+                      <span>
+                        {definition.group === "vitamin"
+                          ? "ビタミン"
+                          : "ミネラル"}
+                      </span>
                       <strong>{definition.label}</strong>
                       <small>{formatValue(value, definition.unit)}</small>
                       <div className="mini-track">
-                        <span style={{ width: `${nutrientPercent(value, definition)}%` }} />
+                        <span
+                          style={{
+                            width: `${nutrientPercent(value, definition)}%`,
+                          }}
+                        />
                       </div>
-                  </article>
+                    </article>
                   );
                 })}
               </div>
