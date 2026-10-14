@@ -89,9 +89,10 @@ gh pr create --base main --title "<要約>" --body "<AGENTS.md の形式>"
 ## 8. レビューとマージ
 
 1. CI の結果を待つ: `gh pr checks <番号> --watch`。失敗したら直して push し直す
-2. 実装者とは別のエージェントにレビューを頼む（例: 実装が Codex なら Claude Code、Claude Code なら別のサブエージェント）。人がいる場合は人でもよい。指摘に対応し、`docs/reviews/REV-<連番>-issue<番号>.md` に記録する
-3. AGENTS.md の「自動マージの条件」をすべて確かめる。特に、`git diff --name-only origin/main...HEAD` に `docs/01_concept/`、`docs/02_requirements/`、`docs/03_design/`、`docs/adr/` が含まれるなら、人の承認がレビュー記録にあるかを確かめる
-4. 条件を満たせば `gh pr merge <番号> --merge` でマージする。満たさなければマージせず、理由を報告する
+2. 実装者とは別のエージェントにレビューを頼む（例: 実装が Codex なら Claude Code、Claude Code なら別のサブエージェント）。人がいる場合は人でもよい。レビュアーには「読み取りだけ・マージしない」と伝える。指摘に対応し、`docs/reviews/REV-<連番>-issue<番号>.md` に記録する
+3. 指摘に対応して直したときは、**修正分を同じ方法で再レビュー**し、「承認」を得る。再レビューの結果をレビュー記録に追記する
+4. AGENTS.md の「自動マージの条件」をすべて確かめる。特に、`git diff --name-only origin/main...HEAD` に `docs/01_concept/`、`docs/02_requirements/` 、`AGENTS.md`、`CLAUDE.md`、`.claude/`、`docs/00_plan/` が含まれるなら、本人の指示か承認がレビュー記録にあるかを確かめる。採用した設計への提案は、レビュー記録と今の反復の振り返り（`docs/iterations/itNN/retrospective.md`）に書く
+5. 条件を満たせば、マージの直前に `gh pr checks <番号>` を確かめ、`gh pr merge <番号> --merge` を 1 回だけ実行する。拒否されたら AGENTS.md の「マージのしかた」に従う。条件を満たさなければマージせず、理由を報告する
 
 ## 9. 報告
 
