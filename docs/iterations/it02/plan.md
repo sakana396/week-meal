@@ -46,7 +46,7 @@
 | 成果物 | 置き場所 |
 |---|---|
 | 本計画書 | `docs/iterations/it02/plan.md` |
-| ユースケース（反復 2 の範囲） | `docs/02_requirements/use-cases.md`（要求の文書なので本人の承認後に追記。今回は設計書の画面遷移で代える） |
+| ユースケース（反復 2 の範囲） | 設計書 DES-IT02 の画面遷移（3.1）で代える（use-cases.md は要求の文書なので、追記は本人の承認後） |
 | 設計書（反復 2） | `docs/03_design/design-it02.md` |
 | ADR-0004 保存方式 | `docs/adr/0004-storage.md` |
 | テスト仕様書（反復 2） | `docs/04_test/test-spec-it02.md` |

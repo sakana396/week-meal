@@ -6,8 +6,6 @@
 |---|---|---|---|
 | 企画 | 要求抽出記録（ヒアリング） | [01_concept/elicitation-notes.md](01_concept/elicitation-notes.md) | 追記中 |
 | 企画 | 企画書 | [01_concept/concept.md](01_concept/concept.md) | ドラフト |
-| 画面 | 画面設計メモ | [screen-design.md](screen-design.md) | 参考（設計書に取り込み後に削除） |
-| 画面 | 画面遷移図 | [screen-flow.md](screen-flow.md) | 参考（設計書に取り込み後に削除） |
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
 | 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.1 確定 |
@@ -18,6 +16,10 @@
 | 設計 | 食品データ ADR | [adr/0002-food-data.md](adr/0002-food-data.md) | 承認待ち |
 | 設計 | 計算方式 ADR | [adr/0003-balance-calculation.md](adr/0003-balance-calculation.md) | 承認待ち |
 | 設計 | 設計書（反復 1） | [03_design/design-it01.md](03_design/design-it01.md) | 承認待ち |
+| 反復 | 反復 2（登録と判定の画面）計画書 | [iterations/it02/plan.md](iterations/it02/plan.md) | v0.1 |
+| 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
+| 設計 | 保存方式 ADR | [adr/0004-storage.md](adr/0004-storage.md) | 採用 |
+| 試験 | テスト仕様書（反復 2） | [04_test/test-spec-it02.md](04_test/test-spec-it02.md) | 追記中 |
 | 試験 | テスト仕様書（反復 1） | [04_test/test-spec-it01.md](04_test/test-spec-it01.md) | 追記中 |
 | 横断 | トレーサビリティマトリクス | [traceability.md](traceability.md) | 反復 1 の行を用意 |
 | 横断 | レビュー記録 | [reviews/](reviews/) | 記録中 |
