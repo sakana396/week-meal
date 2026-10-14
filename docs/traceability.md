@@ -17,21 +17,21 @@
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |
 | FR-QTY-02 | #5 | DES-QTY-01, 02 | TC-FR-QTY-02-01〜05 | src/core/quantity.ts, src/data/unitWeights.ts | 実装済み |
 | FR-QTY-03 | #5 | DES-QTY-02 | TC-FR-QTY-02-01, TC-FR-QTY-03-01, 02 | src/core/quantity.ts | 実装済み |
-| FR-QTY-05 | #5 | DES-QTY-02 | TC-FR-QTY-05-01, 02 | src/core/quantity.ts | 実装済み |
+| FR-QTY-05 | #5, #8 | DES-QTY-02, DES-ANL-01 | TC-FR-QTY-05-01〜04 | src/core/quantity.ts, src/core/analyze.ts | 実装済み |
 | FR-QTY-06 | #5 | DES-QTY-02 | （査閲: グラムを入力させる引数がない） | src/core/quantity.ts | 実装済み |
-| FR-STP-03 | #7 | DES-NUT-02, DES-STP-01 | TC-FR-STP-03-01〜06 | src/core/nutrition.ts | 実装済み（計算。設定画面は IT02） |
+| FR-STP-03 | #7, #8 | DES-NUT-02, DES-STP-01, DES-ANL-01 | TC-FR-STP-03-01〜08 | src/core/nutrition.ts, src/core/analyze.ts | 実装済み（計算。設定画面は IT02） |
 | FR-STP-04 | #6 | DES-BAL-02 | TC-FR-STP-04-01〜05 | src/core/balance.ts, src/core/profile.ts | 実装済み（計算。設定画面は IT02） |
 | FR-NUT-01 | #7 | DES-NUT-01 | TC-FR-NUT-01-01〜05 | src/core/nutrition.ts | 実装済み |
 | FR-NUT-02 | #7 | DES-NUT-03 | TC-FR-NUT-02-01, 02 | src/core/nutrition.ts | 実装済み |
-| FR-NUT-03 | #7 | DES-NUT-03 | TC-FR-NUT-03-01 | src/core/nutrition.ts | 実装済み |
+| FR-NUT-03 | #7, #8 | DES-NUT-03, DES-ANL-01 | TC-FR-NUT-03-01, 02 | src/core/nutrition.ts, src/core/analyze.ts | 実装済み |
 | FR-NUT-04 | #7 | DES-NUT-04 | TC-FR-NUT-04-01〜03 | src/core/nutrition.ts | 実装済み |
 | FR-NUT-05 | #7 | DES-NUT-01, 03 | TC-FR-NUT-05-01〜03 | src/core/nutrition.ts | 実装済み（計算。画面の表示は #9） |
-| FR-NUT-06 | #8 | DES-ANL-01 | | | 未着手 |
-| FR-BAL-01 | #6, #8 | DES-BAL-01, 02, 04 | TC-FR-BAL-01-01 | src/data/dietaryReference.ts | 一部実装（#6: 基準値データ） |
-| FR-BAL-02 | #8 | DES-BAL-04 | | | 未着手 |
-| FR-BAL-03 | #8 | DES-BAL-04 | | | 未着手 |
-| FR-BAL-04 | #8 | DES-BAL-03 | | | 未着手 |
-| FR-BAL-05 | #8 | DES-BAL-05 | | | 未着手 |
+| FR-NUT-06 | #8 | DES-ANL-01 | TC-FR-NUT-06-01, 02 | src/core/analyze.ts | 実装済み |
+| FR-BAL-01 | #6, #8 | DES-BAL-01, 02, 04 | TC-FR-BAL-01-01〜04 | src/data/dietaryReference.ts, src/core/balance.ts, src/core/analyze.ts | 実装済み |
+| FR-BAL-02 | #8 | DES-BAL-04 | TC-FR-BAL-02-01〜07 | src/core/balance.ts | 実装済み |
+| FR-BAL-03 | #8 | DES-BAL-04 | TC-FR-BAL-03-01〜06 | src/core/balance.ts | 実装済み |
+| FR-BAL-04 | #8 | DES-BAL-03 | TC-FR-BAL-04-01 | src/core/balance.ts | 実装済み |
+| FR-BAL-05 | #8 | DES-BAL-05 | TC-FR-BAL-05-01〜03 | src/core/analyze.ts | 実装済み（判定。画面の表示は #9） |
 | FR-UI-01 | #9 | DES-UI-01 | | | 未着手 |
 | FR-UI-07 | #9 | DES-UI-01 | | | 未着手 |
 | NFR-07 | #9 | DES-UI-01 | | | 未着手 |

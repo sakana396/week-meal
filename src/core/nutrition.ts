@@ -109,6 +109,7 @@ export function nutrientRatios(
         key,
         {
           per1000kcal: (total.amount / total.coveredEnergyKcal) * 1000,
+          // 数式上は 1 を超えないが、浮動小数点の誤差で 1 をわずかに超えないようにする
           coverage: Math.min(1, total.coveredEnergyKcal / totalEnergyKcal),
         },
       ];
