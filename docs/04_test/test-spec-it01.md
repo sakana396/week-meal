@@ -25,6 +25,26 @@
 | TC-NFR-08-03 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` で `.tsx` からの react の import、下の階層からの `../../App`・`../ui/*` の import、`globalThis.localStorage`、引数なしの `new Date()`、動的 `import("react")`、`import("react").FC` を書いて `npm run lint` | すべて誤りになる。`../data/*` の import と `new Date(0)` は誤りにならない（#2 で手動確認） | 異常 |
 | TC-QA-02-01 | QA-02 / DES-DEV-02 | 網羅率の閾値 80% | テストのない関数を `src/core/` に置いて `npm run test:coverage` | 終了コードが 0 以外になる（#2 で手動確認） | 異常 |
 | TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
+| TC-FR-NUT-01-01 | FR-NUT-01 / DES-NUT-01 | A（200 kcal、P10g/100g）200g、B（100 kcal、P5g/100g）300g | 合計する | エネルギー 200×2+100×3 = 700、たんぱく質 10×2+5×3 = 35 | 正常 |
+| TC-FR-NUT-01-02 | FR-NUT-01 / DES-NUT-01 | 同上 | 重さ 0 の食材を足す | 合計が変わらない | 境界 |
+| TC-FR-NUT-01-03 | FR-NUT-01 / DES-NUT-01 | 同上 | 重さ −100 の食材を足す | 合計が変わらない | 異常 |
+| TC-FR-NUT-01-04 | FR-NUT-01 / DES-NUT-01 | 同上 | 重さ NaN の食材を足す | 合計が変わらない | 異常 |
+| TC-FR-NUT-01-05 | FR-NUT-01 / DES-NUT-01 | — | 食材なし | すべて null | 境界 |
+| TC-FR-NUT-05-01 | FR-NUT-05 / DES-NUT-01 | A はビタミン C 50mg、B はデータなし | 合計する | 100mg、エネルギーは A の 400 kcal だけ | 正常 |
+| TC-FR-NUT-05-02 | FR-NUT-05 / DES-NUT-01 | どちらもビタミン D のデータなし | 合計する | null | 境界 |
+| TC-FR-NUT-05-03 | FR-NUT-05 / DES-NUT-01 | エネルギーのデータがない食材 C | C を足す | C を数えない | 異常 |
+| TC-FR-STP-03-01 | FR-STP-03 / DES-NUT-02 | ご飯 156 kcal/100g | 中盛り（0.4）、主食以外 1,200 kcal | 主食 800 kcal → 800 ÷ 156 × 100 = 512.82g | 正常 |
+| TC-FR-STP-03-02 | FR-STP-03 / DES-NUT-02 | 同上 | 小・中・大盛りで主食を足す | 主食のエネルギーの比率が 0.3・0.4・0.5 になる | 正常 |
+| TC-FR-STP-03-03 | FR-STP-03 / DES-NUT-02 | 同上 | 比率 0 | null（主食なし） | 境界 |
+| TC-FR-STP-03-04 | FR-STP-03 / DES-NUT-02 | 同上 | 比率 1 | null | 異常 |
+| TC-FR-STP-03-05 | FR-STP-03 / DES-NUT-02 | 同上 | 主食以外のエネルギー 0 | null | 境界 |
+| TC-FR-STP-03-06 | FR-STP-03 / DES-NUT-02 | エネルギーのデータがない主食 | 中盛り | null | 異常 |
+| TC-FR-NUT-02-01 | FR-NUT-02 / DES-NUT-03 | TC-FR-NUT-01-01 の合計、全体 700 kcal | 割合を求める | たんぱく質 35 ÷ 700 × 1,000 = 50g・カバー率 1、ビタミン C 100 ÷ 400 × 1,000 = 250mg・カバー率 4/7 | 正常 |
+| TC-FR-NUT-02-02 | FR-NUT-02 / DES-NUT-03 | 同上 | データのない栄養素、全体 0 kcal | null | 境界 |
+| TC-FR-NUT-03-01 | FR-NUT-03 / DES-NUT-02, 03 | 中盛りの主食を足す | 食材の量を 2・3・7.5 倍にする | 1,000 kcal あたりの量とカバー率が変わらない | 正常 |
+| TC-FR-NUT-04-01 | FR-NUT-04 / DES-NUT-04 | 1,000 kcal あたり P 50g・F 20g・C 155g | 比率を求める | 200:180:620 → 20%・18%・62% | 正常 |
+| TC-FR-NUT-04-02 | FR-NUT-04 / DES-NUT-04 | 脂質のデータなし | 比率を求める | null | 異常 |
+| TC-FR-NUT-04-03 | FR-NUT-04 / DES-NUT-04 | 3 つとも 0 | 比率を求める | null | 境界 |
 | TC-FR-STP-04-01 | FR-STP-04 / DES-BAL-02 | — | 男性・30〜49 歳 | エネルギー 2,750 kcal、食塩 7.5g、鉄 7.5mg | 正常 |
 | TC-FR-STP-04-02 | FR-STP-04 / DES-BAL-02 | — | 女性・75 歳以上 | エネルギー 1,750 kcal、食塩 6.5g、鉄 5.5mg | 境界 |
 | TC-FR-STP-04-03 | FR-STP-04 / DES-BAL-02 | — | 男性・18〜29 歳 | エネルギー 2,600 kcal、食塩 7.5g、鉄 7.0mg | 境界 |
