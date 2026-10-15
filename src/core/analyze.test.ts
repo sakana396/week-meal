@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { extraReferenceBasis } from "../data/dietaryReference";
 import foodsJson from "../data/foods.json";
 import type { FoodItem } from "../types";
 import {
@@ -62,6 +63,9 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     const result = analyzeBasket(basket, defaultProfile);
     if (result.kind !== "judged") throw new Error("判定されなかった");
     expect(result.results).toHaveLength(14);
+    expect(result.details.map((detail) => detail.key).sort()).toEqual(
+      Object.keys(extraReferenceBasis).sort(),
+    );
     expect(result.pfc).not.toBeNull();
     expect(result.approximateItems).toEqual([]);
   });
