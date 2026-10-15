@@ -57,7 +57,7 @@
 | FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-11-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-12-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-13 | #26 | DES-UI-36 | | | 未着手 |
-| FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜03 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
+| FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜04 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-02 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-05 | #29 | DES-UI-23 | | | 未着手 |
