@@ -36,6 +36,8 @@ export type AnalysisResult =
       /** tooFewItems: 品目が足りない、noEnergy: 品目はあるがエネルギーが 0 */
       reason: "tooFewItems" | "noEnergy";
       itemCount: number;
+      /** エネルギーのデータがなく、判定に数えなかった食材名（DES-ANL-03） */
+      noDataItems: string[];
     }
   | {
       kind: "judged";
@@ -43,6 +45,8 @@ export type AnalysisResult =
       pfc: Pfc | null;
       /** 目安重量がなく、1 単位 = 100g の概算で数えた食材名 */
       approximateItems: string[];
+      /** エネルギーのデータがなく、判定に数えなかった食材名（DES-ANL-03） */
+      noDataItems: string[];
     };
 
 /** 計算に使う定義データ。テストで差し替えられるようにする */
@@ -64,7 +68,8 @@ export const defaultAnalysisData: AnalysisData = {
 
 /**
  * 登録した食材から偏りを判定する（DES-ANL-01、FR-NUT-06、FR-BAL-05）。
- * 使い切った食材と個数 0 以下の食材を除き、主食を除いて 3 品目未満なら判定しない。
+ * 使い切った食材と個数 0 以下の食材を除き、エネルギーのデータがある食材が
+ * 主食を除いて 3 品目未満なら判定しない（DES-ANL-03）。
  * 量を換算し、主食を盛りの比率で足し、1,000 kcal あたりに直して基準値と比べる。
  */
 export function analyzeBasket(
@@ -72,14 +77,26 @@ export function analyzeBasket(
   profile: Profile,
   data: AnalysisData = defaultAnalysisData,
 ): AnalysisResult {
-  const active = items.filter(
+  const counted = items.filter(
     (item) => !item.usedUp && Number.isFinite(item.count) && item.count > 0,
   );
+  // エネルギーのデータがない食材は割合を求められないので、3 品目の数に入れない（DES-ANL-03）
+  const active = counted.filter(
+    (item) => item.food.nutrientsPer100g.energyKcal !== null,
+  );
+  const noDataItems = [
+    ...new Set(
+      counted
+        .filter((item) => item.food.nutrientsPer100g.energyKcal === null)
+        .map((item) => item.displayName),
+    ),
+  ];
   if (active.length < minimumItemCount) {
     return {
       kind: "insufficient",
       reason: "tooFewItems",
       itemCount: active.length,
+      noDataItems,
     };
   }
 
@@ -87,7 +104,10 @@ export function analyzeBasket(
   const basket: BasketItem[] = active.map((item) => {
     const amount = edibleGrams(
       item.food,
-      data.unitWeights[item.displayName],
+      // 保存データから来る自由な食材名で Object.prototype の値を拾わないよう、自分のキーだけを引く
+      Object.hasOwn(data.unitWeights, item.displayName)
+        ? data.unitWeights[item.displayName]
+        : undefined,
       item.count,
     );
     if (amount.approximate && !approximateItems.includes(item.displayName)) {
@@ -102,6 +122,7 @@ export function analyzeBasket(
       kind: "insufficient",
       reason: "noEnergy",
       itemCount: active.length,
+      noDataItems,
     };
   }
 
@@ -116,7 +137,7 @@ export function analyzeBasket(
   const ratios = nutrientRatios(totals, totals.energyKcal?.amount ?? 0);
   const pfc = pfcRatio(ratios);
   const results = judgeBalance(ratios, pfc, referenceFor(profile));
-  return { kind: "judged", results, pfc, approximateItems };
+  return { kind: "judged", results, pfc, approximateItems, noDataItems };
 }
 
 /** 感度分析の結果: ずらした食材と、判定が変わった栄養素（DES-ANL-02） */
@@ -143,7 +164,7 @@ export function sensitivity(
   if (base.kind !== "judged") return [];
 
   const names = [...new Set(items.map((item) => item.displayName))].filter(
-    (name) => data.unitWeights[name],
+    (name) => Object.hasOwn(data.unitWeights, name),
   );
   return names.flatMap((name) => {
     const weight = data.unitWeights[name];

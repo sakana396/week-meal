@@ -37,6 +37,10 @@ export default function App() {
     };
   }, [loaded.available, browser, state]);
 
+  const findFood = (foodId: string) =>
+    foodsById.get(foodId) ??
+    state.manualFoods.find((food) => food.id === foodId);
+
   const analysis = useMemo(
     () => analyzeBasket(toRegisteredItems(state, foodsById), state.profile),
     [state],
@@ -44,6 +48,7 @@ export default function App() {
 
   const notice = (
     <StorageNotice
+      available={loaded.available}
       backedUp={loaded.backedUp}
       issue={loaded.issue}
       saveFailed={saveFailed}
@@ -57,6 +62,8 @@ export default function App() {
         {route === "home" && (
           <HomeScreen
             analysis={analysis}
+            dispatch={dispatch}
+            findFood={findFood}
             navigate={navigate}
             notice={notice}
             state={state}
