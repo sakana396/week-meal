@@ -78,7 +78,9 @@ test("TC-FR-UI-01-01 3 品目以上で判定し、買った食材の傾向であ
   ).toBeVisible();
   await expect(panel.getByText("買った食材の傾向です")).toBeVisible();
   // 不足・過剰は色だけでなく文字でも示す（NFR-07）
-  for (const badge of await panel.locator(".balance-status").all()) {
+  const badges = panel.locator(".balance-status");
+  expect(await badges.count()).toBeGreaterThan(0);
+  for (const badge of await badges.all()) {
     await expect(badge).toHaveText(/不足|過剰/);
   }
 });
@@ -87,12 +89,28 @@ test("TC-NFR-02-01 ホームから食材 1 件の登録が 3 タップ以内で�
   page,
 }) => {
   await page.goto("/#/");
-  let taps = 0;
+  await page.evaluate(() => {
+    sessionStorage.setItem("registrationClicks", "0");
+    document.addEventListener(
+      "click",
+      () => {
+        const count = Number(sessionStorage.getItem("registrationClicks"));
+        sessionStorage.setItem("registrationClicks", String(count + 1));
+      },
+      { capture: true },
+    );
+  });
   await openTab(page, "登録");
-  taps += 1;
   await registerFood(page, "キャベツ");
-  taps += 1;
-  expect(taps).toBeLessThanOrEqual(3);
+  await expect(page).toHaveURL(/#\/register$/);
+  expect(
+    await page.evaluate(() =>
+      Number(sessionStorage.getItem("registrationClicks")),
+    ),
+  ).toBe(2);
+  await page.reload();
+  await openTab(page, "ホーム");
+  await expect(itemRow(page, "キャベツ")).toHaveCount(1);
 });
 
 test("TC-FR-ING-10-07 個数を 0.5 ずつ増減でき、0.5 では減らせず、削除できる", async ({
@@ -113,6 +131,39 @@ test("TC-FR-ING-10-07 個数を 0.5 ずつ増減でき、0.5 では減らせず�
   await row.getByRole("button", { name: "にんじんを削除" }).click();
   await expect(itemRow(page, "にんじん")).toHaveCount(0);
   await expect(itemRow(page, "キャベツ")).toHaveCount(1);
+});
+
+test("TC-FR-ING-10-08 999 個では増やせない", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "weekmeal:state",
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: "item-999",
+            foodId: "06212",
+            displayName: "にんじん",
+            count: 999,
+            usedUp: false,
+          },
+        ],
+        manualFoods: [],
+        profile: {
+          staple: "rice",
+          portion: "medium",
+          sex: "unspecified",
+          ageGroup: "30-49",
+        },
+      }),
+    );
+  });
+  await page.goto("/#/");
+  await expect(
+    itemRow(page, "にんじん").getByRole("button", {
+      name: "にんじんを 0.5 増やす",
+    }),
+  ).toBeDisabled();
 });
 
 test("TC-FR-ING-11-02 使い切ったにすると下にまとまり、戻せる", async ({
@@ -167,7 +218,88 @@ test("TC-NFR-12-32 読めない保存データは退避し、初期状態で始�
   await expect(
     page.getByText("保存データを読めなかったので、初期状態で始めました"),
   ).toBeVisible();
+  await expect(page.getByText("登録した食材がありません")).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("weekmeal:state:backup")),
   ).toBe("{壊れた");
+});
+
+test("TC-NFR-12-33 退避できない保存データは上書きせず知らせる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("weekmeal:state", "{壊れた");
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "weekmeal:state:backup") throw new Error("退避失敗");
+      return original.call(this, key, value);
+    };
+  });
+  await page.goto("/#/");
+  await expect(page.getByText(/退避もできませんでした/)).toBeVisible();
+  await expect(page.getByText("登録した食材がありません")).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("weekmeal:state")),
+  ).toBe("{壊れた");
+});
+
+test("TC-NFR-12-34 不正な行を捨てた件数を知らせる", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "weekmeal:state",
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: "bad",
+            foodId: "unknown",
+            displayName: "不明",
+            count: 1,
+            usedUp: false,
+          },
+        ],
+        manualFoods: [],
+        profile: {
+          staple: "rice",
+          portion: "medium",
+          sex: "unspecified",
+          ageGroup: "30-49",
+        },
+      }),
+    );
+  });
+  await page.goto("/#/");
+  await expect(
+    page.getByText("保存データのうち、読み込めなかった食材が 1 件ありました。"),
+  ).toBeVisible();
+  await expect(page.getByText("登録した食材がありません")).toBeVisible();
+});
+
+test("TC-NFR-12-35 設定がないと初期値に戻した旨を知らせる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "weekmeal:state",
+      JSON.stringify({ version: 1, items: [], manualFoods: [] }),
+    );
+  });
+  await page.goto("/#/");
+  await expect(
+    page.getByText("設定を読み込めなかったので、初期値に戻しました。"),
+  ).toBeVisible();
+  await expect(page.getByText("登録した食材がありません")).toBeVisible();
+});
+
+test("TC-NFR-12-36 保存できないブラウザではその旨を知らせる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = function () {
+      throw new Error("保存不可");
+    };
+  });
+  await page.goto("/#/");
+  await expect(page.getByText(/このブラウザでは保存できません/)).toBeVisible();
+  await expect(page.getByText("登録した食材がありません")).toBeVisible();
 });

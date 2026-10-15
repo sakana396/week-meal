@@ -1,6 +1,10 @@
 import type { AnalysisResult } from "../../core/analyze";
 import type { BalanceResult, DetailResult } from "../../core/balance";
-import { highSufficiency, lowSufficiency } from "../../core/balance";
+import {
+  balanceTargets,
+  highSufficiency,
+  lowSufficiency,
+} from "../../core/balance";
 import type { Profile } from "../../core/profile";
 import { extraReferenceBasis } from "../../data/dietaryReference";
 import { NoDataNote } from "../components/BalancePanel";
@@ -92,7 +96,10 @@ function JudgedRow({ result }: { result: BalanceResult }) {
       ) : (
         <SufficiencyBar
           sufficiency={result.sufficiency}
-          upper={result.key === "saltEquivalentG"}
+          upper={balanceTargets.some(
+            (target) =>
+              target.key === result.key && target.rule.kind === "upper",
+          )}
         />
       )}
       <small>

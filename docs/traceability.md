@@ -49,29 +49,29 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜12 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/registerMessage.ts | 実装済み |
-| FR-ING-02 | #34 | DES-UI-32 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
+| FR-ING-02 | #34 | DES-UI-32 | IT01 の core テスト（画面の棚絞り込みは未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-03 | #34 | DES-UI-32 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-04 | #34 | DES-UI-33 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
+| FR-ING-04 | #34 | DES-UI-33 | IT01 の core テスト（画面の優先表示は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-05 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-06 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
+| FR-ING-06 | #34 | DES-UI-30 | IT01 の core テスト（画面の別名表示は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-07 | #34 | DES-UI-31 | TC-FR-ING-07-01 | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-ING-09 | #23, #34 | DES-UI-32, 34 | （IT01 の TC-FR-ING-09-01〜07） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-FDB-03 | #34 | DES-UI-35 | TC-FR-ING-08-01〜10 | src/ui/screens/RegisterScreen.tsx | 実装済み |
+| FR-FDB-03 | #34 | DES-UI-35 | TC-FR-ING-08-01〜10（画面の手入力は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-BAL-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-04, 05 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み |
-| FR-NUT-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-05 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み |
+| FR-NUT-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-05（画面の注記は未検証） | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み（画面は査閲） |
 | FR-UI-01 | #27 | DES-UI-20, 41 | TC-FR-UI-01-01, 02（E2E） | src/ui/screens/HomeScreen.tsx, src/ui/components/BalancePanel.tsx | 実装済み |
 | FR-UI-07 | #27 | DES-UI-41 | （E2E） | src/ui/components/BalancePanel.tsx | 実装済み |
 | NFR-07 | #27, #28 | DES-UI-22, 41 | TC-FR-UI-05-07 | src/ui/components/BalancePanel.tsx, src/ui/screens/BalanceDetailScreen.tsx, src/ui/App.css | 実装済み |
 | CST-04 | #34 | DES-UI-37 | （査閲: 食品データにない商品の成分値を作る処理がない。手入力だけ） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜11 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts | 実装済み |
+| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜11（画面の手入力は未検証） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts | 実装済み（画面は査閲） |
 | FR-QTY-01 | #24 | DES-BSK-01 | TC-FR-ING-01-01, 02 | src/core/basket.ts | 一部実装（#24: 登録時は個数 1。画面は #27） |
 | FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01, 02 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-NUT-06 | #24 | DES-BSK-07 | TC-FR-NUT-06-03 | src/core/basket.ts | 実装済み（IT01 の analyzeBasket と合わせて） |
-| FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | TC-FR-ING-10-01〜07 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
+| FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | TC-FR-ING-10-01〜08 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
 | FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-11-01, 02 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
 | FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-12-01, TC-FR-ING-11-02 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
 | FR-ING-13 | #34 | DES-UI-36 | （査閲: 1 食ごとの記録の入口がない） | src/ui/ | 実装済み |
-| FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜04, TC-FR-ING-10-07 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
+| FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜04, TC-FR-ING-10-07, 08 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01〜03 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-STP-02 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01〜03 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-STP-05 | #29 | DES-UI-23 | TC-FR-STP-05-01（IT01 の TC-FR-STP-04-05 も） | src/core/profile.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
@@ -84,11 +84,11 @@
 | FR-UI-09 | #29 | DES-UI-23 | TC-FR-STP-01-02 | src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-SYS-01 | #24, #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜10 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx | 実装済み |
 | FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |
-| IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | TC-IF-03-01 | src/ui/App.css, src/ui/components/Navigation.tsx, e2e/screens.spec.ts | 実装済み（IF-01 日本語・IF-02 タッチとマウスは E2E の 2 つの画面幅で操作して確認） |
-| NFR-01 | #30 | DES-E2E-03 | （実演: IT02 の振り返りで本人が確かめる） | e2e/ | 未検証（本人の確認待ち） |
+| IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | TC-IF-02-01, 02, TC-IF-03-01 | src/ui/App.css, src/ui/components/Navigation.tsx, e2e/screens.spec.ts | 実装済み（IF-01 は査閲、IF-02 の主な流れはタップ・キーボードで確認、IF-03〜05 は E2E） |
+| NFR-01 | #30 | DES-E2E-03 | （実演: IT02 の振り返りで本人が確かめる） | src/ui/screens/HomeScreen.tsx, src/ui/screens/RegisterScreen.tsx | 未検証（本人の確認待ち） |
 | NFR-02 | #30 | DES-E2E-03 | TC-NFR-02-01 | e2e/register-home.spec.ts | 実装済み（2 タップ） |
-| NFR-12 | #25, #26, #27, #30 | DES-STO-02〜06, DES-UI-13, DES-E2E-04 | TC-NFR-12-01, 02, 07〜32 | src/core/storage.ts, src/ui/storage.ts, src/ui/components/StorageNotice.tsx | 実装済み（E2E は #30） |
+| NFR-12 | #25, #26, #27, #30 | DES-STO-02〜06, DES-UI-13, DES-E2E-04 | TC-NFR-12-01, 02, 07〜36 | src/core/storage.ts, src/ui/storage.ts, src/ui/components/StorageNotice.tsx | 実装済み（保存異常の 5 場面を E2E で確認） |
 | NFR-13 | #25 | DES-STO-07 | TC-NFR-13-01〜11 | src/core/storage.ts | 実装済み（版の検査と移行の仕組み。仮の移行表で旧い版を読み込めることを確認） |
 | NFR-14 | #26 | DES-UI-13 | （査閲: 外部に送る処理がなく、保存は localStorage だけ） | src/ui/storage.ts | 実装済み |
-| QA-03 | #30 | DES-E2E-01〜06 | （E2E 17 項目 × 2 つの画面幅） | playwright.config.ts, e2e/, .github/workflows/ci.yml | 実装済み |
+| QA-03 | #30 | DES-E2E-01〜06 | e2e/register-home.spec.ts, e2e/screens.spec.ts | playwright.config.ts, e2e/, .github/workflows/ci.yml | 実装済み |
 | QA-09 | #28 | DES-BAL-06 | TC-FR-UI-05-01 | src/data/dietaryReference.ts（extraReferenceBasis にページと基準の種類） | 実装済み |

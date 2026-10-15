@@ -195,6 +195,8 @@ h3 {
 }
 
 .food-browser-list {
+  grid-auto-rows: max-content;
+  align-content: start;
   max-height: 58vh;
   overflow: auto;
   padding-right: 4px;

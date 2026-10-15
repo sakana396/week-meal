@@ -14,8 +14,7 @@ export async function openTab(
 /** 食材登録画面で、簡易モードの食材名を押して登録する */
 export async function registerFood(page: Page, name: string) {
   await page
-    .getByRole("group", { name: "食材名一覧" })
-    .or(page.getByLabel("食材名一覧"))
+    .getByLabel("食材名一覧")
     .getByRole("button", { name: new RegExp(`^${name}`) })
     .first()
     .click();
