@@ -11,7 +11,7 @@
 | FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
 | FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜10 | src/core/catalog.ts（まとめ・代表食品）, src/App.tsx（押して登録） | 実装済み（まとめ・代表食品。画面は IT02 で E2E） |
 | FR-ING-06 | #3, #5 | DES-CAT-01 | TC-FR-ING-06-01〜20 | src/core/catalog.ts | 実装済み |
-| FR-ING-09 | #3, #4, #9 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07 | src/core/catalog.ts, scripts/food-selection.json, src/App.tsx | 実装済み（判定・データ。画面は手動確認待ち、IT02 で E2E） |
+| FR-ING-09 | #3, #4, #9, #20 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（画面は IT02 の E2E TC-FR-ING-09-06） |
 | FR-FDB-01 | #4, #20 | DES-FDB-01, 02 | TC-FR-FDB-01-01, 02 | scripts/food-selection.json, src/data/foods.json | 実装済み |
 | FR-FDB-02 | #4 | DES-FDB-01, 02 | TC-FR-FDB-02-01〜04 | scripts/convert-mext-foods.py | 実装済み |
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |
@@ -38,7 +38,7 @@
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
-| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜07 | src/data/integrity.test.ts | 実装済み |
+| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜08 | src/data/integrity.test.ts | 実装済み |
 | NFR-15 | #7 | DES-NUT-01〜04 | TC-FR-NUT-01-01, 02-01, 04-01, TC-FR-STP-03-01 | src/core/nutrition.test.ts | 実装済み |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
