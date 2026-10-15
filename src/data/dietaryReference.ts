@@ -241,3 +241,251 @@ export const dietaryReference: Record<Sex, Record<AgeGroup, DailyReference>> = {
     },
   },
 };
+
+/**
+ * 判定しないビタミン・ミネラルの基準値（DES-BAL-06、REV-013 #1）。
+ * 栄養詳細画面で充足率だけを出すのに使う。推奨量があれば推奨量、なければ目安量。
+ * 値は上と同じ報告書（正誤表 令和7年3月25日 反映版の分割 PDF）で、表のページを画像とテキストの 2 通りで読んで確かめた。
+ */
+export type ExtraReferenceKey =
+  | "alphaTocopherolMg"
+  | "vitaminKUg"
+  | "vitaminB6Mg"
+  | "vitaminB12Ug"
+  | "folateUg"
+  | "niacinEquivalentMg"
+  | "pantothenicAcidMg"
+  | "biotinUg"
+  | "magnesiumMg"
+  | "phosphorusMg"
+  | "copperMg"
+  | "manganeseMg"
+  | "iodineUg"
+  | "seleniumUg"
+  | "chromiumUg"
+  | "molybdenumUg";
+
+/** 各栄養素の基準の種類と、報告書の印刷ページ（QA-09） */
+export const extraReferenceBasis: Record<
+  ExtraReferenceKey,
+  { basis: "推奨量" | "目安量"; page: number; label: string }
+> = {
+  alphaTocopherolMg: {
+    basis: "目安量",
+    page: 183,
+    label: "ビタミン E（α-トコフェロール）（mg）",
+  },
+  vitaminKUg: { basis: "目安量", page: 184, label: "ビタミン K（μg）" },
+  vitaminB6Mg: { basis: "推奨量", page: 237, label: "ビタミン B6（mg）" },
+  vitaminB12Ug: { basis: "目安量", page: 238, label: "ビタミン B12（μg）" },
+  folateUg: { basis: "推奨量", page: 239, label: "葉酸（μg）" },
+  niacinEquivalentMg: {
+    basis: "推奨量",
+    page: 236,
+    label: "ナイアシン（mgNE）",
+  },
+  pantothenicAcidMg: {
+    basis: "目安量",
+    page: 240,
+    label: "パントテン酸（mg）",
+  },
+  biotinUg: { basis: "目安量", page: 241, label: "ビオチン（μg）" },
+  magnesiumMg: { basis: "推奨量", page: 284, label: "マグネシウム（mg）" },
+  phosphorusMg: { basis: "目安量", page: 285, label: "リン（mg）" },
+  copperMg: { basis: "推奨量", page: 347, label: "銅（mg）" },
+  manganeseMg: { basis: "目安量", page: 348, label: "マンガン（mg）" },
+  iodineUg: { basis: "推奨量", page: 349, label: "ヨウ素（μg）" },
+  seleniumUg: { basis: "推奨量", page: 350, label: "セレン（μg）" },
+  chromiumUg: { basis: "目安量", page: 351, label: "クロム（μg）" },
+  molybdenumUg: { basis: "推奨量", page: 352, label: "モリブデン（μg）" },
+};
+
+export const extraDietaryReference: Record<
+  Sex,
+  Record<AgeGroup, Record<ExtraReferenceKey, number>>
+> = {
+  male: {
+    "18-29": {
+      alphaTocopherolMg: 6.5,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.5,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 15,
+      pantothenicAcidMg: 6,
+      biotinUg: 50,
+      magnesiumMg: 340,
+      phosphorusMg: 1000,
+      copperMg: 0.8,
+      manganeseMg: 3.5,
+      iodineUg: 140,
+      seleniumUg: 30,
+      chromiumUg: 10,
+      molybdenumUg: 30,
+    },
+    "30-49": {
+      alphaTocopherolMg: 6.5,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.5,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 16,
+      pantothenicAcidMg: 6,
+      biotinUg: 50,
+      magnesiumMg: 380,
+      phosphorusMg: 1000,
+      copperMg: 0.9,
+      manganeseMg: 3.5,
+      iodineUg: 140,
+      seleniumUg: 35,
+      chromiumUg: 10,
+      molybdenumUg: 30,
+    },
+    "50-64": {
+      alphaTocopherolMg: 6.5,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.5,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 15,
+      pantothenicAcidMg: 6,
+      biotinUg: 50,
+      magnesiumMg: 370,
+      phosphorusMg: 1000,
+      copperMg: 0.9,
+      manganeseMg: 3.5,
+      iodineUg: 140,
+      seleniumUg: 30,
+      chromiumUg: 10,
+      molybdenumUg: 30,
+    },
+    "65-74": {
+      alphaTocopherolMg: 7.5,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.4,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 14,
+      pantothenicAcidMg: 6,
+      biotinUg: 50,
+      magnesiumMg: 350,
+      phosphorusMg: 1000,
+      copperMg: 0.8,
+      manganeseMg: 3.5,
+      iodineUg: 140,
+      seleniumUg: 30,
+      chromiumUg: 10,
+      molybdenumUg: 30,
+    },
+    "75+": {
+      alphaTocopherolMg: 7,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.4,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 13,
+      pantothenicAcidMg: 6,
+      biotinUg: 50,
+      magnesiumMg: 330,
+      phosphorusMg: 1000,
+      copperMg: 0.8,
+      manganeseMg: 3.5,
+      iodineUg: 140,
+      seleniumUg: 30,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+  },
+  female: {
+    "18-29": {
+      alphaTocopherolMg: 5,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.2,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 11,
+      pantothenicAcidMg: 5,
+      biotinUg: 50,
+      magnesiumMg: 280,
+      phosphorusMg: 800,
+      copperMg: 0.7,
+      manganeseMg: 3,
+      iodineUg: 140,
+      seleniumUg: 25,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+    "30-49": {
+      alphaTocopherolMg: 6,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.2,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 12,
+      pantothenicAcidMg: 5,
+      biotinUg: 50,
+      magnesiumMg: 290,
+      phosphorusMg: 800,
+      copperMg: 0.7,
+      manganeseMg: 3,
+      iodineUg: 140,
+      seleniumUg: 25,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+    "50-64": {
+      alphaTocopherolMg: 6,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.2,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 11,
+      pantothenicAcidMg: 5,
+      biotinUg: 50,
+      magnesiumMg: 290,
+      phosphorusMg: 800,
+      copperMg: 0.7,
+      manganeseMg: 3,
+      iodineUg: 140,
+      seleniumUg: 25,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+    "65-74": {
+      alphaTocopherolMg: 7,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.2,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 11,
+      pantothenicAcidMg: 5,
+      biotinUg: 50,
+      magnesiumMg: 280,
+      phosphorusMg: 800,
+      copperMg: 0.7,
+      manganeseMg: 3,
+      iodineUg: 140,
+      seleniumUg: 25,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+    "75+": {
+      alphaTocopherolMg: 6,
+      vitaminKUg: 150,
+      vitaminB6Mg: 1.2,
+      vitaminB12Ug: 4,
+      folateUg: 240,
+      niacinEquivalentMg: 10,
+      pantothenicAcidMg: 5,
+      biotinUg: 50,
+      magnesiumMg: 270,
+      phosphorusMg: 800,
+      copperMg: 0.7,
+      manganeseMg: 3,
+      iodineUg: 140,
+      seleniumUg: 25,
+      chromiumUg: 10,
+      molybdenumUg: 25,
+    },
+  },
+};
