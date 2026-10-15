@@ -1,6 +1,6 @@
 import { ageGroups } from "../data/dietaryReference";
 import { nutrientDefinitions } from "../data/nutrients";
-import type { FoodItem } from "../types";
+import type { FoodItem, NutrientsPer100g } from "../types";
 import {
   initialAppState,
   minimumCount,
@@ -9,25 +9,29 @@ import {
 } from "./basket";
 import { defaultProfile, type Profile } from "./profile";
 
-/** 保存データの版（DES-STO-04、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
+/** 保存データの版（DES-STO-07、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
 export const storageVersion = 1;
+
+/** 1 行の個数の上限（DES-STO-04） */
+export const maximumCount = 999;
+
+/** 手入力の食品の ID の接頭辞（DES-BSK-08） */
+export const manualFoodIdPrefix = "manual-";
 
 /** 読み込みで起きた問題（DES-STO-02） */
 export type StorageIssue =
   null | "corrupted" | { droppedItems: number; profileReset: boolean };
 
-type StoredState = {
-  version: number;
-  items: unknown;
-  manualFoods?: unknown;
-  profile?: unknown;
-};
+/** 移行の途中の保存データ */
+export type StoredState = { version: number } & Record<string, unknown>;
+
+export type Migrations = Record<number, (stored: StoredState) => StoredState>;
 
 /**
- * 旧い版を 1 つ新しい版に直す関数（DES-STO-04、NFR-13）。
+ * 旧い版を 1 つ新しい版に直す関数（DES-STO-07、NFR-13）。
  * キーは移行前の版。版 1 が最初の版なので、今は空。
  */
-const migrations: Record<number, (stored: StoredState) => StoredState> = {};
+const migrations: Migrations = {};
 
 /** 状態を保存用の JSON 文字列にする（DES-STO-01、FR-SYS-01） */
 export function serializeState(state: AppState): string {
@@ -39,121 +43,178 @@ export function serializeState(state: AppState): string {
   });
 }
 
+/**
+ * 保存データを今の版まで 1 つずつ移行する（DES-STO-07）。
+ * 移行の関数がない、または移行しても版が上がらないときは null を返す。
+ */
+export function migrateStored(
+  stored: StoredState,
+  table: Migrations,
+  targetVersion: number,
+): StoredState | null {
+  let current = stored;
+  while (current.version < targetVersion) {
+    const migrate = table[current.version];
+    if (!migrate) return null;
+    const next = migrate(current);
+    if (!(next.version > current.version)) return null;
+    current = next;
+  }
+  return current;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+/** 設定を検査し、4 項目だけで作り直す（DES-STO-06） */
 function parseProfile(value: unknown): Profile | null {
   if (!isRecord(value)) return null;
   const { sex, ageGroup, staple, portion } = value;
-  const ok =
+  if (
     (sex === "male" || sex === "female" || sex === "unspecified") &&
     ageGroups.includes(ageGroup as Profile["ageGroup"]) &&
     (staple === "rice" ||
       staple === "bread" ||
       staple === "noodle" ||
       staple === "none") &&
-    (portion === "small" || portion === "medium" || portion === "large");
-  return ok ? (value as Profile) : null;
+    (portion === "small" || portion === "medium" || portion === "large")
+  ) {
+    return { sex, ageGroup: ageGroup as Profile["ageGroup"], staple, portion };
+  }
+  return null;
 }
 
-function parseManualFood(value: unknown): FoodItem | null {
+/** 手入力の食品を検査し、検査した項目だけで作り直す（DES-STO-05） */
+function parseManualFood(
+  value: unknown,
+  knownFoodIds: ReadonlySet<string>,
+): FoodItem | null {
   if (!isRecord(value)) return null;
   const { id, name, category, refusePct, nutrientsPer100g } = value;
   if (
-    typeof id !== "string" ||
+    !isNonEmptyString(id) ||
+    !id.startsWith(manualFoodIdPrefix) ||
+    knownFoodIds.has(id) ||
     typeof name !== "string" ||
     typeof category !== "string"
   ) {
     return null;
   }
-  if (refusePct !== null && typeof refusePct !== "number") return null;
-  if (!isRecord(nutrientsPer100g)) return null;
-  const nutrientsOk = nutrientDefinitions.every(({ key }) => {
+  const refuseOk =
+    refusePct === null ||
+    (typeof refusePct === "number" &&
+      Number.isFinite(refusePct) &&
+      refusePct >= 0 &&
+      refusePct <= 100);
+  if (!refuseOk || !isRecord(nutrientsPer100g)) return null;
+
+  const nutrients: Partial<NutrientsPer100g> = {};
+  for (const { key } of nutrientDefinitions) {
     const nutrient = nutrientsPer100g[key];
-    return (
-      nutrient === null || nutrient === undefined || Number.isFinite(nutrient)
-    );
-  });
-  return nutrientsOk ? (value as FoodItem) : null;
+    if (nutrient === null || nutrient === undefined) {
+      nutrients[key] = null;
+    } else if (
+      typeof nutrient === "number" &&
+      Number.isFinite(nutrient) &&
+      nutrient >= 0
+    ) {
+      nutrients[key] = nutrient;
+    } else {
+      return null;
+    }
+  }
+  return {
+    id,
+    name,
+    category,
+    refusePct: refusePct as number | null,
+    nutrientsPer100g: nutrients as NutrientsPer100g,
+  };
 }
 
+/** 行を検査し、作り直す（DES-STO-04） */
 function parseEntry(
   value: unknown,
-  knownFoodIds: ReadonlySet<string>,
+  usableFoodIds: ReadonlySet<string>,
 ): BasketEntry | null {
   if (!isRecord(value)) return null;
   const { id, foodId, displayName, count, usedUp } = value;
   const ok =
-    typeof id === "string" &&
+    isNonEmptyString(id) &&
     typeof foodId === "string" &&
-    knownFoodIds.has(foodId) &&
-    typeof displayName === "string" &&
+    usableFoodIds.has(foodId) &&
+    isNonEmptyString(displayName) &&
     typeof count === "number" &&
-    Number.isFinite(count) &&
+    Number.isInteger(count * 2) &&
     count >= minimumCount &&
+    count <= maximumCount &&
     typeof usedUp === "boolean";
   return ok ? { id, foodId, displayName, count, usedUp } : null;
 }
 
 /**
- * 保存データを読み込む（DES-STO-02〜04、NFR-12, 13）。
+ * 保存データを読み込む（DES-STO-02〜07、NFR-12, 13）。
  * - 保存データがなければ初期状態（問題なし）
- * - JSON として読めない・形が違う・版が新しすぎるときは、初期状態と "corrupted"
- * - 形のおかしい行や、食品データにも手入力にもない食品の行は捨て、捨てた件数を返す
- * - 設定の形が違うときは初期値にする
+ * - JSON として読めない・形が違う・版がない／新しすぎる／移行できないときは、初期状態と "corrupted"
+ * - 形のおかしい行、使える食品のない行、ID が重複した行は捨て、捨てた件数を返す
+ * - 手入力の食品は形を確かめ、おかしいもの・どの行からも参照されないものは捨てる
+ * - 設定の形が違う・ないときは初期値にし、profileReset で知らせる
  */
 export function parseStoredState(
   text: string | null,
   knownFoodIds: ReadonlySet<string>,
+  table: Migrations = migrations,
+  targetVersion: number = storageVersion,
 ): { state: AppState; issue: StorageIssue } {
+  const corrupted = { state: initialAppState, issue: "corrupted" as const };
   if (text === null) return { state: initialAppState, issue: null };
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return { state: initialAppState, issue: "corrupted" };
+    return corrupted;
   }
   if (
     !isRecord(parsed) ||
     typeof parsed.version !== "number" ||
     !Number.isInteger(parsed.version) ||
     parsed.version < 1 ||
-    parsed.version > storageVersion
+    parsed.version > targetVersion
   ) {
-    return { state: initialAppState, issue: "corrupted" };
+    return corrupted;
   }
 
-  let stored = parsed as StoredState;
-  while (stored.version < storageVersion) {
-    const migrate = migrations[stored.version];
-    if (!migrate) return { state: initialAppState, issue: "corrupted" };
-    stored = migrate(stored);
-  }
-  if (!Array.isArray(stored.items)) {
-    return { state: initialAppState, issue: "corrupted" };
-  }
+  const stored = migrateStored(parsed as StoredState, table, targetVersion);
+  if (!stored || !Array.isArray(stored.items)) return corrupted;
 
   const rawManualFoods = Array.isArray(stored.manualFoods)
     ? stored.manualFoods
     : [];
-  const manualFoods = rawManualFoods.flatMap((value) => {
-    const food = parseManualFood(value);
-    return food ? [food] : [];
-  });
-  const usableIds = new Set([
-    ...knownFoodIds,
-    ...manualFoods.map((food) => food.id),
-  ]);
+  const manualById = new Map<string, FoodItem>();
+  for (const value of rawManualFoods) {
+    const food = parseManualFood(value, knownFoodIds);
+    if (food && !manualById.has(food.id)) manualById.set(food.id, food);
+  }
+  const usableIds = new Set([...knownFoodIds, ...manualById.keys()]);
 
   const seenIds = new Set<string>();
-  const items = stored.items.flatMap((value) => {
+  const items: BasketEntry[] = [];
+  for (const value of stored.items) {
     const entry = parseEntry(value, usableIds);
-    if (!entry || seenIds.has(entry.id)) return [];
+    if (!entry || seenIds.has(entry.id)) continue;
     seenIds.add(entry.id);
-    return [entry];
-  });
+    items.push(entry);
+  }
+  const referenced = new Set(items.map((item) => item.foodId));
+  const manualFoods = [...manualById.values()].filter((food) =>
+    referenced.has(food.id),
+  );
 
   const profile = parseProfile(stored.profile);
   const droppedItems = stored.items.length - items.length;
