@@ -21,12 +21,32 @@ export type UnitWeight = {
 
 /**
  * 出典: 一般的な市販品の重さをもとにした概算（エージェントが作成）。
- * 本人の査閲待ち（IT01 の振り返りで確認する。REV-002）。
+ * 本人が確認した（REV-010）。
  */
-const estimate = "概算（一般的な市販品の重さ。本人の査閲待ち）";
+const estimate = "概算（一般的な市販品の重さ。本人が確認、REV-010）";
 
 export const unitWeights: Record<string, UnitWeight> = {
   がんもどき: { unit: "枚", purchaseG: 100, source: estimate },
+  // 乾物・粉類（#20）
+  でん粉: { unit: "袋", purchaseG: 200, source: estimate, note: "片栗粉" },
+  "はるさめ（乾燥）": { unit: "袋", purchaseG: 100, source: estimate },
+  "あずき（乾燥）": { unit: "袋", purchaseG: 300, source: estimate },
+  "ひよこまめ（乾燥）": { unit: "袋", purchaseG: 300, source: estimate },
+  ひよこまめ: {
+    unit: "パック",
+    purchaseG: 120,
+    source: estimate,
+    note: "ゆでたもの",
+  },
+  ぎんだら: { unit: "切れ", purchaseG: 80, source: estimate, note: "切り身" },
+  しょうがの漬物: { unit: "袋", purchaseG: 50, source: estimate },
+  かぶの漬物: { unit: "袋", purchaseG: 150, source: estimate },
+  "かんきつ（缶詰）": {
+    unit: "缶",
+    purchaseG: 250,
+    source: estimate,
+    note: "みかん缶の果肉",
+  },
   こんぶ: { unit: "袋", purchaseG: 30, source: estimate, note: "乾物" },
   "かつお（缶詰）": {
     unit: "缶",
