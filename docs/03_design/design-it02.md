@@ -68,7 +68,7 @@ type BasketAction =
 | ID | 規則 | 要求 |
 |---|---|---|
 | DES-BSK-01 | `register`: **食材名と食品番号が同じ**行があれば個数を 1 増やす。使い切ったの行なら、使い切ったを外して個数を 1 にする。なければ個数 1 の行を先頭に足す（P-04、REV-013 #2）。詳細モードで同じ食材名の別の食品を選んだときは、栄養が違うので別の行にする（REV-012） | FR-ING-01, FR-QTY-01 |
-| DES-BSK-02 | `increment` / `decrement`: 0.5 ずつ増減する。0.5 未満にはしない | FR-ING-10, FR-QTY-04 |
+| DES-BSK-02 | `increment` / `decrement`: 0.5 ずつ増減する。0.5 未満にも、999 を超える値にもしない（保存データの検査 DES-STO-04 と合わせる） | FR-ING-10, FR-QTY-04 |
 | DES-BSK-03 | `toggleUsedUp`: 使い切ったを切り替える（1 回の操作で取り消せる） | FR-ING-11, 12 |
 | DES-BSK-04 | `remove`: 行を消す。手入力の食品は、ほかの行から参照されていなければ `manualFoods` からも消す | FR-ING-10 |
 | DES-BSK-05 | `setProfile`: 設定を置き換える | FR-STP-01, 02, 04 |
@@ -78,7 +78,7 @@ type BasketAction =
 
 ### 2.2 判定の数え方の補足（DES-ANL-03、IT01 の DES-ANL-01 を補う）
 
-- 「主食を除いて 3 品目」（FR-BAL-05）には、**エネルギーのデータがある食材だけ**を数える。成分を入れなかった手入力の食品は数えず、判定の結果の `noDataItems` に名前を返して画面で知らせる（DES-UI-35）
+- 「主食を除いて 3 品目」（FR-BAL-05）には、**エネルギーのデータがある食材だけ**を数える（`sumNutrients` がエネルギーのデータがない食品を除くのと合わせる）。エネルギーのデータがない食品（成分を入れなかった、またはエネルギーだけ入れなかった手入力の食品など）は数えず、判定の結果の `noDataItems` に名前を返して画面で知らせる（DES-UI-35）
 
 ### 2.3 保存の形式（DES-STO、`core/storage.ts`、ADR-0004）
 
@@ -88,8 +88,8 @@ type BasketAction =
 | DES-STO-02 | `parseStoredState(text, knownFoodIds)` | `{ state, issue }` を返す。`issue` は `null` / `"corrupted"` / `{ droppedItems, profileReset }` | NFR-12, 13 |
 | DES-STO-03 | 全体を `"corrupted"` にする場合 | JSON として読めない、オブジェクトでない、`version` がない・整数でない・1 未満・今より新しい、`items` が配列でない。初期状態を返す | NFR-12 |
 | DES-STO-04 | 1 件ずつ捨てる場合 | 行: `id`・`displayName` が空でない文字列、`foodId` が食品データか読み込めた手入力の食品にある、`count` が 0.5 刻みで 0.5 以上 999 以下、`usedUp` が真偽値。ID が重複したら後ろを捨てる。捨てた行の数を `droppedItems` に入れる | NFR-12 |
-| DES-STO-05 | 手入力の食品の検査 | `id` が `manual-` で始まり、食品データとも重複もしない。`name`・`category` が文字列。`refusePct` は null か 0〜100。成分値は null か 0 以上の有限の数（ない成分は null にする）。検査した項目だけで新しいオブジェクトを作る。どの行からも参照されない手入力の食品は捨てる（件数は出さない） | NFR-12 |
-| DES-STO-06 | 設定の検査 | 4 つの項目が決まった値のどれかなら、その 4 項目だけで新しいオブジェクトを作る。そうでなければ初期値にし、`profileReset` を true にする（設定がないときも含む）（REV-013 の profileReset の採用） | NFR-12 |
+| DES-STO-05 | 手入力の食品の検査 | `id` が `manual-` で始まり、食品データの食品番号ともぶつからない。ほかの手入力の食品と ID が重複したら先のものを使う。`name`・`category` が文字列。`refusePct` は null か 0〜100。成分値は null か 0 以上の有限の数（ない成分は null にする）。検査した項目だけで新しいオブジェクトを作る。どの行からも参照されない手入力の食品は捨てる（件数は出さない） | NFR-12 |
+| DES-STO-06 | 設定の検査 | 4 つの項目が決まった値のどれかなら、その 4 項目だけで新しいオブジェクトを作る。そうでなければ初期値にし、`profileReset` を true にする（設定がないときも含む）（設計への提案 profileReset の採用。REV-014） | NFR-12 |
 | DES-STO-07 | 版の移行 | `migrateStored(stored, migrations)` を export し、`migrations[version]` で 1 つずつ版を上げる。移行がない、または移行しても版が上がらないときは `"corrupted"`。版 1 が最初なので、今の `migrations` は空 | NFR-13 |
 
 画面側（DES-UI-13）の約束:
@@ -142,7 +142,7 @@ DES-IT01 の DES-CAT-01〜06 で実装済みの規則を、画面では次のよ
 | DES-UI-32 | 棚で絞り込む。選べる棚は SRS の 14 種から「米・パン・麺」「調味料」を除いた 12 種（`registrableShelves`、FR-ING-09）と「すべて」。検索語は両モードで共通 | FR-ING-02, 03 |
 | DES-UI-33 | 未検索のときは、よくある食材を先に並べる（`prioritizeSupermarketFoods`） | FR-ING-04 |
 | DES-UI-34 | 米・パン・麺・調味料・油は出さない（`isRegistrable`） | FR-ING-09 |
-| DES-UI-35 | 手入力: 名前と棚（`registrableShelves`）は必須、100g あたりの成分は任意。成分を入れなかった食品は判定に数えず（DES-ANL-03）、その旨を出す。食品データから外れた食材を補う手段でもある | FR-ING-08, FR-FDB-03 |
+| DES-UI-35 | 手入力: 名前と棚（`registrableShelves`）は必須、100g あたりの成分は任意。エネルギーを入れなかった食品は判定に数えず（DES-ANL-03）、その旨を出す。食品データから外れた食材を補う手段でもある | FR-ING-08, FR-FDB-03 |
 | DES-UI-36 | 1 食ごとの食事を記録する入口は作らない | FR-ING-13 |
 | DES-UI-37 | 食品データにない商品（コーラなど）に、架空の成分値を作らない。補うときは手入力を使う | CST-04 |
 
@@ -168,7 +168,7 @@ DES-IT01 の DES-CAT-01〜06 で実装済みの規則を、画面では次のよ
 
 ### 3.5 栄養詳細の基準値（DES-BAL-06）
 
-- 判定しないビタミン・ミネラル（ビタミン E・K・B6・B12・葉酸・ナイアシン・パントテン酸・ビオチン、マグネシウム・リン・銅・マンガン・ヨウ素・セレン・クロム・モリブデン）の基準値（推奨量、なければ目安量）を、食事摂取基準（2025年版）から `src/data/dietaryReference.ts` に加える（REV-013 #1）
+- 判定しないビタミン・ミネラル（ビタミン E（α-トコフェロール）・K・B6・B12・葉酸・ナイアシン（食事摂取基準は mgNE なので `niacinEquivalentMg` を使う）・パントテン酸・ビオチン、マグネシウム・リン・銅・マンガン・ヨウ素・セレン・クロム・モリブデン）の基準値（推奨量、なければ目安量）を、食事摂取基準（2025年版）から `src/data/dietaryReference.ts` に加える（REV-013 #1）
 - 栄養詳細では、これらの充足率（1,000 kcal あたりに直した基準値との比）を棒と数字で出す。判定（不足・過剰）はしない（TBD-11 の解決どおり）
 
 ## 4. E2E テスト（DES-E2E、Playwright）

@@ -63,6 +63,10 @@
 | FR-UI-07 | #27 | DES-UI-41 | | | 未着手 |
 | NFR-07 | #27, #28 | DES-UI-22, 41 | | | 未着手 |
 | CST-04 | #34 | DES-UI-37 | | | 未着手 |
+| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | | | 未着手 |
+| FR-QTY-01 | #24 | DES-BSK-01 | | | 未着手 |
+| FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | | | 未着手 |
+| FR-NUT-06 | #24 | DES-BSK-07 | | | 未着手 |
 | FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | | | 未着手 |
 | FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | | | 未着手 |
 | FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | | | 未着手 |
