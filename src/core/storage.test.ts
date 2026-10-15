@@ -220,12 +220,13 @@ describe("値の検査の境界（DES-STO-04〜06、REV-014）", () => {
   });
 
   it.each([
-    ["TC-NFR-12-20 廃棄率が 100 を超える", { refusePct: 120 }],
-    ["TC-NFR-12-21 廃棄率が負", { refusePct: -1 }],
-    ["TC-NFR-12-22 成分値が負", { nutrientsPer100g: { energyKcal: -5 } }],
-    ["TC-NFR-12-23 ID が manual- で始まらない", { id: "x-1" }],
-    ["TC-NFR-12-24 ID が食品番号とぶつかる", { id: "06212" }],
-  ])("%s 手入力の食品は捨てる（異常）", (_title, override) => {
+    ["TC-NFR-12-20 廃棄率が 100 を超える", { refusePct: 120 }, 1],
+    ["TC-NFR-12-21 廃棄率が負", { refusePct: -1 }, 1],
+    ["TC-NFR-12-22 成分値が負", { nutrientsPer100g: { energyKcal: -5 } }, 1],
+    ["TC-NFR-12-23 ID が manual- で始まらない", { id: "x-1" }, 1],
+    // 行は食品データの 06212（にんじん）を指すことになるので、行は捨てない
+    ["TC-NFR-12-24 ID が食品番号とぶつかる", { id: "06212" }, 0],
+  ])("%s 手入力の食品は捨てる（異常）", (_title, override, dropped) => {
     const broken = { ...manualFood, ...override };
     const text = stored({
       manualFoods: [broken],
@@ -233,6 +234,17 @@ describe("値の検査の境界（DES-STO-04〜06、REV-014）", () => {
     });
     const result = parseStoredState(text, known);
     expect(result.state.manualFoods).toEqual([]);
+    expect(result.issue).toEqual(
+      dropped > 0 ? { droppedItems: dropped, profileReset: false } : null,
+    );
+  });
+
+  it("TC-NFR-12-28 手入力の食品の成分のキーがなければ null にして読み込む（正常）", () => {
+    const sparse = { ...manualFood, nutrientsPer100g: { energyKcal: 30 } };
+    const result = parseStoredState(stored({ manualFoods: [sparse] }), known);
+    expect(result.state.manualFoods[0].nutrientsPer100g.energyKcal).toBe(30);
+    expect(result.state.manualFoods[0].nutrientsPer100g.proteinG).toBeNull();
+    expect(result.issue).toBeNull();
   });
 
   it("TC-NFR-12-25 同じ ID の手入力の食品が 2 つあれば、先のものだけ使う", () => {
@@ -315,6 +327,25 @@ describe("版の移行（DES-STO-07、NFR-13）", () => {
   it("TC-NFR-13-08 移行しても版が上がらなければ止める（無限ループにしない。異常）", () => {
     expect(
       migrateStored({ version: 1 }, { 1: (stored) => stored }, 2),
+    ).toBeNull();
+  });
+
+  it("TC-NFR-13-10 移行の関数が例外を出したら止める（異常）", () => {
+    const throwing: Migrations = {
+      1: () => {
+        throw new Error("想定外の形");
+      },
+    };
+    expect(migrateStored({ version: 1 }, throwing, 2)).toBeNull();
+  });
+
+  it("TC-NFR-13-11 移行で今の版を飛び越えたら止める（異常）", () => {
+    expect(
+      migrateStored(
+        { version: 1 },
+        { 1: (stored) => ({ ...stored, version: 5 }) },
+        2,
+      ),
     ).toBeNull();
   });
 
