@@ -32,9 +32,10 @@ export type BasketAction =
   | { type: "setProfile"; profile: Profile }
   | { type: "replace"; state: AppState };
 
-/** 個数の増減の幅と、下限（DES-BSK-02、FR-QTY-04） */
+/** 個数の増減の幅と、下限・上限（DES-BSK-02、FR-QTY-04。上限は保存データの検査 DES-STO-04 と合わせる） */
 export const countStep = 0.5;
 export const minimumCount = 0.5;
+export const maximumCount = 999;
 
 export const initialAppState: AppState = {
   items: [],
@@ -92,10 +93,11 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
         displayName: action.displayName,
       });
     case "increment":
-      return updateItem(state, action.id, (item) => ({
-        ...item,
-        count: item.count + countStep,
-      }));
+      return updateItem(state, action.id, (item) =>
+        item.count + countStep > maximumCount
+          ? item
+          : { ...item, count: item.count + countStep },
+      );
     case "decrement":
       return updateItem(state, action.id, (item) =>
         item.count - countStep < minimumCount

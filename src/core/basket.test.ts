@@ -102,6 +102,14 @@ describe("basketReducer の個数・使い切った・削除（DES-BSK-02〜04�
     expect(state.items[0].count).toBe(0.5);
   });
 
+  it("TC-FR-QTY-04-04 999 からは増やさない（境界）", () => {
+    const at999 = apply(initialAppState, carrot);
+    const state = { ...at999, items: [{ ...at999.items[0], count: 999 }] };
+    expect(
+      basketReducer(state, { type: "increment", id: "r1" }).items[0].count,
+    ).toBe(999);
+  });
+
   it("TC-FR-ING-11-01 使い切ったにすると、行は残して使い切ったにする", () => {
     const state = apply(initialAppState, carrot, {
       type: "toggleUsedUp",
