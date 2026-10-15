@@ -132,10 +132,16 @@ npm run convert:mext
 
 ```text
 src/
-  App.tsx              画面本体
-  App.css              画面スタイル
+  main.tsx             入口
+  ui/                  画面（React）
+    App.tsx            画面の切り替え・状態・保存の呼び出し
+    screens/           画面ごとの部品
+    components/        共通の部品
+    storage.ts         localStorage の読み書き
   core/                計算のロジック（React に依存しない純粋な関数）
     catalog.ts         表示名のまとめ・登録対象の判定
+    basket.ts          登録した食材と設定の状態
+    storage.ts         保存データの形式と検査
   data/
     foods.json         食品データ
     nutrients.ts       表示する栄養素定義

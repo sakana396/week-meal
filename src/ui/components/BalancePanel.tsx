@@ -75,7 +75,8 @@ export function BalancePanel({
         </ul>
       )}
       <p className="balance-note">
-        買った食材の傾向です。食べた量や摂取量ではありません（{stapleNote(profile)}）。
+        買った食材の傾向です。食べた量や摂取量ではありません（
+        {stapleNote(profile)}）。
       </p>
       {analysis.approximateItems.length > 0 && (
         <p className="balance-note">

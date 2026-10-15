@@ -45,13 +45,23 @@ export function loadAppState(
   foodIds: ReadonlySet<string> = knownFoodIds,
 ): LoadResult {
   if (!store) {
-    return { state: initialAppState, issue: null, backedUp: false, available: false };
+    return {
+      state: initialAppState,
+      issue: null,
+      backedUp: false,
+      available: false,
+    };
   }
   let text: string | null;
   try {
     text = store.getItem(storageKey);
   } catch {
-    return { state: initialAppState, issue: null, backedUp: false, available: false };
+    return {
+      state: initialAppState,
+      issue: null,
+      backedUp: false,
+      available: false,
+    };
   }
   const { state, issue } = parseStoredState(text, foodIds);
   let backedUp = false;
@@ -67,7 +77,10 @@ export function loadAppState(
 }
 
 /** 状態を書き出す。書き出せなければ false（DES-UI-13） */
-export function saveAppState(store: KeyValueStore | null, state: AppState): boolean {
+export function saveAppState(
+  store: KeyValueStore | null,
+  state: AppState,
+): boolean {
   if (!store) return false;
   try {
     store.setItem(storageKey, serializeState(state));
