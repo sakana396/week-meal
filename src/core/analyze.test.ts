@@ -32,6 +32,7 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     expect(analyzeBasket(basket.slice(0, 2), defaultProfile)).toEqual({
       kind: "insufficient",
       reason: "tooFewItems",
+      noDataItems: [],
       itemCount: 2,
     });
   });
@@ -52,6 +53,7 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     expect(analyzeBasket(items, defaultProfile)).toEqual({
       kind: "insufficient",
       reason: "tooFewItems",
+      noDataItems: [],
       itemCount: 2,
     });
   });
@@ -112,6 +114,7 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     expect(analyzeBasket(zero, defaultProfile)).toEqual({
       kind: "insufficient",
       reason: "noEnergy",
+      noDataItems: [],
       itemCount: 4,
     });
   });
@@ -235,6 +238,46 @@ describe("仮説 H-02 の記録（docs/iterations/it01/retrospective.md）", () 
         before: "ok",
         after: "low",
       },
+    ]);
+  });
+});
+
+describe("エネルギーのデータがない食材（DES-ANL-03）", () => {
+  const noEnergy = {
+    ...item("キャベツ"),
+    displayName: "自家製スープ",
+    food: {
+      ...item("キャベツ").food,
+      id: "manual-1",
+      nutrientsPer100g: {
+        ...item("キャベツ").food.nutrientsPer100g,
+        energyKcal: null,
+      },
+    },
+  };
+
+  it("TC-FR-BAL-05-04 エネルギーのデータがない食材は 3 品目に数えず、名前を返す", () => {
+    expect(
+      analyzeBasket([basket[0], basket[1], noEnergy], defaultProfile),
+    ).toEqual({
+      kind: "insufficient",
+      reason: "tooFewItems",
+      itemCount: 2,
+      noDataItems: ["自家製スープ"],
+    });
+  });
+
+  it("TC-FR-BAL-05-05 判定したときも、数えなかった食材名を返す", () => {
+    const result = analyzeBasket([...basket, noEnergy], defaultProfile);
+    expect(result.kind).toBe("judged");
+    expect(result.noDataItems).toEqual(["自家製スープ"]);
+  });
+
+  it("TC-FR-QTY-05-05 食材名が constructor でも Object.prototype の値を目安重量にしない（異常）", () => {
+    const odd = { ...item("キャベツ"), displayName: "constructor" };
+    const result = analyzeBasket([...basket, odd], defaultProfile);
+    expect(result.kind === "judged" && result.approximateItems).toEqual([
+      "constructor",
     ]);
   });
 });

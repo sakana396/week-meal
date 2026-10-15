@@ -32,6 +32,7 @@ export function BalancePanel({
           主食を除いて 3 品目以上登録すると、栄養の偏りを判定します（いま{" "}
           {analysis.itemCount} 品目）。
         </p>
+        <NoDataNote names={analysis.noDataItems} />
       </section>
     );
   }
@@ -84,6 +85,7 @@ export function BalancePanel({
           の概算で数えています。
         </p>
       )}
+      <NoDataNote names={analysis.noDataItems} />
       {partial.length > 0 && (
         <p className="balance-note">
           一部の食材に
@@ -98,5 +100,15 @@ export function BalancePanel({
         </p>
       )}
     </section>
+  );
+}
+
+/** エネルギーのデータがなく、判定に数えなかった食材（DES-ANL-03、DES-UI-35） */
+function NoDataNote({ names }: { names: string[] }) {
+  if (names.length === 0) return null;
+  return (
+    <p className="balance-note">
+      {names.join("・")} はエネルギーのデータがないので、判定に数えていません。
+    </p>
   );
 }

@@ -846,3 +846,77 @@ h3 {
   color: #2b7a57;
   font-weight: 700;
 }
+
+/* ホームの登録した食材の一覧（DES-UI-40） */
+.item-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.item-row[data-used-up="true"] {
+  opacity: 0.55;
+}
+
+.item-name {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item-name small {
+  color: #6f6a60;
+}
+
+.item-count,
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-count button,
+.item-actions button,
+.link-button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #17201b;
+  background: #ffffff;
+}
+
+.item-count button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.item-actions .danger-button {
+  color: #a63a24;
+}
+
+.link-button {
+  justify-self: start;
+  color: #2b7a57;
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .item-row {
+    grid-template-columns: 1fr;
+  }
+}
