@@ -952,3 +952,114 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+/* 栄養詳細（DES-UI-22）。判定は色だけでなく文字でも示す（NFR-07） */
+.detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-row .balance-status {
+  color: #ffffff;
+  background: #2b7a57;
+}
+
+.detail-row[data-status="low"] .balance-status {
+  background: #c84b31;
+}
+
+.detail-row[data-status="high"] .balance-status {
+  background: #8a5a00;
+}
+
+.detail-row[data-status="unknown"] .balance-status {
+  background: #6f6a60;
+}
+
+.detail-bar {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5dfd4;
+}
+
+.detail-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  background: #2b7a57;
+}
+
+/* 充足率 70%（不足の境目）と 100%（基準値）の目印 */
+.detail-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(23, 32, 27, 0.35);
+}
+
+.detail-mark-main {
+  background: #17201b;
+}
+
+/* PFC の値の位置 */
+.detail-value {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  margin-left: -2px;
+  background: #2b7a57;
+}
+
+.detail-row[data-status="low"] .detail-value,
+.detail-row[data-status="high"] .detail-value {
+  background: #c84b31;
+}
+
+/* PFC の目標の範囲 */
+.detail-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(43, 122, 87, 0.25);
+}
+
+.detail-row[data-status="low"] .detail-fill {
+  background: #c84b31;
+}
+
+.detail-row[data-status="high"] .detail-fill {
+  background: #8a5a00;
+}
+
+.detail-row[data-status="info"] .detail-fill {
+  background: #7a8f80;
+}
+
+.pfc-summary {
+  font-weight: 700;
+}

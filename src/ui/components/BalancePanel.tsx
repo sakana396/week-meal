@@ -106,7 +106,7 @@ export function BalancePanel({
 }
 
 /** エネルギーのデータがなく、判定に数えなかった食材（DES-ANL-03、DES-UI-35） */
-function NoDataNote({ names }: { names: string[] }) {
+export function NoDataNote({ names }: { names: string[] }) {
   if (names.length === 0) return null;
   return (
     <p className="balance-note">

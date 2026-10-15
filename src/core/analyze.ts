@@ -5,7 +5,14 @@ import {
   type UnitWeight,
 } from "../data/unitWeights";
 import type { FoodItem } from "../types";
-import { judgeBalance, referenceFor, type BalanceResult } from "./balance";
+import {
+  detailSufficiencies,
+  extraReferenceFor,
+  judgeBalance,
+  referenceFor,
+  type BalanceResult,
+  type DetailResult,
+} from "./balance";
 import {
   nutrientRatios,
   pfcRatio,
@@ -47,6 +54,8 @@ export type AnalysisResult =
       approximateItems: string[];
       /** エネルギーのデータがなく、判定に数えなかった食材名（DES-ANL-03） */
       noDataItems: string[];
+      /** 判定しないビタミン・ミネラルの充足率（栄養詳細用。DES-BAL-06） */
+      details: DetailResult[];
     };
 
 /** 計算に使う定義データ。テストで差し替えられるようにする */
@@ -136,8 +145,21 @@ export function analyzeBasket(
   const totals = sumNutrients(all);
   const ratios = nutrientRatios(totals, totals.energyKcal?.amount ?? 0);
   const pfc = pfcRatio(ratios);
-  const results = judgeBalance(ratios, pfc, referenceFor(profile));
-  return { kind: "judged", results, pfc, approximateItems, noDataItems };
+  const reference = referenceFor(profile);
+  const results = judgeBalance(ratios, pfc, reference);
+  const details = detailSufficiencies(
+    ratios,
+    reference.energyKcal,
+    extraReferenceFor(profile),
+  );
+  return {
+    kind: "judged",
+    results,
+    pfc,
+    approximateItems,
+    noDataItems,
+    details,
+  };
 }
 
 /** 感度分析の結果: ずらした食材と、判定が変わった栄養素（DES-ANL-02） */

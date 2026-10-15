@@ -6,6 +6,7 @@ import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
 import { useHashRoute } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
+import { BalanceDetailScreen } from "./screens/BalanceDetailScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
@@ -73,7 +74,11 @@ export default function App() {
           <RegisterScreen dispatch={dispatch} state={state} />
         )}
         {route === "balance" && (
-          <PlaceholderScreen label="栄養詳細" title="栄養の割合と充足率" />
+          <BalanceDetailScreen
+            analysis={analysis}
+            navigate={navigate}
+            profile={state.profile}
+          />
         )}
         {route === "settings" && (
           <PlaceholderScreen label="設定" title="主食と基準値の設定">

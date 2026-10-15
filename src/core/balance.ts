@@ -1,6 +1,9 @@
 import {
   dietaryReference,
+  extraDietaryReference,
+  extraReferenceBasis,
   type DailyReference,
+  type ExtraReferenceKey,
 } from "../data/dietaryReference";
 import type { NutrientKey } from "../types";
 import type { NutrientRatios, Pfc } from "./nutrition";
@@ -197,5 +200,54 @@ export function judgeBalance(
           ? "high"
           : "ok";
     return { key, status, sufficiency, pfcPct: null, pfcRange: null, coverage };
+  });
+}
+
+/** 栄養詳細だけで出す栄養素 1 つの充足率（DES-BAL-06）。判定はしない */
+export type DetailResult = {
+  key: ExtraReferenceKey;
+  /** 充足率（栄養の割合 ÷ 基準値）。データがなければ null */
+  sufficiency: number | null;
+  coverage: number | null;
+};
+
+/** 判定しないビタミン・ミネラルの基準値（1 日あたり）。未選択は男女の平均（DES-BAL-06） */
+export function extraReferenceFor(
+  profile: Pick<Profile, "sex" | "ageGroup">,
+): Record<ExtraReferenceKey, number> {
+  const male = extraDietaryReference.male[profile.ageGroup];
+  const female = extraDietaryReference.female[profile.ageGroup];
+  // 呼び出し側が書き換えても定数が壊れないよう、写しを返す
+  if (profile.sex === "male") return { ...male };
+  if (profile.sex === "female") return { ...female };
+  return Object.fromEntries(
+    extraReferenceKeys.map((key) => [key, (male[key] + female[key]) / 2]),
+  ) as Record<ExtraReferenceKey, number>;
+}
+
+const extraReferenceKeys = Object.keys(
+  extraReferenceBasis,
+) as ExtraReferenceKey[];
+
+/**
+ * 判定しないビタミン・ミネラルの充足率を求める（DES-BAL-06、FR-UI-05）。
+ * 基準値は推定エネルギー必要量で 1,000 kcal あたりに直して比べる（判定する 14 種と同じ方法）。
+ */
+export function detailSufficiencies(
+  ratios: NutrientRatios,
+  energyKcal: number,
+  extra: Record<ExtraReferenceKey, number>,
+): DetailResult[] {
+  return extraReferenceKeys.map((key) => {
+    const ratio = ratios[key];
+    if (!ratio || !(energyKcal > 0) || !(extra[key] > 0)) {
+      return { key, sufficiency: null, coverage: ratio?.coverage ?? null };
+    }
+    const referencePer1000kcal = (extra[key] / energyKcal) * 1000;
+    return {
+      key,
+      sufficiency: roundForJudgement(ratio.per1000kcal / referencePer1000kcal),
+      coverage: ratio.coverage,
+    };
   });
 }

@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { ageGroups, dietaryReference } from "../data/dietaryReference";
+import {
+  ageGroups,
+  dietaryReference,
+  extraDietaryReference,
+  extraReferenceBasis,
+} from "../data/dietaryReference";
 import type { DailyReference } from "../data/dietaryReference";
-import { balanceTargets, judgeBalance, referenceFor } from "./balance";
+import {
+  balanceTargets,
+  detailSufficiencies,
+  extraReferenceFor,
+  judgeBalance,
+  referenceFor,
+} from "./balance";
 import type { NutrientRatios, Pfc } from "./nutrition";
 import { defaultProfile } from "./profile";
 
@@ -257,5 +268,76 @@ describe("judgeBalance（DES-BAL-04）", () => {
     );
     expect(result?.status).toBe("ok");
     expect(result?.sufficiency).toBe(rate);
+  });
+});
+
+describe("判定しないビタミン・ミネラルの充足率（DES-BAL-06）", () => {
+  it("TC-FR-UI-05-01 追加した基準値は 16 種で、すべての性別・年齢区分で正の値", () => {
+    const keys = Object.keys(extraReferenceBasis);
+    expect(keys).toHaveLength(16);
+    const invalid = (["male", "female"] as const).flatMap((sex) =>
+      ageGroups.flatMap((ageGroup) =>
+        keys.filter(
+          (key) =>
+            !(
+              extraDietaryReference[sex][ageGroup][
+                key as keyof (typeof extraDietaryReference)["male"]["18-29"]
+              ] > 0
+            ),
+        ),
+      ),
+    );
+    expect(invalid).toEqual([]);
+  });
+
+  it.each([
+    ["TC-FR-UI-05-02 男性 30〜49 歳のマグネシウムは 380mg", "male", 380],
+    [
+      "TC-FR-UI-05-03 未選択は男女の平均（(380 + 290) ÷ 2 = 335mg）",
+      "unspecified",
+      335,
+    ],
+  ] as const)("%s", (_title, sex, expected) => {
+    expect(extraReferenceFor({ sex, ageGroup: "30-49" }).magnesiumMg).toBe(
+      expected,
+    );
+  });
+
+  it("TC-FR-UI-05-04 1,000 kcal あたりに直した基準値との比を充足率にする", () => {
+    // 基準値 400mg ÷ 2,000 kcal × 1,000 = 200mg/1000kcal。割合 100mg → 0.5
+    const extra = {
+      ...extraReferenceFor({ sex: "male", ageGroup: "30-49" }),
+      magnesiumMg: 400,
+    };
+    const results = detailSufficiencies(
+      ratiosWith({ magnesiumMg: 100 }),
+      2000,
+      extra,
+    );
+    expect(results.find((result) => result.key === "magnesiumMg")).toEqual({
+      key: "magnesiumMg",
+      sufficiency: 0.5,
+      coverage: 0.9,
+    });
+  });
+
+  it("TC-FR-UI-05-05 データがない栄養素は充足率 null（異常）", () => {
+    const results = detailSufficiencies(
+      ratiosWith({}),
+      2000,
+      extraReferenceFor({ sex: "male", ageGroup: "30-49" }),
+    );
+    expect(results.every((result) => result.sufficiency === null)).toBe(true);
+  });
+
+  it("TC-FR-UI-05-06 エネルギーの基準が 0 なら充足率 null（境界）", () => {
+    const results = detailSufficiencies(
+      ratiosWith({ magnesiumMg: 100 }),
+      0,
+      extraReferenceFor({ sex: "male", ageGroup: "30-49" }),
+    );
+    expect(
+      results.find((result) => result.key === "magnesiumMg")?.sufficiency,
+    ).toBeNull();
   });
 });
