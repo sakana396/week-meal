@@ -55,7 +55,7 @@
 | FR-ING-05 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-ING-06 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-ING-07 | #34 | DES-UI-31 | TC-FR-ING-07-01 | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-09 | #23, #34 | DES-UI-32, 34 | （IT01 の TC-FR-ING-09-01〜07） | src/ui/screens/RegisterScreen.tsx | 実装済み（#23 は未着手） |
+| FR-ING-09 | #23, #34 | DES-UI-32, 34 | （IT01 の TC-FR-ING-09-01〜07） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-FDB-03 | #34 | DES-UI-35 | TC-FR-ING-08-01〜10 | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-BAL-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-04, 05 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み |
 | FR-NUT-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-05 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み |
