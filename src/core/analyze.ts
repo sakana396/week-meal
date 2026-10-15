@@ -164,7 +164,7 @@ export function sensitivity(
   if (base.kind !== "judged") return [];
 
   const names = [...new Set(items.map((item) => item.displayName))].filter(
-    (name) => data.unitWeights[name],
+    (name) => Object.hasOwn(data.unitWeights, name),
   );
   return names.flatMap((name) => {
     const weight = data.unitWeights[name];

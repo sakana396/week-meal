@@ -18,8 +18,10 @@ export function BalancePanel({
       <section className="notice-panel" aria-label="栄養バランスの判定">
         <h3>判定できません</h3>
         <p>
-          登録した食材にエネルギーのデータがないため、栄養の割合を計算できません。
+          登録した食材のエネルギーの合計が 0
+          のため、栄養の割合を計算できません。
         </p>
+        <NoDataNote names={analysis.noDataItems} />
       </section>
     );
   }

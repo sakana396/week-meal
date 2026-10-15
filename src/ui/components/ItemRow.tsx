@@ -32,7 +32,11 @@ export function ItemRow({
         {detail && <small>{detail}</small>}
         {item.usedUp && <small>使い切った</small>}
       </div>
-      <div className="item-count" aria-label={`${item.displayName}の個数`}>
+      <div
+        aria-label={`${item.displayName}の個数`}
+        className="item-count"
+        role="group"
+      >
         <button
           aria-label={`${item.displayName}を 0.5 減らす`}
           disabled={item.usedUp || item.count <= minimumCount}
@@ -55,7 +59,11 @@ export function ItemRow({
       </div>
       <div className="item-actions">
         <button
-          aria-pressed={item.usedUp}
+          aria-label={
+            item.usedUp
+              ? `${item.displayName}を使い切った から戻す`
+              : `${item.displayName}を使い切った`
+          }
           onClick={() => dispatch({ type: "toggleUsedUp", id: item.id })}
           type="button"
         >

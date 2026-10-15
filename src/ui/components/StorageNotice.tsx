@@ -33,7 +33,7 @@ export function StorageNotice({
   }
   if (!available && issue !== "corrupted") {
     messages.push(
-      "このブラウザでは保存できません（プライベートモードや容量不足など）。ページを閉じると登録した食材は消えます。",
+      "このブラウザでは保存できません（プライベートモードや容量不足など）。ページを閉じると、この画面での変更は消えます。",
     );
   } else if (available && saveFailed) {
     messages.push(
