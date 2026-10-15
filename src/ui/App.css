@@ -1063,3 +1063,43 @@ h3 {
 .pfc-summary {
   font-weight: 700;
 }
+
+/* 設定画面の選択肢（DES-UI-23） */
+.choice-group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-group legend {
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.choice-group:disabled {
+  opacity: 0.5;
+}
+
+.choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice-buttons button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  padding: 0 14px;
+  color: #17201b;
+  background: #ffffff;
+}
+
+.choice-buttons button[data-active="true"] {
+  border-color: #2b7a57;
+  background: #edf5ef;
+  font-weight: 700;
+}

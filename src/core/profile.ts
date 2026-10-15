@@ -12,7 +12,7 @@ export type Profile = {
   portion: Portion;
 };
 
-/** 設定の初期値（TBD-15 の仮置き） */
+/** 設定の初期値（TBD-15。SRS v0.3 で本人が決定。REV-013） */
 export const defaultProfile: Profile = {
   sex: "unspecified",
   ageGroup: "30-49",

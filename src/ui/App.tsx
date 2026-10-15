@@ -8,8 +8,8 @@ import { useHashRoute } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
 import { BalanceDetailScreen } from "./screens/BalanceDetailScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
-import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
 import "./App.css";
 
@@ -81,15 +81,11 @@ export default function App() {
           />
         )}
         {route === "settings" && (
-          <PlaceholderScreen label="設定" title="主食と基準値の設定">
-            <button
-              className="primary-button"
-              onClick={() => navigate("foods")}
-              type="button"
-            >
-              食品一覧を見る
-            </button>
-          </PlaceholderScreen>
+          <SettingsScreen
+            dispatch={dispatch}
+            navigate={navigate}
+            profile={state.profile}
+          />
         )}
         {route === "foods" && <FoodsScreen />}
       </main>
