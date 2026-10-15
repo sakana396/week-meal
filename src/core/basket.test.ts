@@ -150,11 +150,32 @@ describe("basketReducer の個数・使い切った・削除（DES-BSK-02〜04�
     expect(basketReducer(state, action)).toBe(state);
   });
 
-  it("TC-FR-ING-10-06 引数の状態を変えない", () => {
-    const state = apply(initialAppState, carrot);
+  function deepFreeze<T>(value: T): T {
+    if (typeof value === "object" && value !== null) {
+      Object.values(value).forEach(deepFreeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  it.each<BasketAction>([
+    { ...carrot, id: "r9" },
+    { type: "register", id: "r8", foodId: "06153", displayName: "玉ねぎ" },
+    { type: "increment", id: "r1" },
+    { type: "decrement", id: "r1" },
+    { type: "toggleUsedUp", id: "r1" },
+    { type: "remove", id: "r1" },
+    {
+      type: "addManualFood",
+      id: "m9",
+      food: food("manual-9"),
+      displayName: "手入力",
+    },
+    { type: "setProfile", profile: { ...defaultProfile, sex: "male" } },
+  ])("TC-FR-ING-10-06 引数の状態を変えない（$type）", (action) => {
+    const state = deepFreeze(apply(initialAppState, carrot));
     const snapshot = structuredClone(state);
-    basketReducer(state, { type: "increment", id: "r1" });
-    basketReducer(state, { type: "remove", id: "r1" });
+    expect(() => basketReducer(state, action)).not.toThrow();
     expect(state).toEqual(snapshot);
   });
 });
@@ -188,11 +209,42 @@ describe("basketReducer の手入力と設定（DES-BSK-04, 05）", () => {
     expect(state.items[0].count).toBe(2);
   });
 
-  it("TC-FR-STP-01-01 設定を置き換える", () => {
+  it("TC-FR-ING-08-04 同じ手入力の食品をほかの行がまだ使っていれば、行を消しても食品は残す（境界）", () => {
+    const shared = food("manual-2");
+    const state = apply(
+      initialAppState,
+      {
+        type: "addManualFood",
+        id: "a",
+        food: shared,
+        displayName: "スープ（朝）",
+      },
+      {
+        type: "addManualFood",
+        id: "b",
+        food: shared,
+        displayName: "スープ（夜）",
+      },
+      { type: "remove", id: "a" },
+    );
+    expect(state.manualFoods.map((item) => item.id)).toEqual(["manual-2"]);
+    expect(state.items.map((item) => item.id)).toEqual(["b"]);
+  });
+
+  it("TC-FR-ING-08-05 食品データの食品の行を消しても、手入力の食品は変わらない", () => {
+    const state = apply(initialAppState, manual, carrot, {
+      type: "remove",
+      id: "r1",
+    });
+    expect(state.manualFoods.map((item) => item.id)).toEqual(["manual-1"]);
+  });
+
+  it("TC-FR-STP-01-01 設定（主食・盛り・性別・年齢区分）を置き換える", () => {
     const profile = {
-      ...defaultProfile,
       staple: "bread" as const,
       portion: "large" as const,
+      sex: "female" as const,
+      ageGroup: "65-74" as const,
     };
     expect(
       apply(initialAppState, { type: "setProfile", profile }).profile,
@@ -225,17 +277,19 @@ describe("toRegisteredItems（DES-BSK-07）", () => {
         displayName: "自家製",
       },
       { type: "toggleUsedUp", id: "r1" },
+      { type: "increment", id: "r1" },
     );
     const foods = new Map([["06212", food("06212")]]);
     expect(
       toRegisteredItems(state, foods).map((item) => [
         item.displayName,
         item.food.id,
+        item.count,
         item.usedUp,
       ]),
     ).toEqual([
-      ["自家製", "manual-1", false],
-      ["にんじん", "06212", true],
+      ["自家製", "manual-1", 1, false],
+      ["にんじん", "06212", 1.5, true],
     ]);
   });
 });

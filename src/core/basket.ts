@@ -6,7 +6,7 @@ import { defaultProfile, type Profile } from "./profile";
 export type BasketEntry = {
   /** 登録ごとの ID（画面側で作って action に入れる） */
   id: string;
-  /** 食品番号。手入力の食品は manualFoods の id */
+  /** 食品番号。手入力の食品は manualFoods の id（"manual-" で始め、食品番号とぶつからないようにする） */
   foodId: string;
   /** 登録一覧の食材名（目安重量を引くキー） */
   displayName: string;
@@ -54,7 +54,10 @@ function updateItem(
   };
 }
 
-/** 同じ食材名なら個数を増やし、なければ先頭に足す（DES-BSK-01） */
+/**
+ * 同じ食材名かつ同じ食品番号の行があれば個数を増やし、なければ先頭に足す（DES-BSK-01）。
+ * 詳細モードで同じ食材名の別の食品を選んだときは、栄養が違うので別の行にする。
+ */
 function register(
   state: AppState,
   entry: Omit<BasketEntry, "count" | "usedUp">,
