@@ -48,7 +48,7 @@
 
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
-| FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜04 | src/core/basket.ts | 一部実装（#24: 状態。画面は #34） |
+| FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜05 | src/core/basket.ts | 一部実装（#24: 状態。画面は #34） |
 | FR-ING-02 | #34 | DES-UI-32 |  |  | 未着手 |
 | FR-ING-03 | #34 | DES-UI-32 |  |  | 未着手 |
 | FR-ING-04 | #34 | DES-UI-33 |  |  | 未着手 |

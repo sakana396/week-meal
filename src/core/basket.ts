@@ -10,7 +10,7 @@ export type BasketEntry = {
   foodId: string;
   /** 登録一覧の食材名（目安重量を引くキー） */
   displayName: string;
-  /** 個数（0.5 刻み、0.5 以上） */
+  /** 個数（0.5 刻み、0.5 以上 999 以下） */
   count: number;
   usedUp: boolean;
 };
@@ -76,7 +76,7 @@ function register(
   return updateItem(state, existing.id, (item) =>
     item.usedUp
       ? { ...item, usedUp: false, count: 1 }
-      : { ...item, count: item.count + 1 },
+      : { ...item, count: Math.min(item.count + 1, maximumCount) },
   );
 }
 

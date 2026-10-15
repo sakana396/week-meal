@@ -64,6 +64,14 @@ describe("basketReducer の登録（DES-BSK-01）", () => {
     expect(state.items[0]).toMatchObject({ count: 1, usedUp: false });
   });
 
+  it("TC-FR-ING-01-05 再登録しても個数は 999 を超えない（境界）", () => {
+    const base = apply(initialAppState, carrot);
+    const state = { ...base, items: [{ ...base.items[0], count: 998.5 }] };
+    expect(basketReducer(state, { ...carrot, id: "r9" }).items[0].count).toBe(
+      999,
+    );
+  });
+
   it("TC-FR-ING-01-04 同じ食材名でも食品番号が違えば別の行にする（詳細モードで別の状態を選んだとき）", () => {
     const boiled: BasketAction = {
       type: "register",
