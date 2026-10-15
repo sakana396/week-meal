@@ -910,6 +910,11 @@ h3 {
   gap: 6px;
 }
 
+/* 削除は押し間違えにくいよう、使い切ったから離す */
+.item-actions {
+  gap: 16px;
+}
+
 .item-count button,
 .item-actions button,
 .link-button {
