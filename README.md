@@ -13,8 +13,7 @@ weekmeal は、食品ごとの主要栄養素を可視化する Web アプリで
 
 画面に関する資料:
 
-- [画面遷移図](docs/screen-flow.md)
-- [画面設計メモ](docs/screen-design.md)
+- [設計書（反復 2）: 画面と画面遷移](docs/03_design/design-it02.md)
 - [スーパーマーケットの売場分類・運営に関する参考資料](docs/references/supermarket-shelves.md)
 - [データ設計](docs/data-design.md)
 
