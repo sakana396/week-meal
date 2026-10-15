@@ -17,7 +17,7 @@
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |
 | FR-QTY-02 | #5 | DES-QTY-01, 02 | TC-FR-QTY-02-01〜05 | src/core/quantity.ts, src/data/unitWeights.ts | 実装済み |
 | FR-QTY-03 | #5 | DES-QTY-02 | TC-FR-QTY-02-01, TC-FR-QTY-03-01, 02 | src/core/quantity.ts | 実装済み |
-| FR-QTY-05 | #5, #8 | DES-QTY-02, DES-ANL-01 | TC-FR-QTY-05-01〜04 | src/core/quantity.ts, src/core/analyze.ts | 実装済み |
+| FR-QTY-05 | #5, #8 | DES-QTY-02, DES-ANL-01 | TC-FR-QTY-05-01〜05 | src/core/quantity.ts, src/core/analyze.ts | 実装済み |
 | FR-QTY-06 | #5 | DES-QTY-02 | （査閲: グラムを入力させる引数がない） | src/core/quantity.ts | 実装済み |
 | FR-STP-03 | #7, #8 | DES-NUT-02, DES-STP-01, DES-ANL-01 | TC-FR-STP-03-01〜08 | src/core/nutrition.ts, src/core/analyze.ts | 実装済み（計算。設定画面は IT02） |
 | FR-STP-04 | #6 | DES-BAL-02 | TC-FR-STP-04-01〜05 | src/core/balance.ts, src/core/profile.ts | 実装済み（計算。設定画面は IT02） |
@@ -61,7 +61,7 @@
 | FR-NUT-05 | #27 | DES-ANL-03, DES-UI-41 | TC-FR-BAL-05-05 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-01 | #27 | DES-UI-20, 41 | （#30 の E2E。IT01 の TC-FR-UI-01-01, 02 を含む） | src/ui/screens/HomeScreen.tsx, src/ui/components/BalancePanel.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-07 | #27 | DES-UI-41 | （#30 の E2E） | src/ui/components/BalancePanel.tsx | 実装済み（画面は #30 の E2E で確かめる） |
-| NFR-07 | #27, #28 | DES-UI-22, 41 | | | 未着手 |
+| NFR-07 | #27, #28 | DES-UI-22, 41 | （#30 の E2E） | src/ui/components/BalancePanel.tsx, src/ui/App.css | 一部実装（#27: ホーム。栄養詳細は #28） |
 | CST-04 | #34 | DES-UI-37 | （査閲: 食品データにない商品の成分値を作る処理がない。手入力だけ） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜11 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-QTY-01 | #24 | DES-BSK-01 | TC-FR-ING-01-01, 02 | src/core/basket.ts | 一部実装（#24: 登録時は個数 1。画面は #27） |
@@ -79,7 +79,7 @@
 | FR-UI-03 | #27 | DES-UI-20 | （#30 の E2E） | src/ui/screens/HomeScreen.tsx, src/ui/components/Navigation.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-04 | #34 | DES-UI-21, 31 | （画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-05 | #28 | DES-UI-22, DES-BAL-06 | | | 未着手 |
-| FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | | | 未着手 |
+| FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | （#30 の E2E） | src/ui/components/BalancePanel.tsx | 一部実装（#27: ホーム。栄養詳細は #28） |
 | FR-UI-08 | #34 | DES-UI-24 | TC-FR-UI-08-01 | src/ui/screens/FoodsScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-09 | #29 | DES-UI-23 | | | 未着手 |
 | FR-SYS-01 | #24, #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜09 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx | 実装済み（画面での確認は #30 の E2E） |

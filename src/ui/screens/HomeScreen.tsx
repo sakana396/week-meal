@@ -34,9 +34,9 @@ export function HomeScreen({
   const detailOf = (foodId: string, displayName: string) => {
     if ((nameCounts.get(displayName) ?? 0) < 2) return null;
     const food = findFood(foodId);
-    return food
-      ? foodPresentation(food.name, food.category).details || food.name
-      : null;
+    if (!food) return null;
+    if (food.id.startsWith("manual-")) return "手入力";
+    return foodPresentation(food.name, food.category).details || food.name;
   };
   const ordered = [
     ...state.items.filter((item) => !item.usedUp),
@@ -72,7 +72,10 @@ export function HomeScreen({
       <section className="section-stack" aria-label="登録した食材">
         <div className="section-heading">
           <h3>登録した食材</h3>
-          <p>{state.items.filter((item) => !item.usedUp).length} 品目</p>
+          <p>
+            {state.items.filter((item) => !item.usedUp).length}{" "}
+            件（使い切ったものを除く）
+          </p>
         </div>
         {ordered.length === 0 ? (
           <div className="empty-result">
