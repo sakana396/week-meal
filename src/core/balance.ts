@@ -217,8 +217,9 @@ export function extraReferenceFor(
 ): Record<ExtraReferenceKey, number> {
   const male = extraDietaryReference.male[profile.ageGroup];
   const female = extraDietaryReference.female[profile.ageGroup];
-  if (profile.sex === "male") return male;
-  if (profile.sex === "female") return female;
+  // 呼び出し側が書き換えても定数が壊れないよう、写しを返す
+  if (profile.sex === "male") return { ...male };
+  if (profile.sex === "female") return { ...female };
   return Object.fromEntries(
     extraReferenceKeys.map((key) => [key, (male[key] + female[key]) / 2]),
   ) as Record<ExtraReferenceKey, number>;

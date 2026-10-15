@@ -3,12 +3,54 @@ import type { BalanceResult, DetailResult } from "../../core/balance";
 import { highSufficiency, lowSufficiency } from "../../core/balance";
 import type { Profile } from "../../core/profile";
 import { extraReferenceBasis } from "../../data/dietaryReference";
+import { NoDataNote } from "../components/BalancePanel";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
 import type { Route } from "../route";
 
-/** 棒の長さ（%）。充足率 150% を棒いっぱいとする */
+/** 充足率の棒の目盛り: 150% を棒いっぱいとする */
+const sufficiencyScale = 1.5;
+
+/** 充足率の棒の長さ（%） */
 function barWidth(sufficiency: number): number {
-  return Math.min(100, Math.max(0, (sufficiency / 1.5) * 100));
+  return Math.min(100, Math.max(0, (sufficiency / sufficiencyScale) * 100));
+}
+
+/** 充足率の棒。100%（基準値）と 70%（不足の境目）の位置に目印を置く */
+function SufficiencyBar({ sufficiency }: { sufficiency: number | null }) {
+  return (
+    <div className="detail-bar" aria-hidden="true">
+      <span
+        className="detail-fill"
+        style={{
+          width: `${sufficiency !== null ? barWidth(sufficiency) : 0}%`,
+        }}
+      />
+      <span
+        className="detail-mark"
+        style={{ left: `${barWidth(lowSufficiency)}%` }}
+      />
+      <span
+        className="detail-mark detail-mark-main"
+        style={{ left: `${barWidth(1)}%` }}
+      />
+    </div>
+  );
+}
+
+/** PFC の棒。エネルギーの 0〜100% を目盛りにし、目標の範囲を帯、値の位置を目印で示す */
+function PfcBar({ pct, range }: { pct: number; range: [number, number] }) {
+  return (
+    <div className="detail-bar" aria-hidden="true">
+      <span
+        className="detail-band"
+        style={{ left: `${range[0]}%`, width: `${range[1] - range[0]}%` }}
+      />
+      <span
+        className="detail-value"
+        style={{ left: `${Math.min(100, Math.max(0, pct))}%` }}
+      />
+    </div>
+  );
 }
 
 function percent(value: number): string {
@@ -29,15 +71,6 @@ function JudgedRow({ result }: { result: BalanceResult }) {
     : result.sufficiency !== null
       ? `充足率 ${percent(result.sufficiency)}`
       : "データなし";
-  const width =
-    isPfc && result.pfcRange
-      ? Math.min(
-          100,
-          ((result.pfcPct ?? 0) / Math.max(result.pfcRange[1], 1)) * 75,
-        )
-      : result.sufficiency !== null
-        ? barWidth(result.sufficiency)
-        : 0;
   const note = coverageNote(result.coverage);
   return (
     <li className="detail-row" data-status={result.status}>
@@ -45,9 +78,11 @@ function JudgedRow({ result }: { result: BalanceResult }) {
         <strong>{nutrientLabel(result.key)}</strong>
         <span className="balance-status">{statusLabels[result.status]}</span>
       </div>
-      <div className="detail-bar" aria-hidden="true">
-        <span style={{ width: `${width}%` }} />
-      </div>
+      {isPfc && result.pfcRange && result.pfcPct !== null ? (
+        <PfcBar pct={result.pfcPct} range={result.pfcRange} />
+      ) : (
+        <SufficiencyBar sufficiency={result.sufficiency} />
+      )}
       <small>
         {value}
         {note ? `・${note}` : ""}
@@ -65,13 +100,7 @@ function DetailRow({ result }: { result: DetailResult }) {
       <div className="detail-label">
         <strong>{basis.label}</strong>
       </div>
-      <div className="detail-bar" aria-hidden="true">
-        <span
-          style={{
-            width: `${result.sufficiency !== null ? barWidth(result.sufficiency) : 0}%`,
-          }}
-        />
-      </div>
+      <SufficiencyBar sufficiency={result.sufficiency} />
       <small>
         {result.sufficiency !== null
           ? `充足率 ${percent(result.sufficiency)}（${basis.basis}に対して）`
@@ -108,10 +137,11 @@ export function BalanceDetailScreen({
         <section className="notice-panel">
           <h3>まだ判定できません</h3>
           <p>
-            主食を除いて、エネルギーのデータがある食材を 3
-            品目以上登録すると、栄養素ごとの充足率を出します（いま{" "}
-            {analysis.itemCount} 品目）。
+            {analysis.reason === "noEnergy"
+              ? "登録した食材のエネルギーの合計が 0 のため、栄養の割合を計算できません。"
+              : `主食を除いて、エネルギーのデータがある食材を 3 品目以上登録すると、栄養素ごとの充足率を出します（いま ${analysis.itemCount} 品目）。`}
           </p>
+          <NoDataNote names={analysis.noDataItems} />
           <button
             className="primary-button"
             onClick={() => navigate("register")}
@@ -123,12 +153,14 @@ export function BalanceDetailScreen({
       ) : (
         <>
           <p className="balance-note">
-            買った食材の栄養を 1,000 kcal
+            買った食材の傾向です。食べた量や摂取量ではありません（
+            {stapleNote(profile)}）。買った食材の栄養を 1,000 kcal
             あたりに直し、日本人の食事摂取基準（2025年版）を同じく 1,000 kcal
-            あたりに直した値と比べています。食べた量や摂取量ではありません（
-            {stapleNote(profile)}）。 不足は充足率 {percent(lowSufficiency)}{" "}
-            未満、食塩の過剰は {percent(highSufficiency)} 超です。
+            あたりに直した値と比べています。充足率が {percent(lowSufficiency)}{" "}
+            未満なら不足、食塩は {percent(highSufficiency)}{" "}
+            超なら過剰、たんぱく質・脂質・炭水化物はエネルギーに占める割合が目標の範囲の外なら不足・過剰です。
           </p>
+          <NoDataNote names={analysis.noDataItems} />
           {analysis.pfc && (
             <section className="section-stack" aria-label="PFC 比率">
               <div className="section-heading">
