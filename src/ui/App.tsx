@@ -8,12 +8,8 @@ import { useHashRoute } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
-<<<<<<< HEAD
 import { RegisterScreen } from "./screens/RegisterScreen";
-import { browserStore, loadAppState, saveAppState } from "./storage";
-=======
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
->>>>>>> it02/26-ui-structure
 import "./App.css";
 
 /**
@@ -21,16 +17,9 @@ import "./App.css";
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
  */
 export default function App() {
-<<<<<<< HEAD
-  const [store] = useState(browserStore);
-  const [loaded] = useState(() => loadAppState(store));
-  const [state, dispatch] = useReducer(basketReducer, loaded.state);
-=======
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  // dispatch は登録画面（#34）とホームの操作（#27）で使う
-  const [state] = useReducer(basketReducer, loaded.state);
->>>>>>> it02/26-ui-structure
+  const [state, dispatch] = useReducer(basketReducer, loaded.state);
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
