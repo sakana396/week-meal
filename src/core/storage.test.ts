@@ -4,12 +4,12 @@ import type { FoodItem } from "../types";
 import {
   basketReducer,
   initialAppState,
+  maximumCount,
   type AppState,
   type BasketAction,
 } from "./basket";
 import { defaultProfile } from "./profile";
 import {
-  maximumCount,
   migrateStored,
   parseStoredState,
   serializeState,

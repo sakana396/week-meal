@@ -3,6 +3,7 @@ import { nutrientDefinitions } from "../data/nutrients";
 import type { FoodItem, NutrientsPer100g } from "../types";
 import {
   initialAppState,
+  maximumCount,
   minimumCount,
   type AppState,
   type BasketEntry,
@@ -11,9 +12,6 @@ import { defaultProfile, type Profile } from "./profile";
 
 /** 保存データの版（DES-STO-07、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
 export const storageVersion = 1;
-
-/** 1 行の個数の上限（DES-STO-04） */
-export const maximumCount = 999;
 
 /** 手入力の食品の ID の接頭辞（DES-BSK-08） */
 export const manualFoodIdPrefix = "manual-";
