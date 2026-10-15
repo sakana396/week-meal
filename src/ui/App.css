@@ -272,7 +272,7 @@ h3 {
 }
 
 .register-mode-switch button {
-  min-height: 38px;
+  min-height: 44px;
   border-color: transparent;
   background: transparent;
   font-weight: 700;
@@ -840,11 +840,33 @@ h3 {
   opacity: 0.55;
 }
 
-/* 登録したことのお知らせ（P-09）。空のときも高さを保ち、一覧が動かないようにする */
+/* 登録したことのお知らせ（P-09）。一覧をスクロールしても見えるよう、画面の下に固定する */
 .register-message {
-  min-height: 1.6em;
-  color: #2b7a57;
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  min-height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.register-message span {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #ffffff;
+  background: #2b7a57;
   font-weight: 700;
+  box-shadow: 0 4px 12px rgba(23, 32, 27, 0.2);
+}
+
+@media (max-width: 767px) {
+  .register-message {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 }
 
 /* ホームの登録した食材の一覧（DES-UI-40） */
