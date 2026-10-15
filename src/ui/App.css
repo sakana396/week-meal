@@ -942,3 +942,75 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+/* 栄養詳細（DES-UI-22）。判定は色だけでなく文字でも示す（NFR-07） */
+.detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-row .balance-status {
+  color: #ffffff;
+  background: #2b7a57;
+}
+
+.detail-row[data-status="low"] .balance-status {
+  background: #c84b31;
+}
+
+.detail-row[data-status="high"] .balance-status {
+  background: #8a5a00;
+}
+
+.detail-row[data-status="unknown"] .balance-status {
+  background: #6f6a60;
+}
+
+.detail-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5dfd4;
+}
+
+.detail-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2b7a57;
+}
+
+.detail-row[data-status="low"] .detail-bar span {
+  background: #c84b31;
+}
+
+.detail-row[data-status="high"] .detail-bar span {
+  background: #8a5a00;
+}
+
+.detail-row[data-status="info"] .detail-bar span {
+  background: #7a8f80;
+}
+
+.pfc-summary {
+  font-weight: 700;
+}
