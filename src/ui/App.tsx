@@ -6,7 +6,9 @@ import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
 import { useHashRoute } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
+import { FoodsScreen } from "./screens/FoodsScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
+import { RegisterScreen } from "./screens/RegisterScreen";
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
 import "./App.css";
 
@@ -17,8 +19,7 @@ import "./App.css";
 export default function App() {
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  // dispatch は登録画面（#34）とホームの操作（#27）で使う
-  const [state] = useReducer(basketReducer, loaded.state);
+  const [state, dispatch] = useReducer(basketReducer, loaded.state);
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
@@ -62,7 +63,7 @@ export default function App() {
           />
         )}
         {route === "register" && (
-          <PlaceholderScreen label="食材登録" title="食材を選ぶ" />
+          <RegisterScreen dispatch={dispatch} state={state} />
         )}
         {route === "balance" && (
           <PlaceholderScreen label="栄養詳細" title="栄養の割合と充足率" />
@@ -78,9 +79,7 @@ export default function App() {
             </button>
           </PlaceholderScreen>
         )}
-        {route === "foods" && (
-          <PlaceholderScreen label="食品一覧" title="食品データベース" />
-        )}
+        {route === "foods" && <FoodsScreen />}
       </main>
     </div>
   );
