@@ -841,8 +841,9 @@ h3 {
 }
 
 /* 登録したことのお知らせ（P-09）。一覧をスクロールしても見えるよう、画面の下に固定する */
+/* 空のときも読み上げの領域は残し（display: none にしない）、screen-stack の間隔だけ打ち消す */
 .register-message:empty {
-  display: none;
+  margin-top: -28px;
 }
 
 .register-message {
