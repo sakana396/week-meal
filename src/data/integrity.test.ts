@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import selection from "../../scripts/food-selection.json";
-import { groupFoods, isRegistrable } from "../core/catalog";
+import { groupFoods, isRegistrable, representativeFood } from "../core/catalog";
 import type { FoodItem } from "../types";
 import {
   foodCategoryGroupAliases,
@@ -147,4 +147,23 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     );
     expect(names.filter((name) => !registrable.has(name))).toEqual([]);
   });
+
+  it.each([
+    ["でん粉", "02034"],
+    ["かぶの漬物", "06041"],
+    ["はるさめ（乾燥）", "02040"],
+    ["しょうがの漬物", "06104"],
+    ["かんきつ（缶詰）", "07035"],
+    ["にんじん", "06212"],
+    ["牛肉", "11030"],
+    ["豆腐", "04032"],
+  ])(
+    "TC-NFR-11-08 食材名 %s の代表食品は、意図した食品（%s）になる",
+    (name, id) => {
+      const group = groupFoods(foods).find(
+        (candidate) => candidate.name === name,
+      );
+      expect(group && representativeFood(group).id).toBe(id);
+    },
+  );
 });
