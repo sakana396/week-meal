@@ -75,20 +75,20 @@
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-02 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-05 | #29 | DES-UI-23 | | | 未着手 |
-| FR-UI-02 | #26 | DES-UI-10〜13, 20〜24 | | | 未着手 |
+| FR-UI-02 | #26 | DES-UI-10〜14, 20〜24 | TC-FR-UI-02-01〜03 | src/ui/App.tsx, src/ui/route.ts, src/ui/components/Navigation.tsx | 一部実装（#26: 構成と切り替え。各画面は #27〜#29・#34） |
 | FR-UI-03 | #27 | DES-UI-20 | | | 未着手 |
 | FR-UI-04 | #34 | DES-UI-21, 31 | | | 未着手 |
 | FR-UI-05 | #28 | DES-UI-22, DES-BAL-06 | | | 未着手 |
 | FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | | | 未着手 |
 | FR-UI-08 | #34 | DES-UI-24 | | | 未着手 |
 | FR-UI-09 | #29 | DES-UI-23 | | | 未着手 |
-| FR-SYS-01 | #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜04 | src/core/basket.ts, src/core/storage.ts | 一部実装（#25: 読み書きの関数。localStorage は #26） |
-| FR-SYS-02 | #26 | DES-UI-13 | | | 未着手 |
-| IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | | | 未着手 |
+| FR-SYS-01 | #24, #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜09 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx | 実装済み（画面での確認は #30 の E2E） |
+| FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |
+| IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | （#30 の E2E） | src/ui/App.css, src/ui/components/Navigation.tsx | 一部実装（#26: 日本語の表示、下のタブとサイドバー、ボタン 44px。確認は #30 の E2E） |
 | NFR-01 | #30 | DES-E2E-03 | | | 未着手 |
 | NFR-02 | #30 | DES-E2E-03 | | | 未着手 |
-| NFR-12 | #25, #26, #27, #30 | DES-STO-02〜06, DES-E2E-04 | TC-NFR-12-01, 02, 07〜28 | src/core/storage.ts | 一部実装（#25: 読み込み。退避と画面の表示は #26・#27） |
+| NFR-12 | #25, #26, #27, #30 | DES-STO-02〜06, DES-UI-13, DES-E2E-04 | TC-NFR-12-01, 02, 07〜31 | src/core/storage.ts, src/ui/storage.ts, src/ui/components/StorageNotice.tsx | 一部実装（読み込み・退避・表示。E2E は #30） |
 | NFR-13 | #25 | DES-STO-07 | TC-NFR-13-01〜11 | src/core/storage.ts | 実装済み（版の検査と移行の仕組み。仮の移行表で旧い版を読み込めることを確認） |
-| NFR-14 | #26 | DES-UI-13 | | | 未着手 |
+| NFR-14 | #26 | DES-UI-13 | （査閲: 外部に送る処理がなく、保存は localStorage だけ） | src/ui/storage.ts | 実装済み |
 | QA-03 | #30 | DES-E2E-01〜06 | | | 未着手 |
 | QA-09 | #28 | DES-BAL-06 | | | 未着手 |
