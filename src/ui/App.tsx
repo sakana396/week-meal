@@ -8,8 +8,12 @@ import { useHashRoute } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
+<<<<<<< HEAD
 import { RegisterScreen } from "./screens/RegisterScreen";
 import { browserStore, loadAppState, saveAppState } from "./storage";
+=======
+import { loadAppState, openBrowserStore, saveAppState } from "./storage";
+>>>>>>> it02/26-ui-structure
 import "./App.css";
 
 /**
@@ -17,25 +21,32 @@ import "./App.css";
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
  */
 export default function App() {
+<<<<<<< HEAD
   const [store] = useState(browserStore);
   const [loaded] = useState(() => loadAppState(store));
   const [state, dispatch] = useReducer(basketReducer, loaded.state);
+=======
+  const [browser] = useState(openBrowserStore);
+  const [loaded] = useState(() => loadAppState(browser));
+  // dispatch は登録画面（#34）とホームの操作（#27）で使う
+  const [state] = useReducer(basketReducer, loaded.state);
+>>>>>>> it02/26-ui-structure
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
   useEffect(() => {
     if (!loaded.available) return;
-    const saved = saveAppState(store, state);
-    if (saved) return;
-    // 書き出しに失敗したとき（容量不足など）は、描画のあとで知らせる
+    const saved = saveAppState(browser.store, state);
+    // 書き出しの結果を、描画のあとで知らせる。effect の中で同期的に setState すると
+    // 描画が連鎖するため（react-hooks の set-state-in-effect 規則）、microtask に回す
     let active = true;
     void Promise.resolve().then(() => {
-      if (active) setSaveFailed(true);
+      if (active) setSaveFailed(!saved);
     });
     return () => {
       active = false;
     };
-  }, [loaded.available, store, state]);
+  }, [loaded.available, browser, state]);
 
   const analysis = useMemo(
     () => analyzeBasket(toRegisteredItems(state, foodsById), state.profile),
@@ -70,7 +81,11 @@ export default function App() {
         )}
         {route === "settings" && (
           <PlaceholderScreen label="設定" title="主食と基準値の設定">
-            <button onClick={() => navigate("foods")} type="button">
+            <button
+              className="primary-button"
+              onClick={() => navigate("foods")}
+              type="button"
+            >
               食品一覧を見る
             </button>
           </PlaceholderScreen>

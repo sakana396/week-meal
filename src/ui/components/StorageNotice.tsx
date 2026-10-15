@@ -29,7 +29,7 @@ export function StorageNotice({
   }
   if (saveFailed) {
     messages.push(
-      "このブラウザでは保存できません。ページを閉じると登録した食材は消えます。",
+      "登録した食材を保存できませんでした。ページを閉じると、保存できなかった変更は消えます。",
     );
   }
   if (messages.length === 0) return null;

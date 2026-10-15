@@ -23,49 +23,59 @@ export type LoadResult = {
   available: boolean;
 };
 
-/** localStorage が使えれば返す。プライベートモードなどで使えなければ null（DES-UI-13） */
-export function browserStore(): KeyValueStore | null {
+/** ブラウザの保存先と、書き込めるかどうか */
+export type BrowserStore = { store: KeyValueStore | null; writable: boolean };
+
+/**
+ * localStorage を開く（DES-UI-13）。読めるかどうかと書き込めるかどうかを分けて調べ、
+ * 容量がいっぱいで書き込めないときも、保存データの読み込みは試せるようにする。
+ * プライベートモードなどで localStorage そのものが使えなければ store は null。
+ */
+export function openBrowserStore(): BrowserStore {
+  let store: Storage;
   try {
-    const store = window.localStorage;
+    store = window.localStorage;
+  } catch {
+    return { store: null, writable: false };
+  }
+  try {
     const probe = "weekmeal:probe";
     store.setItem(probe, "1");
     store.removeItem(probe);
-    return store;
+    return { store, writable: true };
   } catch {
-    return null;
+    return { store, writable: false };
   }
 }
 
 /**
  * 起動時に保存データを読み込む（DES-UI-13）。
  * 読めなかったときは、書き出す前に元の文字列を退避する（新しい版のデータを消さないため）。
+ * 退避できなかったときは、元のデータを上書きしないよう、書き出さない（available を false にする）。
  */
 export function loadAppState(
-  store: KeyValueStore | null,
+  { store, writable }: BrowserStore,
   foodIds: ReadonlySet<string> = knownFoodIds,
 ): LoadResult {
-  if (!store) {
-    return {
-      state: initialAppState,
-      issue: null,
-      backedUp: false,
-      available: false,
-    };
-  }
+  const unavailable = {
+    state: initialAppState,
+    issue: null,
+    backedUp: false,
+    available: false,
+  };
+  if (!store) return unavailable;
   let text: string | null;
   try {
     text = store.getItem(storageKey);
   } catch {
-    return {
-      state: initialAppState,
-      issue: null,
-      backedUp: false,
-      available: false,
-    };
+    return unavailable;
   }
   const { state, issue } = parseStoredState(text, foodIds);
+  if (issue !== "corrupted" || text === null) {
+    return { state, issue, backedUp: false, available: writable };
+  }
   let backedUp = false;
-  if (issue === "corrupted" && text !== null) {
+  if (writable) {
     try {
       store.setItem(backupKey, text);
       backedUp = true;
@@ -73,7 +83,7 @@ export function loadAppState(
       backedUp = false;
     }
   }
-  return { state, issue, backedUp, available: true };
+  return { state, issue, backedUp, available: writable && backedUp };
 }
 
 /** 状態を書き出す。書き出せなければ false（DES-UI-13） */
