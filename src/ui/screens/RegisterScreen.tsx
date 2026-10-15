@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AppState, BasketAction } from "../../core/basket";
 import {
   foodPresentation,
@@ -67,6 +67,19 @@ export function RegisterScreen({
   const [manualForm, setManualForm] = useState<ManualFoodForm>(emptyManualForm);
   // 同じ文言が続いても読み上げ直し・表示し直すよう、連番を持つ
   const [message, setMessage] = useState({ text: "", seq: 0 });
+
+  // お知らせは 4 秒で消す（一覧のボタンの文字を覆い続けないように）
+  useEffect(() => {
+    if (!message.text) return;
+    const timer = window.setTimeout(
+      () =>
+        setMessage((current) =>
+          current.seq === message.seq ? { ...current, text: "" } : current,
+        ),
+      4000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [message]);
 
   const filteredFoods = useMemo(() => {
     const normalizedQuery = normalizeSearchText(query);
@@ -331,10 +344,6 @@ export function RegisterScreen({
         )}
       </section>
 
-      <p className="register-message" role="status" aria-live="polite">
-        {message.text && <span key={message.seq}>{message.text}</span>}
-      </p>
-
       <form className="section-stack" onSubmit={addManualFood}>
         <div className="section-heading">
           <h3>手入力で追加</h3>
@@ -417,6 +426,11 @@ export function RegisterScreen({
           </button>
         </div>
       </form>
+
+      {/* 画面の最後に置き、一覧と手入力のどちらをスクロールしていても画面の下に見えるようにする */}
+      <p className="register-message" role="status" aria-live="polite">
+        {message.text && <span key={message.seq}>{message.text}</span>}
+      </p>
     </div>
   );
 }

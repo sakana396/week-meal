@@ -841,6 +841,10 @@ h3 {
 }
 
 /* 登録したことのお知らせ（P-09）。一覧をスクロールしても見えるよう、画面の下に固定する */
+.register-message:empty {
+  display: none;
+}
+
 .register-message {
   position: sticky;
   bottom: 16px;
