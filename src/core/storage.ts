@@ -43,7 +43,7 @@ export function serializeState(state: AppState): string {
 
 /**
  * 保存データを今の版まで 1 つずつ移行する（DES-STO-07）。
- * 移行の関数がない、または移行しても版が上がらないときは null を返す。
+ * 移行の関数がない、例外を出す、版が上がらない・今の版を飛び越えるときは null を返す。
  */
 export function migrateStored(
   stored: StoredState,
@@ -54,8 +54,21 @@ export function migrateStored(
   while (current.version < targetVersion) {
     const migrate = table[current.version];
     if (!migrate) return null;
-    const next = migrate(current);
-    if (!(next.version > current.version)) return null;
+    let next: StoredState;
+    try {
+      next = migrate(current);
+    } catch {
+      // 移行の関数が想定外の形のデータで失敗したときは、読めなかったものとして扱う
+      return null;
+    }
+    if (
+      !isRecord(next) ||
+      typeof next.version !== "number" ||
+      !(next.version > current.version) ||
+      next.version > targetVersion
+    ) {
+      return null;
+    }
     current = next;
   }
   return current;
