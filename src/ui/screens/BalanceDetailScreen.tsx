@@ -15,8 +15,17 @@ function barWidth(sufficiency: number): number {
   return Math.min(100, Math.max(0, (sufficiency / sufficiencyScale) * 100));
 }
 
-/** 充足率の棒。100%（基準値）と 70%（不足の境目）の位置に目印を置く */
-function SufficiencyBar({ sufficiency }: { sufficiency: number | null }) {
+/**
+ * 充足率の棒。基準値（100%）と、判定の境目（下限の規則は 70%、上限の規則は 130%）に目印を置く
+ */
+function SufficiencyBar({
+  sufficiency,
+  upper = false,
+}: {
+  sufficiency: number | null;
+  upper?: boolean;
+}) {
+  const boundary = upper ? highSufficiency : lowSufficiency;
   return (
     <div className="detail-bar" aria-hidden="true">
       <span
@@ -27,7 +36,7 @@ function SufficiencyBar({ sufficiency }: { sufficiency: number | null }) {
       />
       <span
         className="detail-mark"
-        style={{ left: `${barWidth(lowSufficiency)}%` }}
+        style={{ left: `${barWidth(boundary)}%` }}
       />
       <span
         className="detail-mark detail-mark-main"
@@ -81,7 +90,10 @@ function JudgedRow({ result }: { result: BalanceResult }) {
       {isPfc && result.pfcRange && result.pfcPct !== null ? (
         <PfcBar pct={result.pfcPct} range={result.pfcRange} />
       ) : (
-        <SufficiencyBar sufficiency={result.sufficiency} />
+        <SufficiencyBar
+          sufficiency={result.sufficiency}
+          upper={result.key === "saltEquivalentG"}
+        />
       )}
       <small>
         {value}

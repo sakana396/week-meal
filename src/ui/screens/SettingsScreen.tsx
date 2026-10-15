@@ -94,7 +94,7 @@ export function SettingsScreen({
       <section className="section-stack" aria-label="主食">
         <ChoiceGroup
           label="主食"
-          note="米・パン・麺は食材として登録せず、ここで選んだ主食を毎回の食事で食べる前提で計算します。"
+          note="米・パン・麺は食材として登録せず、ここで選んだ主食を、盛りに応じた割合で食べるものとして計算します。"
           onChange={(staple) => update({ staple })}
           options={stapleChoices}
           value={profile.staple}
@@ -102,7 +102,11 @@ export function SettingsScreen({
         <ChoiceGroup
           disabled={profile.staple === "none"}
           label="盛り"
-          note="小盛り・中盛り・大盛りで、全体のエネルギーのうち主食が 3 割・4 割・5 割を占めるとして計算します。"
+          note={
+            profile.staple === "none"
+              ? "主食なしのときは盛りを使いません（選んだ盛りは残ります）。"
+              : "小盛り・中盛り・大盛りで、全体のエネルギーのうち主食が 3 割・4 割・5 割を占めるとして計算します。"
+          }
           onChange={(portion) => update({ portion })}
           options={portionChoices}
           value={profile.portion}

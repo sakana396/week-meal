@@ -4,3 +4,5 @@ dist
 *.local
 coverage
 __pycache__
+test-results
+playwright-report
