@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { normalizeSearchText } from "../../core/catalog";
 import {
   basicNutrientDefinitions,
@@ -29,6 +29,14 @@ export function FoodsScreen() {
   }, [query]);
   const visible = filtered.slice(0, maxVisibleFoods);
   const selected = baseFoods.find((food) => food.id === selectedId) ?? null;
+  const detailHeading = useRef<HTMLHeadingElement>(null);
+
+  // 食品を選んだら成分の欄へ移り、見出しにフォーカスする（下の方の行を押しても変化が分かるように）
+  useEffect(() => {
+    if (!selectedId || !detailHeading.current) return;
+    detailHeading.current.scrollIntoView({ block: "start" });
+    detailHeading.current.focus();
+  }, [selectedId]);
 
   return (
     <div className="screen-stack" aria-label="食品一覧画面">
@@ -58,9 +66,12 @@ export function FoodsScreen() {
       {selected && (
         <section className="section-stack" aria-label="食品の成分">
           <div className="section-heading">
-            <h3>{selected.name}</h3>
+            <h3 ref={detailHeading} tabIndex={-1}>
+              {selected.name}
+            </h3>
             <p>食品番号 {selected.id} / 可食部 100g あたり</p>
           </div>
+          <h4>基本栄養素</h4>
           <div className="nutrient-chart">
             {basicNutrientDefinitions.map((definition) => {
               const value = selected.nutrientsPer100g[definition.key] ?? null;
@@ -82,6 +93,7 @@ export function FoodsScreen() {
               );
             })}
           </div>
+          <h4>ビタミン・ミネラル</h4>
           <div className="micro-grid">
             {vitaminMineralDefinitions.map((definition) => {
               const value = selected.nutrientsPer100g[definition.key] ?? null;
@@ -96,6 +108,13 @@ export function FoodsScreen() {
                   </span>
                   <strong>{definition.label}</strong>
                   <small>{formatValue(value, definition.unit)}</small>
+                  <div className="mini-track" aria-hidden="true">
+                    <span
+                      style={{
+                        width: `${nutrientPercent(value, definition)}%`,
+                      }}
+                    />
+                  </div>
                 </article>
               );
             })}

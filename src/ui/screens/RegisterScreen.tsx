@@ -1,9 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  basketReducer,
-  type AppState,
-  type BasketAction,
-} from "../../core/basket";
+import type { AppState, BasketAction } from "../../core/basket";
 import {
   foodPresentation,
   groupFoods,
@@ -20,11 +16,11 @@ import {
   basicNutrientDefinitions,
   nutrientDefinitions,
 } from "../../data/nutrients";
-import { unitWeights } from "../../data/unitWeights";
 import type { FoodItem, NutrientKey } from "../../types";
 import { baseFoods } from "../foodData";
-import { formatCount, parseManualValue } from "../format";
+import { parseManualValue } from "../format";
 import { localId } from "../ids";
+import { registerMessage } from "../registerMessage";
 
 const maxVisibleFoods = 80;
 
@@ -55,18 +51,6 @@ function emptyManualForm(): ManualFoodForm {
   };
 }
 
-/** 登録したあとの個数と単位の表示（例: 「2 本」。目安重量がなければ「2 つ」） */
-function countLabel(state: AppState, action: BasketAction): string {
-  if (action.type !== "register" && action.type !== "addManualFood") return "";
-  const next = basketReducer(state, action);
-  const foodId = action.type === "register" ? action.foodId : action.food.id;
-  const entry = next.items.find(
-    (item) => item.foodId === foodId && item.displayName === action.displayName,
-  );
-  const unit = unitWeights[action.displayName]?.unit ?? "つ";
-  return entry ? `${formatCount(entry.count)} ${unit}` : "";
-}
-
 /**
  * 食材登録（DES-UI-21, 30〜37）。食材名を押すと登録し、登録画面に留まって知らせる（P-09）。
  */
@@ -81,7 +65,8 @@ export function RegisterScreen({
   const [mode, setMode] = useState<RegisterMode>("simple");
   const [category, setCategory] = useState<RegisterCategory>("すべて");
   const [manualForm, setManualForm] = useState<ManualFoodForm>(emptyManualForm);
-  const [message, setMessage] = useState("");
+  // 同じ文言が続いても読み上げ直し・表示し直すよう、連番を持つ
+  const [message, setMessage] = useState({ text: "", seq: 0 });
 
   const filteredFoods = useMemo(() => {
     const normalizedQuery = normalizeSearchText(query);
@@ -136,37 +121,42 @@ export function RegisterScreen({
   ).length;
   const total = mode === "simple" ? groups.length : detailedFoods.length;
 
-  function register(action: BasketAction, name: string) {
-    const label = countLabel(state, action);
+  function register(action: BasketAction) {
+    const text = registerMessage(state, action);
     dispatch(action);
-    setMessage(`${name}を登録しました（${label}）`);
+    setMessage((current) => ({ text, seq: current.seq + 1 }));
   }
 
   function registerGroup(group: FoodGroup) {
     const food = representativeFood(group);
-    register(
-      {
-        type: "register",
-        id: localId("item"),
-        foodId: food.id,
-        displayName: group.name,
-      },
-      group.name,
-    );
+    register({
+      type: "register",
+      id: localId("item"),
+      foodId: food.id,
+      displayName: group.name,
+    });
   }
 
   function registerFood(food: FoodItem) {
     const displayName = foodPresentation(food.name, food.category).name;
-    register(
-      { type: "register", id: localId("item"), foodId: food.id, displayName },
+    register({
+      type: "register",
+      id: localId("item"),
+      foodId: food.id,
       displayName,
-    );
+    });
   }
 
   function addManualFood(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = manualForm.name.trim();
-    if (!name) return;
+    if (!name) {
+      setMessage((current) => ({
+        text: "食材名を入れてください",
+        seq: current.seq + 1,
+      }));
+      return;
+    }
     const food: FoodItem = {
       id: localId("manual"),
       name,
@@ -179,10 +169,12 @@ export function RegisterScreen({
         ]),
       ) as FoodItem["nutrientsPer100g"],
     };
-    register(
-      { type: "addManualFood", id: localId("item"), food, displayName: name },
-      name,
-    );
+    register({
+      type: "addManualFood",
+      id: localId("item"),
+      food,
+      displayName: name,
+    });
     setManualForm(emptyManualForm());
   }
 
@@ -195,10 +187,6 @@ export function RegisterScreen({
         </div>
         <span className="category-pill">押すと 1 つ登録</span>
       </header>
-
-      <p className="register-message" role="status" aria-live="polite">
-        {message}
-      </p>
 
       <section className="register-mode-panel" aria-label="入力モード">
         <div>
@@ -233,7 +221,11 @@ export function RegisterScreen({
         </div>
       </section>
 
-      <div className="category-picker" aria-label="スーパーの棚を選択">
+      <div
+        className="category-picker"
+        role="group"
+        aria-label="スーパーの棚を選択"
+      >
         {registerCategories.map((shelf) => (
           <button
             aria-pressed={category === shelf}
@@ -338,6 +330,10 @@ export function RegisterScreen({
           </div>
         )}
       </section>
+
+      <p className="register-message" role="status" aria-live="polite">
+        {message.text && <span key={message.seq}>{message.text}</span>}
+      </p>
 
       <form className="section-stack" onSubmit={addManualFood}>
         <div className="section-heading">
