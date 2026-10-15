@@ -48,39 +48,39 @@
 
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
-| FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜05 | src/core/basket.ts | 一部実装（#24: 状態。画面は #34） |
-| FR-ING-02 | #34 | DES-UI-32 | | | 未着手 |
-| FR-ING-03 | #34 | DES-UI-32 | | | 未着手 |
-| FR-ING-04 | #34 | DES-UI-33 | | | 未着手 |
-| FR-ING-05 | #34 | DES-UI-30 | | | 未着手 |
-| FR-ING-06 | #34 | DES-UI-30 | | | 未着手 |
-| FR-ING-07 | #34 | DES-UI-31 | | | 未着手 |
-| FR-ING-09 | #23, #34 | DES-UI-32, 34 | | | 未着手 |
-| FR-FDB-03 | #34 | DES-UI-35 | | | 未着手 |
+| FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜06 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-02 | #34 | DES-UI-32 | （IT01 の core のテスト。画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-03 | #34 | DES-UI-32 | （IT01 の core のテスト。画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-04 | #34 | DES-UI-33 | （IT01 の core のテスト。画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-05 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-06 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-07 | #34 | DES-UI-31 | TC-FR-ING-07-01 | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
+| FR-ING-09 | #23, #34 | DES-UI-32, 34 | （IT01 の TC-FR-ING-09-01〜07） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる。#23 は未着手） |
+| FR-FDB-03 | #34 | DES-UI-35 | TC-FR-ING-08-01〜10 | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-BAL-05 | #27 | DES-ANL-03, DES-UI-41 | | | 未着手 |
 | FR-NUT-05 | #27 | DES-ANL-03, DES-UI-41 | | | 未着手 |
 | FR-UI-01 | #27 | DES-UI-20, 41 | | | 未着手 |
 | FR-UI-07 | #27 | DES-UI-41 | | | 未着手 |
 | NFR-07 | #27, #28 | DES-UI-22, 41 | | | 未着手 |
-| CST-04 | #34 | DES-UI-37 | | | 未着手 |
-| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜05 | src/core/basket.ts | 一部実装（#24: 状態。画面は #34） |
+| CST-04 | #34 | DES-UI-37 | （査閲: 食品データにない商品の成分値を作る処理がない。手入力だけ） | src/ui/screens/RegisterScreen.tsx | 実装済み |
+| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜10 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-QTY-01 | #24 | DES-BSK-01 | TC-FR-ING-01-01, 02 | src/core/basket.ts | 一部実装（#24: 登録時は個数 1。画面は #27） |
 | FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-NUT-06 | #24 | DES-BSK-07 | TC-FR-NUT-06-03 | src/core/basket.ts | 実装済み（IT01 の analyzeBasket と合わせて） |
 | FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | TC-FR-ING-10-01〜06 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-11-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-12-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
-| FR-ING-13 | #34 | DES-UI-36 | | | 未着手 |
+| FR-ING-13 | #34 | DES-UI-36 | （査閲: 1 食ごとの記録の入口がない） | src/ui/ | 実装済み |
 | FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜04 | src/core/basket.ts | 一部実装（#24: 状態。画面は #27） |
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-02 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01 | src/core/basket.ts | 一部実装（#24: 状態。画面は #29） |
 | FR-STP-05 | #29 | DES-UI-23 | | | 未着手 |
 | FR-UI-02 | #26 | DES-UI-10〜14, 20〜24 | TC-FR-UI-02-01〜03 | src/ui/App.tsx, src/ui/route.ts, src/ui/components/Navigation.tsx | 一部実装（#26: 構成と切り替え。各画面は #27〜#29・#34） |
 | FR-UI-03 | #27 | DES-UI-20 | | | 未着手 |
-| FR-UI-04 | #34 | DES-UI-21, 31 | | | 未着手 |
+| FR-UI-04 | #34 | DES-UI-21, 31 | （画面は #30 の E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-05 | #28 | DES-UI-22, DES-BAL-06 | | | 未着手 |
 | FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | | | 未着手 |
-| FR-UI-08 | #34 | DES-UI-24 | | | 未着手 |
+| FR-UI-08 | #34 | DES-UI-24 | TC-FR-UI-08-01 | src/ui/screens/FoodsScreen.tsx | 実装済み（画面は #30 の E2E で確かめる） |
 | FR-UI-09 | #29 | DES-UI-23 | | | 未着手 |
 | FR-SYS-01 | #24, #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜08 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx | 実装済み（画面での確認は #30 の E2E） |
 | FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |

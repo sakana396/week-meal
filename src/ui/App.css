@@ -839,3 +839,10 @@ h3 {
 .food-row[data-used-up="true"] {
   opacity: 0.55;
 }
+
+/* 登録したことのお知らせ（P-09）。空のときも高さを保ち、一覧が動かないようにする */
+.register-message {
+  min-height: 1.6em;
+  color: #2b7a57;
+  font-weight: 700;
+}
