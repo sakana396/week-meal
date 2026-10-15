@@ -203,6 +203,9 @@ h3 {
 .ingredient-name-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 1fr));
+  /* 高さの上限つきのスクロール枠でも、行を中身の高さに合わせる（文字がはみ出さないように） */
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: 8px;
   max-height: 38vh;
   overflow: auto;
@@ -1102,4 +1105,14 @@ h3 {
   border-color: #2b7a57;
   background: #edf5ef;
   font-weight: 700;
+}
+
+/* PC 幅では、スクロールしてもサイドバー（ナビ）が見えるよう上に留める（P-06） */
+@media (min-width: 768px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+  }
 }
