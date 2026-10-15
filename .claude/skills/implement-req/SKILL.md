@@ -10,6 +10,25 @@ argument-hint: "<#Issue番号 | 要求ID | 設計ID> [...]"
 
 AGENTS.md のルールに従う。以下の手順を順に行い、各段階で問題があれば止めて人に報告する。
 
+## Claude Code が使うとき（実装は Codex に任せる）
+
+AGENTS.md の「エージェントの分担」により、Claude Code は手順 3〜6 を自分で行わず、Codex に任せる。
+
+1. 手順 0〜1 を確かめ、手順 2 のブランチを git worktree で作る（`git worktree add <パス> -b <ブランチ名> origin/main`）。Codex は既定でネットワークを使えないので、worktree で `npm ci` を済ませておく
+2. Codex に、このスキルの手順 0〜6 と手順 7-1（コミット）を行い、「push・プルリクエストの作成・マージ・force push・`git stash` はしない」ことを伝えて実行させる
+
+   ```sh
+   codex exec -C <worktree> -s workspace-write --add-dir <本体の .git> -o <報告の保存先> "<依頼>"
+   ```
+
+   - worktree の gitdir は本体の `.git/worktrees/` にあるので、`--add-dir` で本体の `.git` を書き込める範囲に入れないとコミットできない
+   - 報告の保存先は worktree の外（作業用の一時ディレクトリなど）に置き、コミットに紛れ込まないようにする
+   - E2E などで localhost を使うときは `-c sandbox_workspace_write.network_access=true` を付ける
+
+3. Codex の報告と差分を読み、worktree で手順 5 の検証コマンドを自分でも実行する。通れば手順 7 の push とプルリクエストの作成、手順 8 を行う。レビューの指摘は、Codex に同じ worktree で直させる
+4. Codex が失敗したり使えなかったりしたときは、自分で実装せず人に報告する
+5. マージしたら worktree を片付ける（`git worktree remove <パス>`）
+
 ## 0. Issue の確認（Issue 番号が指定されたとき）
 
 1. `gh issue view <番号>` で Issue を読み、「対象」（要求・設計・ユースケース）、「作業内容」、「作らないもの」、「依存」を把握する。以降の手順の対象 ID は Issue の「対象」に書かれたものとする
