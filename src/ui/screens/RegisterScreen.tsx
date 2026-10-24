@@ -107,24 +107,27 @@ export function RegisterScreen({
 
   const detailedFoods = useMemo(
     () =>
-      [...filteredFoods].sort((left, right) => {
-        if (!query.trim()) {
-          const leftPriority = supermarketPriority(
-            foodPresentation(left.name, left.category).name,
-          );
-          const rightPriority = supermarketPriority(
-            foodPresentation(right.name, right.category).name,
-          );
-          if (leftPriority !== null || rightPriority !== null) {
-            if (leftPriority === null) return 1;
-            if (rightPriority === null) return -1;
-            if (leftPriority !== rightPriority)
-              return leftPriority - rightPriority;
-          }
-        }
-        return left.name.localeCompare(right.name, "ja-JP");
-      }),
-    [filteredFoods, query],
+      // 簡易モードでは詳細用の並べ替えを行わない（DES-UI-30, 31, 33）。
+      mode === "simple"
+        ? []
+        : [...filteredFoods].sort((left, right) => {
+            if (!query.trim()) {
+              const leftPriority = supermarketPriority(
+                foodPresentation(left.name, left.category).name,
+              );
+              const rightPriority = supermarketPriority(
+                foodPresentation(right.name, right.category).name,
+              );
+              if (leftPriority !== null || rightPriority !== null) {
+                if (leftPriority === null) return 1;
+                if (rightPriority === null) return -1;
+                if (leftPriority !== rightPriority)
+                  return leftPriority - rightPriority;
+              }
+            }
+            return left.name.localeCompare(right.name, "ja-JP");
+          }),
+    [filteredFoods, query, mode],
   );
 
   const visibleGroups = groups.slice(0, maxVisibleFoods);

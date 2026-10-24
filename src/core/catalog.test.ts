@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FoodItem } from "../types";
+import { supermarketFoodPriorities } from "../data/supermarketFoods";
 import {
   foodPresentation,
   groupFoods,
@@ -246,6 +247,25 @@ describe("prioritizeSupermarketFoods（DES-CAT-04）", () => {
   ])("%s", (_title, name, expected) => {
     expect(supermarketPriority(name)).toBe(expected);
   });
+
+  it.each(
+    supermarketFoodPriorities.map((name, index) => [name, index] as const),
+  )(
+    "TC-FR-ING-04-04 順位表の全項目で元の順位を保つ（%s）",
+    (name, expected) => {
+      expect(supermarketPriority(name)).toBe(expected);
+      expect(supermarketPriority(` ${name.split("").join("　")} `)).toBe(
+        expected,
+      );
+    },
+  );
+
+  it.each(["", "玉ねぎ類", "constructor", "__proto__"])(
+    "TC-FR-ING-04-05 順位表にない名前は null（%s）",
+    (name) => {
+      expect(supermarketPriority(name)).toBeNull();
+    },
+  );
 });
 
 describe("normalizeSearchText（DES-CAT-06）", () => {

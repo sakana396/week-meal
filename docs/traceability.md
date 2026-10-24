@@ -8,7 +8,7 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-03 | #3 | DES-CAT-06 | TC-FR-ING-03-01〜03 | src/core/catalog.ts | 実装済み（検索の正規化） |
-| FR-ING-04 | #3 | DES-CAT-04 | TC-FR-ING-04-01〜03 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
+| FR-ING-04 | #3, #46 | DES-CAT-04, DES-CAT-06 | TC-FR-ING-04-01〜05 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
 | FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜10 | src/core/catalog.ts（まとめ・代表食品）, src/App.tsx（押して登録） | 実装済み（まとめ・代表食品。画面は IT02 で E2E） |
 | FR-ING-06 | #3, #5 | DES-CAT-01 | TC-FR-ING-06-01〜20 | src/core/catalog.ts | 実装済み |
 | FR-ING-09 | #3, #4, #9, #20 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（画面は IT02 の E2E TC-FR-ING-09-06） |
@@ -51,7 +51,7 @@
 | FR-ING-01 | #24, #34 | DES-BSK-01, DES-UI-21, 30 | TC-FR-ING-01-01〜12 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/registerMessage.ts | 実装済み |
 | FR-ING-02 | #34 | DES-UI-32 | IT01 の core テスト（画面の棚絞り込みは未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-03 | #34 | DES-UI-32 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-04 | #34 | DES-UI-33 | IT01 の core テスト（画面の優先表示は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
+| FR-ING-04 | #34, #46 | DES-UI-33 | TC-FR-ING-04-01〜05（core。画面の優先表示は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-05 | #34 | DES-UI-30 | （IT01 の core のテスト。画面は E2E の登録の操作 TC-FR-ING-01-06・07-01・09-06） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-ING-06 | #34 | DES-UI-30 | IT01 の core テスト（画面の別名表示は未検証） | src/ui/screens/RegisterScreen.tsx | 実装済み（画面は査閲） |
 | FR-ING-07 | #34 | DES-UI-31 | TC-FR-ING-07-01 | src/ui/screens/RegisterScreen.tsx | 実装済み |

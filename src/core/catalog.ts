@@ -138,14 +138,18 @@ export function groupFoods(foods: FoodItem[]) {
   return [...groups.values()];
 }
 
+// 正規化済みの順位表を一度だけ作る。同じ名前があれば先の順位を使う（DES-CAT-04, 06）。
+const supermarketPrioritiesByName = new Map<string, number>();
+for (const [priority, name] of supermarketFoodPriorities.entries()) {
+  const normalizedName = normalizeSearchText(name);
+  if (!supermarketPrioritiesByName.has(normalizedName)) {
+    supermarketPrioritiesByName.set(normalizedName, priority);
+  }
+}
+
 /** よくある食材の並び順を返す。対象外なら null（DES-CAT-04）。 */
 export function supermarketPriority(name: string) {
-  const target = normalizeSearchText(name);
-  const priority = supermarketFoodPriorities.findIndex(
-    (foodName) => target === normalizeSearchText(foodName),
-  );
-
-  return priority >= 0 ? priority : null;
+  return supermarketPrioritiesByName.get(normalizeSearchText(name)) ?? null;
 }
 
 /** よくある食材を先に、それ以外を日本語の localeCompare の順に並べる（DES-CAT-04）。 */
