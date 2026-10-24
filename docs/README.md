@@ -18,7 +18,7 @@
 | 設計 | 食品データ ADR | [adr/0002-food-data.md](adr/0002-food-data.md) | 採用 |
 | 設計 | 計算方式 ADR | [adr/0003-balance-calculation.md](adr/0003-balance-calculation.md) | 承認 |
 | 設計 | 設計書（反復 1） | [03_design/design-it01.md](03_design/design-it01.md) | v0.2 採用 |
-| 反復 | 反復 2（登録と判定の画面）計画書 | [iterations/it02/plan.md](iterations/it02/plan.md) | v0.1 |
+| 反復 | 反復 2（登録と判定の画面）計画書 | [iterations/it02/plan.md](iterations/it02/plan.md) | v0.2 |
 | 反復 | 反復 3（提案と仕上げ）計画書 | [iterations/it03/plan.md](iterations/it03/plan.md) | v0.1 |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 保存方式 ADR | [adr/0004-storage.md](adr/0004-storage.md) | 採用 |
