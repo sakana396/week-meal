@@ -1,5 +1,6 @@
 import type { AnalysisResult } from "../../core/analyze";
 import type { Profile } from "../../core/profile";
+import { balanceTone } from "../balanceTone";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
 
 /**
@@ -53,11 +54,7 @@ export function BalancePanel({
   );
 
   return (
-    <section
-      className="notice-panel"
-      data-alert={flagged.length > 0}
-      aria-label="栄養バランスの判定"
-    >
+    <section className="notice-panel" aria-label="栄養バランスの判定">
       <h3>
         {flagged.length > 0
           ? "偏りがあります"
@@ -69,7 +66,10 @@ export function BalancePanel({
         <ul className="balance-list">
           {flagged.map((result) => (
             <li key={result.key} data-status={result.status}>
-              <span className="balance-status">
+              <span
+                className="balance-status"
+                style={{ backgroundColor: balanceTone(result) ?? undefined }}
+              >
                 {statusLabels[result.status]}
               </span>
               {nutrientLabel(result.key)}

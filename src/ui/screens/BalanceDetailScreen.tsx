@@ -8,6 +8,7 @@ import {
 import type { Profile } from "../../core/profile";
 import { extraReferenceBasis } from "../../data/dietaryReference";
 import { NoDataNote } from "../components/BalancePanel";
+import { balanceTone } from "../balanceTone";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
 import type { Route } from "../route";
 
@@ -89,7 +90,12 @@ function JudgedRow({ result }: { result: BalanceResult }) {
     <li className="detail-row" data-status={result.status}>
       <div className="detail-label">
         <strong>{nutrientLabel(result.key)}</strong>
-        <span className="balance-status">{statusLabels[result.status]}</span>
+        <span
+          className="balance-status"
+          style={{ backgroundColor: balanceTone(result) ?? undefined }}
+        >
+          {statusLabels[result.status]}
+        </span>
       </div>
       {isPfc && result.pfcRange && result.pfcPct !== null ? (
         <PfcBar pct={result.pfcPct} range={result.pfcRange} />
