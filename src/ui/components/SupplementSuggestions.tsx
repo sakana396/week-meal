@@ -44,6 +44,7 @@ export function SupplementSuggestions({
   const interactionLocked = useRef(false);
   const pending = useRef<CandidateView | null>(null);
   const committedRevision = useRef(revision);
+  const registrationRevision = useRef<number | null>(null);
   const hasLow =
     analysis.kind === "judged" &&
     analysis.results.some((result) => result.status === "low");
@@ -56,8 +57,15 @@ export function SupplementSuggestions({
 
   // ボタンの無効化を DOM に反映してから、再計算を待たずに移す（DES-UI-42）。
   useLayoutEffect(() => {
-    if (locked) heading.current?.focus({ preventScroll: true });
-  }, [locked]);
+    if (!locked) return;
+    heading.current?.focus({ preventScroll: true });
+    // 登録で状態が変わらない場合も、次の計算結果を待たず固定を解く。
+    if (registrationRevision.current === revision) {
+      interactionLocked.current = false;
+      setLocked(false);
+      setHeight(undefined);
+    }
+  }, [locked, revision]);
 
   function publish(next: CandidateView | null) {
     if (!next || next.revision !== committedRevision.current) return;
@@ -91,6 +99,7 @@ export function SupplementSuggestions({
   function register(suggestion: SupplementSuggestion) {
     if (interactionLocked.current || calculating) return;
     // React の再描画を待たず、同じ位置への連続イベントも止める。
+    registrationRevision.current = revision;
     interactionLocked.current = true;
     pending.current = null;
     setLocked(true);
@@ -147,7 +156,7 @@ export function SupplementSuggestions({
       <h3 id="supplement-heading" ref={heading} tabIndex={-1}>
         不足を補う候補
       </h3>
-      <p className="balance-note" role="status">
+      <p className="balance-note" aria-live="off">
         {ready?.revision !== revision
           ? "候補を計算中"
           : locked

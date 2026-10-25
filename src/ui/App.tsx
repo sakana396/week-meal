@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { analyzeBasket } from "../core/analyze";
+import { toRegisteredItems } from "../core/basket";
 import {
-  basketReducer,
-  toRegisteredItems,
-  type AppState,
-  type BasketAction,
-} from "../core/basket";
+  basketSessionReducer,
+  type BasketSessionState,
+  type BasketSessionAction,
+} from "../core/basketSession";
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
@@ -20,26 +20,33 @@ import "./App.css";
 
 /** 状態と候補予約を対応付ける revision（DES-UI-42）。 */
 function revisionReducer(
-  current: { state: AppState; revision: number },
-  action: BasketAction,
+  current: { session: BasketSessionState; revision: number },
+  action: BasketSessionAction,
 ) {
-  const state = basketReducer(current.state, action);
-  return state === current.state
+  const session = basketSessionReducer(current.session, action);
+  return session === current.session
     ? current
-    : { state, revision: current.revision + 1 };
+    : {
+        session,
+        revision:
+          current.revision +
+          (session.appState === current.session.appState ? 0 : 1),
+      };
 }
 
 /**
  * 画面全体（DES-UI-10）。状態は useReducer（P-02）、画面はハッシュで切り替える（P-01）。
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
+ * 削除の取り消しはセッション内に保持し、保存・分析には appState だけを渡す（DES-BSK-09）。
  */
 export default function App() {
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  const [{ state, revision }, dispatch] = useReducer(revisionReducer, {
-    state: loaded.state,
+  const [{ session, revision }, dispatch] = useReducer(revisionReducer, {
+    session: { appState: loaded.state, pendingRemoval: null },
     revision: 0,
   });
+  const state = session.appState;
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
@@ -88,6 +95,7 @@ export default function App() {
             navigate={navigate}
             notice={notice}
             state={state}
+            pendingRemoval={session.pendingRemoval}
           />
         )}
         {route === "register" && (

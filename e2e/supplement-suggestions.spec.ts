@@ -22,6 +22,11 @@ const initial: AppState = {
     usedUp: false,
   })),
 };
+// 各食材10単位では、先頭10173の追加後も不足が残り、残る2候補の順位も変わる。
+const rotating: AppState = {
+  ...initial,
+  items: initial.items.map((item) => ({ ...item, count: 10 })),
+};
 const panel = (page: Page) =>
   page.getByRole("region", { name: "不足を補う候補" });
 const revision = (page: Page) =>
@@ -130,12 +135,24 @@ test("TC-FR-BAL-06-06 TC-FR-NUT-06-04 候補表示では登録・判定・保存
   await expect(itemRow(page, chosen.displayName)).toHaveCount(1);
 });
 
-test("TC-FR-BAL-06-08 同じ位置の連打を防ぎ、マウスを候補欄の外へ動かして更新する", async ({
+test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と残る候補の順序を欄外移動まで保つ", async ({
   page,
 }) => {
-  await seed(page);
+  await seed(page, rotating);
   await ready(page);
-  const first = panel(page).getByRole("button").first();
+  const slots = panel(page).locator("li");
+  const buttons = panel(page).locator("button[data-food-id]");
+  const ids = () =>
+    buttons.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-food-id")),
+    );
+  const beforeIds = await ids();
+  expect(beforeIds).toEqual(["10173", "08028", "08013"]);
+  const originalButtons = await buttons.elementHandles();
+  const firstHeight = await slots
+    .first()
+    .evaluate((element) => element.getBoundingClientRect().height);
+  const first = buttons.first();
   await first.scrollIntoViewIfNeeded();
   const box = (await first.boundingBox())!;
   const oldRevision = await revision(page);
@@ -162,17 +179,45 @@ test("TC-FR-BAL-06-08 同じ位置の連打を防ぎ、マウスを候補欄の�
     .getByRole("button", { includeHidden: true })
     .all())
     await expect(button).toBeDisabled();
+  expect(await ids()).toEqual(beforeIds);
+  // 食品番号 key によって同じ DOM と枠を保持し、消えた先頭だけを隠す。
+  for (let i = 0; i < originalButtons.length; i++) {
+    expect(
+      await buttons
+        .nth(i)
+        .evaluate(
+          (element, original) => element === original,
+          originalButtons[i],
+        ),
+    ).toBe(true);
+  }
+  await expect(slots.first()).toHaveCSS("visibility", "hidden");
+  expect(
+    await slots
+      .first()
+      .evaluate((element) => element.getBoundingClientRect().height),
+  ).toBe(firstHeight);
+  await expect(slots.nth(1)).toBeVisible();
+  await expect(slots.nth(2)).toBeVisible();
+  // 再計算後、元の座標への連打でも空き枠へ次の候補を詰めない。
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, {
+    clickCount: 2,
+    delay: 250,
+  });
+  expect(await ids()).toEqual(beforeIds);
   expect(
     await panel(page)
       .locator("ul")
       .evaluate((element) => element.getBoundingClientRect().height),
   ).toBe(listHeight);
   expect(JSON.parse((await saved(page))!).items).toHaveLength(
-    initial.items.length + 1,
+    rotating.items.length + 1,
   );
   // DES-UI-42: PC のマウスを欄外へ移し、固定した並びを解放する。
   await page.mouse.move(0, 0);
-  await expect(panel(page)).toHaveCount(0); // この固定試料では不足を解消する。
+  await ready(page);
+  expect(await ids()).toEqual(["08001", "08013", "08028"]);
+  await expect(buttons.first()).toBeEnabled();
 });
 
 test("TC-FR-BAL-06-08 再計算前後に通知と空き枠を押しても同じ見出しのフォーカスを保つ", async ({
@@ -302,4 +347,25 @@ test("TC-FR-BAL-06-07 候補なしを説明し、未判定・不足なしでは�
     await page.reload();
     await expect(panel(page)).toHaveCount(0);
   }
+});
+
+test("TC-FR-BAL-06-08 削除の取り消し表示中に候補を登録しても見出しへフォーカスする", async ({
+  page,
+}) => {
+  await seed(page, rotating);
+  await ready(page);
+  await itemRow(page, "キャベツ")
+    .getByRole("button", { name: "キャベツを削除" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "元に戻す", exact: true }),
+  ).toBeFocused();
+  await ready(page);
+  await panel(page).getByRole("button").first().click();
+  await expect(
+    page.getByRole("heading", { name: "不足を補う候補" }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "元に戻す", exact: true }),
+  ).toHaveCount(0);
 });
