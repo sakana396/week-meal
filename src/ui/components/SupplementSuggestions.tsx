@@ -54,6 +54,11 @@ export function SupplementSuggestions({
     committedRevision.current = revision;
   }, [revision]);
 
+  // ボタンの無効化を DOM に反映してから、再計算を待たずに移す（DES-UI-42）。
+  useLayoutEffect(() => {
+    if (locked) heading.current?.focus({ preventScroll: true });
+  }, [locked]);
+
   function publish(next: CandidateView | null) {
     if (!next || next.revision !== committedRevision.current) return;
     const buttonFocused = Boolean(
@@ -100,7 +105,6 @@ export function SupplementSuggestions({
       text: registerMessage(state, action),
       seq: current.seq + 1,
     }));
-    heading.current?.focus({ preventScroll: true });
     dispatch(action);
   }
 
@@ -117,6 +121,14 @@ export function SupplementSuggestions({
       data-candidates-revision={view.revision}
       aria-busy={ready?.revision !== revision}
       ref={section}
+      onPointerDownCapture={(event) => {
+        // 登録通知の挿入で同じ座標がリスト外になっても、見出しから離さない。
+        if (interactionLocked.current) event.preventDefault();
+      }}
+      onMouseDownCapture={(event) => {
+        // 互換マウスイベントでもフォーカス解除・連打による選択を防ぐ（DES-UI-42）。
+        if (interactionLocked.current) event.preventDefault();
+      }}
       onPointerEnter={(event) => {
         if (event.pointerType !== "touch") pointerInside.current = true;
       }}

@@ -175,6 +175,67 @@ test("TC-FR-BAL-06-08 同じ位置の連打を防ぎ、マウスを候補欄の�
   await expect(panel(page)).toHaveCount(0); // この固定試料では不足を解消する。
 });
 
+test("TC-FR-BAL-06-08 再計算前後に通知と空き枠を押しても同じ見出しのフォーカスを保つ", async ({
+  page,
+}) => {
+  await seed(page);
+  await ready(page);
+  const first = panel(page).getByRole("button").first();
+  await first.scrollIntoViewIfNeeded();
+  const box = (await first.boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const heading = page.getByRole("heading", { name: "不足を補う候補" });
+  const originalHeading = (await heading.elementHandle())!;
+  const oldRevision = await revision(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await page.mouse.click(x, y);
+  await expect(heading).toBeFocused();
+  await expect(
+    panel(page).getByText("候補を計算中", { exact: true }),
+  ).toBeVisible();
+  for (const button of await panel(page).getByRole("button").all())
+    await expect(button).toBeDisabled();
+  // clickCount: 2 はここでは2度目の down/up の属性。再計算との競合をなくす。
+  await page.mouse.down({ clickCount: 2 });
+  await page.mouse.up({ clickCount: 2 });
+  await expect(heading).toBeFocused();
+  // 元の座標の移動量は画面幅や判定欄の高さでも変わるため、通知自体も押す。
+  const notice = panel(page).locator('p[role="status"]').last();
+  await notice.click();
+  await expect(heading).toBeFocused();
+  await page.clock.runFor(100);
+  await expect(
+    panel(page).getByText(
+      "候補欄の外へポインターを動かすと、更新した候補を表示します",
+    ),
+  ).toBeVisible();
+  await expect(heading).toBeFocused();
+  expect(
+    await heading.evaluate(
+      (element, original) => element === original,
+      originalHeading,
+    ),
+  ).toBe(true);
+  // 計算後も通知と消えた候補の空き枠で維持する。
+  await notice.click();
+  await expect(heading).toBeFocused();
+  await panel(page)
+    .locator("ul")
+    .click({ position: { x: 8, y: 8 } });
+  await expect(heading).toBeFocused();
+  await expect(panel(page)).toHaveAttribute(
+    "data-candidates-revision",
+    oldRevision!,
+  );
+  expect(JSON.parse((await saved(page))!).items).toHaveLength(
+    initial.items.length + 1,
+  );
+  await page.mouse.move(0, 0);
+  await expect(panel(page)).toHaveCount(0);
+});
+
 test("TC-FR-BAL-06-08 キーボードで登録し、計算待ちの個数変更では最新revisionだけを反映する", async ({
   page,
 }) => {
