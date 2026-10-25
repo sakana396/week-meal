@@ -92,3 +92,13 @@
 | NFR-14 | #26 | DES-UI-13 | （査閲: 外部に送る処理がなく、保存は localStorage だけ） | src/ui/storage.ts | 実装済み |
 | QA-03 | #30 | DES-E2E-01〜06 | e2e/register-home.spec.ts, e2e/screens.spec.ts | playwright.config.ts, e2e/, .github/workflows/ci.yml | 実装済み |
 | QA-09 | #28 | DES-BAL-06 | TC-FR-UI-05-01 | src/data/dietaryReference.ts（extraReferenceBasis にページと基準の種類） | 実装済み |
+
+## 反復 3（IT03）
+
+| 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
+|---|---|---|---|---|---|
+| FR-BAL-06 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05 | src/core/suggestions.ts, src/core/suggestions.test.ts | core 実装済み（画面はGの範囲） |
+| FR-BAL-07 | #54 | DES-SUG-02, 03 | TC-FR-BAL-07-01〜06, 08 | src/core/suggestions.ts, src/core/balance.ts, src/core/suggestions.test.ts | core 実装済み（画面はGの範囲） |
+| FR-NUT-06 | #54 | DES-SUG-01〜03 | TC-FR-NUT-06-04（単体部分） | src/core/suggestions.ts, src/core/suggestions.test.ts | core 実装済み（表示・保存・押下はGで検証） |
+| NFR-08 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-04, TC-FR-NUT-06-04、既存lint | src/core/suggestions.ts, src/core/balance.ts | 実装済み（純粋関数・入力不変） |
+| NFR-09 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05, TC-FR-BAL-07-01〜06, 08、既存の網羅率検査 | src/core/suggestions.test.ts | 実装済み（core 命令網羅率80%以上を検証） |

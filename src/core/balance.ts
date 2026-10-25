@@ -251,3 +251,29 @@ export function detailSufficiencies(
     };
   });
 }
+
+/** 表示・候補評価用の下限比。判定や保存の値は変えない（DES-SUG-03）。 */
+export function lowerTargetRatio(result: BalanceResult): number | null {
+  if (result.status === "unknown") return null;
+  const rule = balanceTargets.find(({ key }) => key === result.key)?.rule;
+  if (!rule || rule.kind === "upper") return null;
+  if (rule.kind === "lower") {
+    const value = result.sufficiency;
+    return value !== null && Number.isFinite(value) && value >= 0
+      ? value
+      : null;
+  }
+  const value = result.pfcPct;
+  const lower = result.pfcRange?.[0];
+  if (
+    value === null ||
+    !Number.isFinite(value) ||
+    value < 0 ||
+    lower === undefined ||
+    !Number.isFinite(lower) ||
+    lower <= 0
+  )
+    return null;
+  const ratio = value / lower;
+  return Number.isFinite(ratio) ? ratio : null;
+}
