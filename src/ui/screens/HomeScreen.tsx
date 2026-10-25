@@ -1,5 +1,10 @@
+import { useLayoutEffect, useRef } from "react";
+import type {
+  BasketSessionAction,
+  PendingRemoval,
+} from "../../core/basketSession";
 import type { AnalysisResult } from "../../core/analyze";
-import type { AppState, BasketAction } from "../../core/basket";
+import type { AppState } from "../../core/basket";
 import { foodPresentation } from "../../core/catalog";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
@@ -16,14 +21,35 @@ export function HomeScreen({
   navigate,
   findFood,
   notice,
+  pendingRemoval,
 }: {
   state: AppState;
   analysis: AnalysisResult;
-  dispatch: (action: BasketAction) => void;
+  dispatch: (action: BasketSessionAction) => void;
   navigate: (route: Route) => void;
   findFood: (foodId: string) => FoodItem | undefined;
   notice: React.ReactNode;
+  pendingRemoval: PendingRemoval | null;
 }) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const undoRef = useRef<HTMLButtonElement>(null);
+  const previousRemoval = useRef<PendingRemoval | null>(null);
+
+  // 削除後は取り消しへ、復元後は戻った行の有効な操作へ移す（DES-UI-45）。
+  useLayoutEffect(() => {
+    const previous = previousRemoval.current;
+    if (pendingRemoval) {
+      undoRef.current?.focus();
+    } else if (previous) {
+      const row = Array.from(listRef.current?.children ?? []).find(
+        (element) =>
+          element.getAttribute("data-entry-id") === previous.entry.id,
+      );
+      row?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+    }
+    previousRemoval.current = pendingRemoval;
+  }, [pendingRemoval]);
+
   const nameCounts = new Map<string, number>();
   for (const item of state.items) {
     nameCounts.set(
@@ -69,6 +95,19 @@ export function HomeScreen({
           栄養素ごとの充足率を見る
         </button>
       )}
+      {pendingRemoval && (
+        <div className="section-stack">
+          <p role="status">{pendingRemoval.entry.displayName}を削除しました</p>
+          <button
+            className="link-button"
+            ref={undoRef}
+            onClick={() => dispatch({ type: "undoRemove" })}
+            type="button"
+          >
+            元に戻す
+          </button>
+        </div>
+      )}
       <section className="section-stack" aria-label="登録した食材">
         <div className="section-heading">
           <h3>登録した食材</h3>
@@ -85,7 +124,7 @@ export function HomeScreen({
             </span>
           </div>
         ) : (
-          <ul className="item-list">
+          <ul className="item-list" ref={listRef}>
             {ordered.map((item) => (
               <ItemRow
                 detail={detailOf(item.foodId, item.displayName)}
