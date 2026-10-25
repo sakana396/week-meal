@@ -138,10 +138,23 @@ for (const mode of ["簡易", "詳細"]) {
     await expect(page.locator("form")).toHaveCount(1);
     await expect(form).toHaveCount(1);
     await nameOf(form).fill("編集中の名前");
+    const shelves = page.getByRole("group", { name: "スーパーの棚を選択" });
+    await shelves.getByRole("button", { name: "惣菜", exact: true }).click();
+    const query = page.getByRole("searchbox", { name: "食材名", exact: true });
+    for (const emptyQuery of ["", "   "]) {
+      await query.fill(emptyQuery);
+      await expect(
+        page.getByText("該当する食材がありません", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "この名前で手入力", exact: true }),
+      ).toHaveCount(0);
+      await expect(nameOf(form)).toHaveValue("編集中の名前");
+    }
+    await shelves.getByRole("button", { name: "すべて", exact: true }).click();
     await form.getByLabel("棚", { exact: true }).selectOption("肉");
     await form.getByText(summary, { exact: true }).click();
     await nutrientInput(form, "エネルギー").fill("123");
-    const query = page.getByRole("searchbox", { name: "食材名", exact: true });
     await query.fill("  見つからない自家製料理  ");
     await expect(nameOf(form)).toHaveValue("編集中の名前");
     await page
@@ -363,3 +376,32 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
     else expect(stored.manualFoods[0]).not.toHaveProperty("sourceFoodId");
   });
 }
+
+test("TC-FR-ING-16-04 下書き候補は80件まで表示し名前と食品番号を個別に照合する", async ({
+  page,
+}) => {
+  await page.goto("/#/register");
+  const form = formOf(page);
+  await form.getByText(summary, { exact: true }).click();
+  const query = form.getByRole("searchbox", { name: "似た食品を探す" });
+  const results = form.getByRole("group", { name: "下書き元の食品一覧" });
+  const hint = results.getByText("さらに絞り込んでください", { exact: true });
+  await query.fill("0");
+  await expect(results.getByRole("button")).toHaveCount(80);
+  await expect(hint).toBeVisible();
+  for (const term of [source.id, source.name]) {
+    await query.fill(term);
+    await expect(results.getByRole("button")).toHaveCount(1);
+    await expect(results.getByRole("button")).toContainText(
+      `食品番号 ${source.id}`,
+    );
+    await expect(hint).toHaveCount(0);
+  }
+  // 名前末尾と番号先頭を連結した語は、どちらの項目にも一致しない。
+  await query.fill(`${source.name}${source.id}`);
+  await expect(results.getByRole("button")).toHaveCount(0);
+  await expect(results.getByText("該当する食品がありません")).toBeVisible();
+  await expect(hint).toHaveCount(0);
+  await query.fill("");
+  await expect(results).toHaveCount(0);
+});

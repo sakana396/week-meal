@@ -83,8 +83,10 @@ export function RegisterScreen({
   const draftFoods = useMemo(() => {
     const normalized = normalizeSearchText(draftQuery);
     return normalized
-      ? baseFoods.filter((food) =>
-          normalizeSearchText(`${food.name}${food.id}`).includes(normalized),
+      ? baseFoods.filter(
+          (food) =>
+            normalizeSearchText(food.name).includes(normalized) ||
+            normalizeSearchText(food.id).includes(normalized),
         )
       : [];
   }, [draftQuery]);
@@ -185,6 +187,7 @@ export function RegisterScreen({
       );
   }, [state.manualFoods, category, query]);
 
+  const visibleDraftFoods = draftFoods.slice(0, maxVisibleFoods);
   const visibleGroups = groups.slice(0, maxVisibleFoods);
   const visibleDetailedFoods = detailedFoods.slice(0, maxVisibleFoods);
   const commonCount = visibleGroups.filter(
@@ -425,7 +428,7 @@ export function RegisterScreen({
             <span>検索語や棚を変えるか、下の手入力で追加してください。</span>
           </div>
         )}
-        {total === 0 && rememberedFoods.length === 0 && (
+        {query.trim() !== "" && total === 0 && rememberedFoods.length === 0 && (
           <button
             type="button"
             className="primary-button"
@@ -536,9 +539,10 @@ export function RegisterScreen({
             {draftQuery.trim() && (
               <div
                 className="ingredient-name-list manual-draft-results"
+                role="group"
                 aria-label="下書き元の食品一覧"
               >
-                {draftFoods.map((food) => (
+                {visibleDraftFoods.map((food) => (
                   <button
                     type="button"
                     className="ingredient-name-button"
@@ -550,6 +554,9 @@ export function RegisterScreen({
                     <span>この食品の成分で下書きを置き換える</span>
                   </button>
                 ))}
+                {draftFoods.length > maxVisibleFoods && (
+                  <p>さらに絞り込んでください</p>
+                )}
                 {draftFoods.length === 0 && <p>該当する食品がありません</p>}
               </div>
             )}
