@@ -256,13 +256,13 @@ describe("値の検査の境界（DES-STO-04〜06、REV-014）", () => {
     ).toEqual(["自家製ぬか漬け"]);
   });
 
-  it("TC-NFR-12-26 どの行からも参照されない手入力の食品は捨てる", () => {
+  it("TC-NFR-12-26 どの行からも参照されない手入力の食品も覚える", () => {
     const text = stored({
       manualFoods: [manualFood, { ...manualFood, id: "manual-2" }],
     });
     expect(
       parseStoredState(text, known).state.manualFoods.map((food) => food.id),
-    ).toEqual(["manual-1"]);
+    ).toEqual(["manual-1", "manual-2"]);
   });
 
   it("TC-NFR-12-27 余計なキーや __proto__ を状態に持ち込まない", () => {
@@ -353,4 +353,76 @@ describe("版の移行（DES-STO-07、NFR-13）", () => {
     const current = { version: storageVersion, items: [] };
     expect(migrateStored(current, {}, storageVersion)).toBe(current);
   });
+});
+
+describe("保存の版 2（DES-STO-08）", () => {
+  it("TC-NFR-13-12 版 1 の全台帳・登録行・設定・順序を引き継ぎ版 2 で保存する", () => {
+    const expected = {
+      ...saved,
+      manualFoods: [{ ...manualFood, id: "manual-unused" }, manualFood],
+    };
+    const text = JSON.stringify({
+      ...expected,
+      version: 1,
+      pendingRemoval: { id: "temporary" },
+    });
+    const result = parseStoredState(text, known);
+    expect(result).toEqual({ state: expected, issue: null });
+    const serialized = JSON.parse(serializeState(result.state));
+    expect(serialized.version).toBe(2);
+    expect(Object.keys(serialized).sort()).toEqual([
+      "items",
+      "manualFoods",
+      "profile",
+      "version",
+    ]);
+    expect(parseStoredState(JSON.stringify(serialized), known).state).toEqual(
+      expected,
+    );
+  });
+
+  it.each(["99999", "", 123, null])(
+    "TC-NFR-13-13 未参照の台帳と有効な来歴だけを往復で残す（%s）",
+    (sourceFoodId) => {
+      const text = stored({
+        items: [],
+        manualFoods: [{ ...manualFood, sourceFoodId }],
+      });
+      const result = parseStoredState(text, known);
+      expect(result.issue).toBeNull();
+      expect(result.state.manualFoods).toEqual([
+        {
+          ...manualFood,
+          ...(sourceFoodId === "99999" ? { sourceFoodId } : {}),
+        },
+      ]);
+      expect(
+        parseStoredState(serializeState(result.state), known, {}).state,
+      ).toEqual(result.state);
+    },
+  );
+
+  it.each([1, 2])(
+    "TC-NFR-13-14 版 %s でも個別の不正と余計なキーを検査する",
+    (version) => {
+      const result = parseStoredState(
+        stored({
+          version,
+          manualFoods: [
+            manualFood,
+            { ...manualFood, name: 123 },
+            { ...manualFood, extra: true },
+          ],
+          items: [...saved.items, { ...saved.items[0], id: "bad", count: -1 }],
+          extra: true,
+        }),
+        known,
+      );
+      expect(result.state).toEqual(saved);
+      expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+      expect(
+        parseStoredState(stored({ version, items: "bad" }), known).issue,
+      ).toBe("corrupted");
+    },
+  );
 });

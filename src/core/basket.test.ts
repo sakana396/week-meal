@@ -214,9 +214,9 @@ describe("basketReducer の手入力と設定（DES-BSK-04, 05）", () => {
     });
   });
 
-  it("TC-FR-ING-08-02 手入力の食品の行を消すと、手入力の食品も消す", () => {
+  it("TC-FR-ING-08-02 手入力の食品の行を消しても、覚えた食品は残る", () => {
     const state = apply(initialAppState, manual, { type: "remove", id: "m1" });
-    expect(state.manualFoods).toEqual([]);
+    expect(state.manualFoods).toEqual([manual.food]);
   });
 
   it("TC-FR-ING-08-03 同じ手入力の食品をもう一度足しても、食品は 1 つのまま個数を増やす（境界）", () => {
@@ -308,4 +308,90 @@ describe("toRegisteredItems（DES-BSK-07）", () => {
       ["にんじん", "06212", 1.5, true],
     ]);
   });
+});
+
+describe("覚えた食品（DES-MAN-01）", () => {
+  it("TC-FR-ING-15-01 削除した食品を同じ ID で再登録でき、未登録の台帳は分析に混ざらない", () => {
+    const input = apply(initialAppState, {
+      type: "addManualFood",
+      id: "m1",
+      food: food("manual-1"),
+      displayName: "自家製",
+    });
+    const removed = basketReducer(input, { type: "remove", id: "m1" });
+    expect(removed.manualFoods).toEqual(input.manualFoods);
+    expect(toRegisteredItems(removed, new Map())).toEqual([]);
+    const restored = basketReducer(removed, {
+      type: "register",
+      id: "m2",
+      foodId: "manual-1",
+      displayName: "自家製",
+    });
+    expect(restored.items).toEqual([
+      {
+        id: "m2",
+        foodId: "manual-1",
+        displayName: "自家製",
+        count: 1,
+        usedUp: false,
+      },
+    ]);
+    expect(input.items).toHaveLength(1);
+  });
+
+  it.each([false, true])(
+    "TC-FR-ING-15-02 再登録で加算または使い切った解除し台帳を増やさない（usedUp=%s）",
+    (usedUp) => {
+      const input = apply(initialAppState, {
+        type: "addManualFood",
+        id: "m1",
+        food: food("manual-1"),
+        displayName: "自家製",
+      });
+      const state = {
+        ...input,
+        items: [{ ...input.items[0], count: 2, usedUp }],
+      };
+      const result = basketReducer(state, {
+        type: "register",
+        id: "new",
+        foodId: "manual-1",
+        displayName: "自家製",
+      });
+      expect(result.items).toEqual([
+        { ...state.items[0], count: usedUp ? 1 : 3, usedUp: false },
+      ]);
+      expect(result.manualFoods).toBe(state.manualFoods);
+      expect(state.items[0].usedUp).toBe(usedUp);
+    },
+  );
+});
+
+it("TC-FR-ING-15-03 同じ名前の新規手入力は別 ID で保存し覚えた順を保つ", () => {
+  const first = {
+    ...food("manual-first"),
+    name: "自家製",
+    nutrientsPer100g: { energyKcal: 10 },
+  } as FoodItem;
+  const second = {
+    ...first,
+    id: "manual-second",
+    nutrientsPer100g: { ...first.nutrientsPer100g, energyKcal: 20 },
+  };
+  const state = apply(
+    initialAppState,
+    { type: "addManualFood", id: "first", food: first, displayName: "自家製" },
+    {
+      type: "addManualFood",
+      id: "second",
+      food: second,
+      displayName: "自家製",
+    },
+  );
+  expect(state.manualFoods).toEqual([second, first]);
+  expect(state.items.map(({ foodId }) => foodId)).toEqual([
+    "manual-second",
+    "manual-first",
+  ]);
+  expect(first.nutrientsPer100g.energyKcal).toBe(10);
 });
