@@ -103,3 +103,6 @@
 | NFR-08 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-04, TC-FR-NUT-06-04、既存lint | src/core/suggestions.ts, src/core/balance.ts | 実装済み（純粋関数・入力不変） |
 | NFR-09 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05, TC-FR-BAL-07-01〜06, 08、既存の網羅率検査 | src/core/suggestions.test.ts | 実装済み（core 命令網羅率80%以上を検証） |
 | FR-ING-15 | #56 | DES-MAN-01, DES-STO-08, DES-UI-43（一覧） | TC-FR-ING-15-01〜09、TC-NFR-13-12, 13 | src/core/manualFoods.ts, src/core/basket.ts, src/core/storage.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-memory.spec.ts | 実装済み（単体テスト成功。E2E 成功（ローカル・CI）） |
+| FR-ING-08 | #58 | DES-UI-43（フォーム） | TC-FR-ING-08-12, 13 | src/ui/screens/RegisterScreen.tsx, src/ui/App.css, e2e/manual-input.spec.ts | 実装済み（検索語の明示引き継ぎ・成分折りたたみ。E2E はサンドボックスのため未実行、Claude Code が実行） |
+| FR-ING-16 | #58 | DES-MAN-02, DES-UI-44, DES-STO-08（来歴） | TC-FR-ING-16-01〜03 | src/core/manualFoods.ts, src/core/manualFoods.test.ts, src/core/storage.test.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-input.spec.ts, e2e/manual-memory.spec.ts | 実装済み（成分の独立した写し・全項目編集・来歴表示と保持。単体検証、E2E は未実行） |
+| CST-01, CST-04 | #58 | DES-MAN-02, DES-UI-44 | TC-FR-ING-16-01, 02 | src/core/manualFoods.ts, src/core/manualFoods.test.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-input.spec.ts | 実装済み（明示選択した実在食品の成分だけを下書きに使用、原典の変更なし。単体検証、E2E は未実行） |
