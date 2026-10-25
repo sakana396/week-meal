@@ -549,19 +549,13 @@ h3 {
   font-weight: 700;
 }
 
+/* 判定バッジの文字は黒、警告色なしの背景は灰色（DES-COL-02）。 */
 .balance-status {
   border-radius: 999px;
   padding: 2px 8px;
-  color: #ffffff;
+  color: #000000;
+  background: #f3f4f6;
   font-size: 0.8rem;
-}
-
-.balance-list li[data-status="low"] .balance-status {
-  background: #c84b31;
-}
-
-.balance-list li[data-status="high"] .balance-status {
-  background: #8a5a00;
 }
 
 .balance-note {
@@ -983,29 +977,12 @@ h3 {
   gap: 8px;
 }
 
-.detail-row .balance-status {
-  color: #ffffff;
-  background: #2b7a57;
-}
-
-.detail-row[data-status="low"] .balance-status {
-  background: #c84b31;
-}
-
-.detail-row[data-status="high"] .balance-status {
-  background: #8a5a00;
-}
-
-.detail-row[data-status="unknown"] .balance-status {
-  background: #6f6a60;
-}
-
 .detail-bar {
   position: relative;
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e5dfd4;
+  background: #e5e7eb;
 }
 
 .detail-fill {
@@ -1014,7 +991,7 @@ h3 {
   bottom: 0;
   left: 0;
   border-radius: inherit;
-  background: #2b7a57;
+  background: #6b7280;
 }
 
 /* 充足率 70%（不足の境目）と 100%（基準値）の目印 */
@@ -1037,12 +1014,7 @@ h3 {
   bottom: 0;
   width: 4px;
   margin-left: -2px;
-  background: #2b7a57;
-}
-
-.detail-row[data-status="low"] .detail-value,
-.detail-row[data-status="high"] .detail-value {
-  background: #c84b31;
+  background: #6b7280;
 }
 
 /* PFC の目標の範囲 */
@@ -1050,19 +1022,7 @@ h3 {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(43, 122, 87, 0.25);
-}
-
-.detail-row[data-status="low"] .detail-fill {
-  background: #c84b31;
-}
-
-.detail-row[data-status="high"] .detail-fill {
-  background: #8a5a00;
-}
-
-.detail-row[data-status="info"] .detail-fill {
-  background: #7a8f80;
+  background: #e5e7eb;
 }
 
 .pfc-summary {
