@@ -8,12 +8,12 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-03 | #3 | DES-CAT-06 | TC-FR-ING-03-01〜03 | src/core/catalog.ts | 実装済み（検索の正規化） |
-| FR-ING-04 | #3, #46 | DES-CAT-04, DES-CAT-06 | TC-FR-ING-04-01〜05 | src/core/catalog.ts（並び順）, src/App.tsx（検索結果） | 実装済み（並び順。画面は IT02 で E2E） |
-| FR-ING-05 | #3 | DES-CAT-01〜03 | TC-FR-ING-05-01〜10 | src/core/catalog.ts（まとめ・代表食品）, src/App.tsx（押して登録） | 実装済み（まとめ・代表食品。画面は IT02 で E2E） |
+| FR-ING-04 | #3, #46, #59 | DES-CAT-04, DES-CAT-06, DES-FDB-04 | TC-FR-ING-04-01〜05（04 は順位取得とデータ重複検査） | src/core/catalog.ts（並び順）, src/data/integrity.test.ts（順位表の重複）, src/ui/screens/RegisterScreen.tsx（検索結果） | 実装済み（単体。画面の優先表示は IT02 の行を参照） |
+| FR-ING-05 | #3, #59 | DES-CAT-01〜03, DES-FDB-04 | TC-FR-ING-05-01〜10, TC-NFR-11-08 | src/core/catalog.ts（まとめ・代表食品）, src/data/foodDisplayNames.ts（代表食品の指定）, src/ui/screens/RegisterScreen.tsx（押して登録） | 実装済み（ゆではるさめの代表を明示。画面は IT02 の登録 E2E） |
 | FR-ING-06 | #3, #5 | DES-CAT-01 | TC-FR-ING-06-01〜20 | src/core/catalog.ts | 実装済み |
-| FR-ING-09 | #3, #4, #9, #20 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（画面は IT02 の E2E TC-FR-ING-09-06） |
-| FR-FDB-01 | #4, #20 | DES-FDB-01, 02 | TC-FR-FDB-01-01, 02 | scripts/food-selection.json, src/data/foods.json | 実装済み |
-| FR-FDB-02 | #4 | DES-FDB-01, 02 | TC-FR-FDB-02-01〜04 | scripts/convert-mext-foods.py | 実装済み |
+| FR-ING-09 | #3, #4, #9, #20, #59 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（登録対象外の食品を出さない画面動作は TC-FR-ING-09-06 で検証済み） |
+| FR-FDB-01 | #4, #20, #59 | DES-FDB-01, 02, 06 | TC-FR-FDB-01-01〜03 | scripts/food-selection.json, src/data/foods.json, src/data/integrity.test.ts | 実装済み（9 件を除外。原典再生成・候補関数の結合確認の未実施範囲は docs/04_test/food-selection-review-it03.md） |
+| FR-FDB-02 | #4, #59 | DES-FDB-01, 02, 06 | TC-FR-FDB-02-01〜04, TC-FR-FDB-01-03 | scripts/convert-mext-foods.py, scripts/food-selection.json, src/data/foods.json | 実装済み（今回は既存データを再絞り込み。原典 Excel からの再生成は未実施） |
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |
 | FR-QTY-02 | #5 | DES-QTY-01, 02 | TC-FR-QTY-02-01〜05 | src/core/quantity.ts, src/data/unitWeights.ts | 実装済み |
 | FR-QTY-03 | #5 | DES-QTY-02 | TC-FR-QTY-02-01, TC-FR-QTY-03-01, 02 | src/core/quantity.ts | 実装済み |
@@ -38,11 +38,11 @@
 | NFR-08 | #2 | DES-PKG-01, 05 | TC-NFR-08-01〜03 | eslint.config.js | 実装済み |
 | NFR-09 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
-| NFR-11 | #4, #5 | DES-FDB-04 | TC-NFR-11-01〜08 | src/data/integrity.test.ts | 実装済み |
+| NFR-11 | #4, #5, #59 | DES-FDB-04, 06 | TC-NFR-11-01〜08, TC-FR-FDB-01-03 | src/data/integrity.test.ts | 実装済み |
 | NFR-15 | #7 | DES-NUT-01〜04 | TC-FR-NUT-01-01, 02-01, 04-01, TC-FR-STP-03-01 | src/core/nutrition.test.ts | 実装済み |
 | QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
-| QA-09 | #5, #6 | DES-QTY-01, DES-BAL-01 | TC-FR-QTY-02-05、査閲（基準値の出典: REV-007） | src/data/unitWeights.ts, src/data/dietaryReference.ts | 実装済み |
+| QA-09 | #5, #6, #59 | DES-QTY-01, DES-BAL-01, DES-FDB-06 | TC-FR-QTY-02-05、査閲（基準値の出典: REV-007） | src/data/unitWeights.ts, src/data/dietaryReference.ts, docs/04_test/food-selection-review-it03.md | 実装済み（#59 の食品データの原典照合は未実施と明記） |
 
 ## 反復 2（IT02）
 

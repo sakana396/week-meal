@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import selection from "../../scripts/food-selection.json";
-import { groupFoods, isRegistrable, representativeFood } from "../core/catalog";
+import {
+  groupFoods,
+  isRegistrable,
+  normalizeSearchText,
+  representativeFood,
+  supermarketPriority,
+} from "../core/catalog";
 import type { FoodItem } from "../types";
+import { baseFoods } from "../ui/foodData";
 import {
   foodCategoryGroupAliases,
   foodGroupAliases,
@@ -19,6 +26,54 @@ const foodIds = new Set(foods.map((food) => food.id));
 const groupNames = new Set(groupFoods(foods).map((group) => group.name));
 
 describe("食品データの整合性（DES-FDB-04）", () => {
+  // DES-SUG-01 の候補集合の入口。候補選定関数自体は別 Issue の担当。
+  const candidates = groupFoods(baseFoods.filter(isRegistrable))
+    .filter((group) => supermarketPriority(group.name) !== null)
+    .map(representativeFood);
+
+  it.each([
+    ["02030", "米でん粉"],
+    ["02031", "小麦でん粉"],
+    ["02032", "サゴでん粉"],
+    ["02070", "おおうばゆりでん粉"],
+    ["06366", "しょうがのおろし汁"],
+    ["06368", "だいこんのおろし汁"],
+    ["07036", "うんしゅうみかん缶詰の液汁"],
+    ["07139", "もも缶詰の液汁"],
+    ["09059", "カットわかめの水煮の汁"],
+  ])(
+    "TC-FR-FDB-01-03 除外した食品 %s（%s）は定義・同梱データ・候補集合にない",
+    (id) => {
+      expect(selection.some((entry) => entry.id === id)).toBe(false);
+      expect(baseFoods.some((food) => food.id === id)).toBe(false);
+      expect(candidates.some((food) => food.id === id)).toBe(false);
+    },
+  );
+
+  it.each([
+    "02028",
+    "02029",
+    "02033",
+    "02034",
+    "02035",
+    "02039",
+    "02040",
+    "02061",
+    "02062",
+    "04057",
+    "04090",
+    "07035",
+    "07138",
+  ])("TC-FR-FDB-01-03 維持する食品 %s は定義・同梱データに残る", (id) => {
+    expect(selection.some((entry) => entry.id === id)).toBe(true);
+    expect(baseFoods.some((food) => food.id === id)).toBe(true);
+  });
+
+  it("TC-FR-ING-04-04 順位表の名前は検索用の正規化後も重複しない（データの直接検査）", () => {
+    const names = supermarketFoodPriorities.map(normalizeSearchText);
+    expect(names.length).toBe(new Set(names).size);
+  });
+
   it("TC-FR-FDB-01-01 食品データは、絞り込みの定義にある食品だけを持つ", () => {
     expect(foods.map((food) => food.id).sort()).toEqual(
       selection.map((entry) => entry.id).sort(),
@@ -152,6 +207,7 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     ["でん粉", "02034"],
     ["かぶの漬物", "06041"],
     ["はるさめ（乾燥）", "02040"],
+    ["はるさめ", "02062"],
     ["しょうがの漬物", "06104"],
     ["かんきつ（缶詰）", "07035"],
     ["にんじん", "06212"],
