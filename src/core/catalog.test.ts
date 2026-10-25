@@ -248,6 +248,8 @@ describe("prioritizeSupermarketFoods（DES-CAT-04）", () => {
     expect(supermarketPriority(name)).toBe(expected);
   });
 
+  // 重複名を先の順位へまとめる分岐の網羅ではなく、実データの順位取得を検査する。
+  // 順位表自体の重複は integrity.test.ts の同 ID で直接検査する（DES-CAT-04）。
   it.each(
     supermarketFoodPriorities.map((name, index) => [name, index] as const),
   )(
