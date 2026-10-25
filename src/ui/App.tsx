@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { analyzeBasket } from "../core/analyze";
-import { basketReducer, toRegisteredItems } from "../core/basket";
+import { toRegisteredItems } from "../core/basket";
+import { basketSessionReducer } from "../core/basketSession";
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
@@ -16,11 +17,16 @@ import "./App.css";
 /**
  * 画面全体（DES-UI-10）。状態は useReducer（P-02）、画面はハッシュで切り替える（P-01）。
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
+ * 削除の取り消しはセッション内に保持し、保存・分析には appState だけを渡す（DES-BSK-09）。
  */
 export default function App() {
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  const [state, dispatch] = useReducer(basketReducer, loaded.state);
+  const [session, dispatch] = useReducer(basketSessionReducer, {
+    appState: loaded.state,
+    pendingRemoval: null,
+  });
+  const state = session.appState;
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
@@ -68,6 +74,7 @@ export default function App() {
             navigate={navigate}
             notice={notice}
             state={state}
+            pendingRemoval={session.pendingRemoval}
           />
         )}
         {route === "register" && (

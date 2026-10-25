@@ -26,7 +26,7 @@ export function ItemRow({
   const unit = weight ? weight.unit : "つ（概算）";
 
   return (
-    <li className="item-row" data-used-up={item.usedUp}>
+    <li className="item-row" data-entry-id={item.id} data-used-up={item.usedUp}>
       <div className="item-name">
         <strong>{item.displayName}</strong>
         {detail && <small>{detail}</small>}
