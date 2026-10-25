@@ -16,11 +16,11 @@
 | 項目 | 実測記録 |
 |---|---|
 | 計測日時・担当 | 2026-10-25 19:22、Claude Code（IT03 の振り返り、Issue #74） |
-| コミット・作業差分 | ee43cf5（main の f6b680e に振り返りの文書だけを足したブランチ。アプリのコードは f6b680e と同じ） |
+| コミット・作業差分 | ee43cf5（main の f6b680e に振り返りの文書だけを足したブランチ。アプリのコードは f6b680e と同じ）。計測の直前の `git status --short` は空（作業差分なし） |
 | ビルドコマンド・Node 版 | `npm run build`、Node v22.23.2 |
 | URL・配信方法 | `npx vite preview --host 127.0.0.1 --port 4173 --strictPort`、http://127.0.0.1:4173/ |
 | 機器（CPU・メモリー）・OS | 開発者の PC の WSL2（Linux 6.18.54.1-microsoft-standard-WSL2、論理 CPU 12）。スマートフォンの実機ではない |
-| Chrome 版・Lighthouse 版 | Google Chrome for Testing 156.0.8078.4（Playwright の chromium-1248）、Lighthouse 13.5.0（CLI。作業用ディレクトリに入れ、リポジトリの依存には足していない） |
+| Chrome 版・Lighthouse 版 | Google Chrome for Testing 156.0.8078.4（Playwright の chromium-1248。版は `chrome --version` で確かめた。レポートの `hostUserAgent` は `HeadlessChrome/156.0.0.0` と短縮される）、Lighthouse 13.5.0（CLI。作業用ディレクトリに入れ、リポジトリの依存には足していない） |
 | モード・カテゴリ・端末設定 | Navigation / Performance / Mobile。DevTools ではなく CLI（`lighthouse http://127.0.0.1:4173/ --only-categories=performance --form-factor=mobile --chrome-flags="--headless=new --no-sandbox"`） |
 | CPU・ネットワーク制限 | simulate（Lighthouse の既定）。CPU 4 倍、RTT 150 ms、下り 1,474.56 Kbps、上り 675 Kbps |
 | 保存データ・ストレージ消去・キャッシュ・拡張機能 | Lighthouse の既定（ストレージを消去）。保存データなしの初回表示。拡張機能なし（headless） |
