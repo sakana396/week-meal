@@ -1,5 +1,6 @@
 import type { AnalysisResult } from "../../core/analyze";
 import type { Profile } from "../../core/profile";
+import { balanceTone } from "../balanceTone";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
 
 /**
@@ -69,7 +70,10 @@ export function BalancePanel({
         <ul className="balance-list">
           {flagged.map((result) => (
             <li key={result.key} data-status={result.status}>
-              <span className="balance-status">
+              <span
+                className="balance-status"
+                style={{ backgroundColor: balanceTone(result) ?? undefined }}
+              >
                 {statusLabels[result.status]}
               </span>
               {nutrientLabel(result.key)}
