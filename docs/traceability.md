@@ -63,7 +63,7 @@
 | FR-UI-07 | #27 | DES-UI-41 | （E2E） | src/ui/components/BalancePanel.tsx | 実装済み |
 | NFR-07 | #27, #28 | DES-UI-22, 41 | TC-FR-UI-05-07 | src/ui/components/BalancePanel.tsx, src/ui/screens/BalanceDetailScreen.tsx, src/ui/App.css | 実装済み |
 | CST-04 | #34 | DES-UI-37 | （査閲: 食品データにない商品の成分値を作る処理がない。手入力だけ） | src/ui/screens/RegisterScreen.tsx | 実装済み |
-| FR-ING-08 | #24, #34 | DES-BSK-04, 08, DES-UI-35 | TC-FR-ING-08-01〜11（画面の手入力は未検証） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts | 実装済み（画面は査閲） |
+| FR-ING-08 | #24, #34, #56 | DES-BSK-04, 08, DES-UI-35, DES-MAN-01, DES-STO-08 | TC-FR-ING-08-01〜11（画面の手入力は未検証）、TC-FR-ING-08-02（IT03 で保持に変更）、TC-FR-ING-15-01 | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/format.ts, src/core/storage.ts, e2e/manual-memory.spec.ts | 実装済み（IT03 の台帳保持。E2E 成功（ローカル・CI）。フォーム改善は別 Issue） |
 | FR-QTY-01 | #24 | DES-BSK-01 | TC-FR-ING-01-01, 02 | src/core/basket.ts | 一部実装（#24: 登録時は個数 1。画面は #27） |
 | FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01, 02 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-NUT-06 | #24 | DES-BSK-07 | TC-FR-NUT-06-03 | src/core/basket.ts | 実装済み（IT01 の analyzeBasket と合わせて） |
@@ -82,13 +82,13 @@
 | FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | TC-FR-UI-05-07 | src/ui/components/BalancePanel.tsx, src/ui/screens/BalanceDetailScreen.tsx | 実装済み |
 | FR-UI-08 | #34 | DES-UI-24 | TC-FR-UI-08-01 | src/ui/screens/FoodsScreen.tsx | 実装済み |
 | FR-UI-09 | #29 | DES-UI-23 | TC-FR-STP-01-02 | src/ui/screens/SettingsScreen.tsx | 実装済み |
-| FR-SYS-01 | #24, #25, #26 | DES-STO-01〜07, DES-UI-13 | TC-FR-SYS-01-01〜10 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx | 実装済み |
+| FR-SYS-01 | #24, #25, #26, #56 | DES-STO-01〜07, DES-UI-13, DES-STO-08, 09 | TC-FR-SYS-01-01〜10、TC-NFR-13-12〜14 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx, e2e/manual-memory.spec.ts | 実装済み（版 2。移行の E2E 成功（ローカル・CI）） |
 | FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |
 | IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | TC-IF-02-01, 02, TC-IF-03-01 | src/ui/App.css, src/ui/components/Navigation.tsx, e2e/screens.spec.ts | 実装済み（IF-01 は査閲、IF-02 の主な流れはタップ・キーボードで確認、IF-03〜05 は E2E） |
 | NFR-01 | #30 | DES-E2E-03 | （実演: IT02 の振り返りで本人が確かめる） | src/ui/screens/HomeScreen.tsx, src/ui/screens/RegisterScreen.tsx | 未検証（本人の確認待ち） |
-| NFR-02 | #30 | DES-E2E-03 | TC-NFR-02-01 | e2e/register-home.spec.ts | 実装済み（2 タップ） |
-| NFR-12 | #25, #26, #27, #30 | DES-STO-02〜06, DES-UI-13, DES-E2E-04 | TC-NFR-12-01, 02, 07〜36 | src/core/storage.ts, src/ui/storage.ts, src/ui/components/StorageNotice.tsx | 実装済み（保存異常の 5 場面を E2E で確認） |
-| NFR-13 | #25 | DES-STO-07 | TC-NFR-13-01〜11 | src/core/storage.ts | 実装済み（版の検査と移行の仕組み。仮の移行表で旧い版を読み込めることを確認） |
+| NFR-02 | #30, #56 | DES-E2E-03, DES-UI-43 | TC-NFR-02-01、TC-FR-ING-15-04 | e2e/register-home.spec.ts, e2e/manual-memory.spec.ts | 実装済み（覚えた食品の 2 タップ登録。追加 E2E 成功（ローカル・CI）） |
+| NFR-12 | #25, #26, #27, #30, #56 | DES-STO-02〜06, DES-UI-13, DES-E2E-04, DES-STO-08, 09 | TC-NFR-12-01, 02, 07〜36、TC-NFR-13-14、TC-NFR-12-26（保持に変更）、TC-NFR-12-33（登録後まで強化） | src/core/storage.ts, src/ui/storage.ts, src/ui/components/StorageNotice.tsx, src/ui/App.tsx, e2e/register-home.spec.ts | 実装済み（退避不可時の保存停止。強化した E2E 成功（ローカル・CI）） |
+| NFR-13 | #25, #56 | DES-STO-07, DES-STO-08 | TC-NFR-13-01〜11、TC-NFR-13-12〜14 | src/core/storage.ts, src/ui/storage.test.ts, e2e/manual-memory.spec.ts | 実装済み（版 1→2 の移行、未参照食品・来歴の往復。E2E 成功（ローカル・CI）） |
 | NFR-14 | #26 | DES-UI-13 | （査閲: 外部に送る処理がなく、保存は localStorage だけ） | src/ui/storage.ts | 実装済み |
 | QA-03 | #30 | DES-E2E-01〜06 | e2e/register-home.spec.ts, e2e/screens.spec.ts | playwright.config.ts, e2e/, .github/workflows/ci.yml | 実装済み |
 | QA-09 | #28 | DES-BAL-06 | TC-FR-UI-05-01 | src/data/dietaryReference.ts（extraReferenceBasis にページと基準の種類） | 実装済み |
@@ -102,3 +102,4 @@
 | FR-NUT-06 | #54 | DES-SUG-01〜03 | TC-FR-NUT-06-04（単体部分） | src/core/suggestions.ts, src/core/suggestions.test.ts | core 実装済み（表示・保存・押下はGで検証） |
 | NFR-08 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-04, TC-FR-NUT-06-04、既存lint | src/core/suggestions.ts, src/core/balance.ts | 実装済み（純粋関数・入力不変） |
 | NFR-09 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05, TC-FR-BAL-07-01〜06, 08、既存の網羅率検査 | src/core/suggestions.test.ts | 実装済み（core 命令網羅率80%以上を検証） |
+| FR-ING-15 | #56 | DES-MAN-01, DES-STO-08, DES-UI-43（一覧） | TC-FR-ING-15-01〜09、TC-NFR-13-12, 13 | src/core/manualFoods.ts, src/core/basket.ts, src/core/storage.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-memory.spec.ts | 実装済み（単体テスト成功。E2E 成功（ローカル・CI）） |

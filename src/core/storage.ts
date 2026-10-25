@@ -1,6 +1,6 @@
 import { ageGroups } from "../data/dietaryReference";
 import { nutrientDefinitions } from "../data/nutrients";
-import type { FoodItem, NutrientsPer100g } from "../types";
+import type { NutrientsPer100g } from "../types";
 import {
   initialAppState,
   maximumCount,
@@ -8,10 +8,11 @@ import {
   type AppState,
   type BasketEntry,
 } from "./basket";
+import type { ManualFood } from "./manualFoods";
 import { defaultProfile, type Profile } from "./profile";
 
 /** 保存データの版（DES-STO-07、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
-export const storageVersion = 1;
+export const storageVersion = 2;
 
 /** 手入力の食品の ID の接頭辞（DES-BSK-08） */
 export const manualFoodIdPrefix = "manual-";
@@ -27,9 +28,14 @@ export type Migrations = Record<number, (stored: StoredState) => StoredState>;
 
 /**
  * 旧い版を 1 つ新しい版に直す関数（DES-STO-07、NFR-13）。
- * キーは移行前の版。版 1 が最初の版なので、今は空。
+ * キーは移行前の版。
  */
-const migrations: Migrations = {};
+const migrations: Migrations = { 1: migrateV1ToV2 };
+
+/** 版 1 の全台帳・登録行・設定を保ち、移行後に通常の検査へ渡す（DES-STO-08）。 */
+export function migrateV1ToV2(stored: StoredState): StoredState {
+  return { ...stored, version: 2 };
+}
 
 /** 状態を保存用の JSON 文字列にする（DES-STO-01、FR-SYS-01） */
 export function serializeState(state: AppState): string {
@@ -104,7 +110,7 @@ function parseProfile(value: unknown): Profile | null {
 function parseManualFood(
   value: unknown,
   knownFoodIds: ReadonlySet<string>,
-): FoodItem | null {
+): ManualFood | null {
   if (!isRecord(value)) return null;
   const { id, name, category, refusePct, nutrientsPer100g } = value;
   if (
@@ -145,6 +151,9 @@ function parseManualFood(
     category,
     refusePct: refusePct as number | null,
     nutrientsPer100g: nutrients as NutrientsPer100g,
+    ...(isNonEmptyString(value.sourceFoodId)
+      ? { sourceFoodId: value.sourceFoodId }
+      : {}),
   };
 }
 
@@ -173,7 +182,7 @@ function parseEntry(
  * - 保存データがなければ初期状態（問題なし）
  * - JSON として読めない・形が違う・版がない／新しすぎる／移行できないときは、初期状態と "corrupted"
  * - 形のおかしい行、使える食品のない行、ID が重複した行は捨て、捨てた件数を返す
- * - 手入力の食品は形を確かめ、おかしいもの・どの行からも参照されないものは捨てる
+ * - 手入力の食品は形を確かめ、おかしいものは捨て、未参照でも覚えた食品として残す（DES-STO-08）
  * - 設定の形が違う・ないときは初期値にし、profileReset で知らせる
  */
 export function parseStoredState(
@@ -207,7 +216,7 @@ export function parseStoredState(
   const rawManualFoods = Array.isArray(stored.manualFoods)
     ? stored.manualFoods
     : [];
-  const manualById = new Map<string, FoodItem>();
+  const manualById = new Map<string, ManualFood>();
   for (const value of rawManualFoods) {
     const food = parseManualFood(value, knownFoodIds);
     if (food && !manualById.has(food.id)) manualById.set(food.id, food);
@@ -222,10 +231,7 @@ export function parseStoredState(
     seenIds.add(entry.id);
     items.push(entry);
   }
-  const referenced = new Set(items.map((item) => item.foodId));
-  const manualFoods = [...manualById.values()].filter((food) =>
-    referenced.has(food.id),
-  );
+  const manualFoods = [...manualById.values()];
 
   const profile = parseProfile(stored.profile);
   const droppedItems = stored.items.length - items.length;

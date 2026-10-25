@@ -11,6 +11,7 @@ import {
   supermarketPriority,
   type FoodGroup,
 } from "../../core/catalog";
+import { manualFoodShelf } from "../../core/manualFoods";
 import { foodShelf, type FoodShelf } from "../../data/foodShelves";
 import {
   basicNutrientDefinitions,
@@ -129,6 +130,38 @@ export function RegisterScreen({
           }),
     [filteredFoods, query, mode],
   );
+
+  // 台帳は新しい順のまま全件を対象とし、通常食品の表示上限に含めない（DES-UI-43）。
+  const rememberedFoods = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query);
+    const counts = new Map<string, number>();
+    const totals = new Map<string, number>();
+    const keyFor = (food: FoodItem) =>
+      JSON.stringify([food.name, manualFoodShelf(food) ?? "その他"]);
+    for (const food of state.manualFoods) {
+      const key = keyFor(food);
+      totals.set(key, (totals.get(key) ?? 0) + 1);
+    }
+    // 番号は古い保存順で付け、表示は新しい順に戻す（DES-MAN-01、DES-UI-43）。
+    return [...state.manualFoods]
+      .reverse()
+      .map((food) => {
+        const key = keyFor(food);
+        const number = (counts.get(key) ?? 0) + 1;
+        counts.set(key, number);
+        return {
+          food,
+          shelf: manualFoodShelf(food) ?? "その他",
+          number: (totals.get(key) ?? 0) > 1 ? number : null,
+        };
+      })
+      .reverse()
+      .filter(
+        ({ food, shelf }) =>
+          (category === "すべて" || shelf === category) &&
+          normalizeSearchText(food.name).includes(normalizedQuery),
+      );
+  }, [state.manualFoods, category, query]);
 
   const visibleGroups = groups.slice(0, maxVisibleFoods);
   const visibleDetailedFoods = detailedFoods.slice(0, maxVisibleFoods);
@@ -346,6 +379,39 @@ export function RegisterScreen({
           </div>
         )}
       </section>
+
+      {rememberedFoods.length > 0 && (
+        <section className="section-stack" aria-label="覚えた食材">
+          <div className="section-heading">
+            <h3>覚えた食材</h3>
+            <p>{rememberedFoods.length} 種類</p>
+          </div>
+          <div className="ingredient-name-list">
+            {rememberedFoods.map(({ food, shelf, number }) => (
+              <button
+                className="ingredient-name-button"
+                key={food.id}
+                disabled={!food.name.trim()}
+                type="button"
+                onClick={() =>
+                  register({
+                    type: "register",
+                    id: localId("item"),
+                    foodId: food.id,
+                    displayName: food.name,
+                  })
+                }
+              >
+                <strong>
+                  {food.name.trim() ? food.name : "（名前なし）"}
+                  {number !== null ? `（${number}）` : ""}
+                </strong>
+                <small>手入力 / {shelf}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <form className="section-stack" onSubmit={addManualFood}>
         <div className="section-heading">
