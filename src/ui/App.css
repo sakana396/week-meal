@@ -1079,6 +1079,27 @@ h3 {
   }
 }
 
+/* 候補の枠を登録直後も保持する（DES-UI-42）。 */
+.supplement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.supplement-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
 /* 成分の開閉と下書きの選択（DES-UI-43、44）。 */
 .manual-nutrients summary {
   min-height: 44px;
