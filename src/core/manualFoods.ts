@@ -12,3 +12,11 @@ export function manualFoodShelf(food: FoodItem): FoodShelf | null {
     null
   );
 }
+
+/** 成分の写しと下書き元だけを返す（DES-MAN-02）。 */
+export function manualDraftFrom(food: FoodItem) {
+  return {
+    nutrientsPer100g: { ...food.nutrientsPer100g },
+    sourceFoodId: food.id,
+  };
+}

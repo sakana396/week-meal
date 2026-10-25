@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AppState, BasketAction } from "../../core/basket";
 import {
   foodPresentation,
@@ -11,12 +11,13 @@ import {
   supermarketPriority,
   type FoodGroup,
 } from "../../core/catalog";
-import { manualFoodShelf } from "../../core/manualFoods";
-import { foodShelf, type FoodShelf } from "../../data/foodShelves";
 import {
-  basicNutrientDefinitions,
-  nutrientDefinitions,
-} from "../../data/nutrients";
+  manualDraftFrom,
+  manualFoodShelf,
+  type ManualFood,
+} from "../../core/manualFoods";
+import { foodShelf, type FoodShelf } from "../../data/foodShelves";
+import { nutrientDefinitions } from "../../data/nutrients";
 import type { FoodItem, NutrientKey } from "../../types";
 import { baseFoods } from "../foodData";
 import { parseManualValue } from "../format";
@@ -32,6 +33,7 @@ type ManualFoodForm = {
   name: string;
   category: FoodShelf;
   nutrientsPer100g: Record<NutrientKey, string>;
+  sourceFoodId?: string;
 };
 
 const registerCategories: RegisterCategory[] = [
@@ -42,6 +44,7 @@ const registerCategories: RegisterCategory[] = [
 // 米・パン・麺・調味料・油は登録の一覧に出さない（DES-UI-34、FR-ING-09）
 const registrableFoods = baseFoods.filter(isRegistrable);
 
+/** 手入力を初期化する（DES-UI-43）。 */
 function emptyManualForm(): ManualFoodForm {
   return {
     name: "",
@@ -50,6 +53,14 @@ function emptyManualForm(): ManualFoodForm {
       nutrientDefinitions.map((definition) => [definition.key, ""]),
     ) as Record<NutrientKey, string>,
   };
+}
+
+/** 保存された番号を来歴として表示する（DES-UI-44、DES-STO-08）。 */
+function draftSourceLabel(sourceFoodId: string): string {
+  const source = baseFoods.find((food) => food.id === sourceFoodId);
+  return source
+    ? `下書き元: ${source.name}（食品番号 ${sourceFoodId}）。登録値は手入力`
+    : `下書き元: 食品番号 ${sourceFoodId}（現在の食品データにはありません）。登録値は手入力`;
 }
 
 /**
@@ -66,6 +77,19 @@ export function RegisterScreen({
   const [mode, setMode] = useState<RegisterMode>("simple");
   const [category, setCategory] = useState<RegisterCategory>("すべて");
   const [manualForm, setManualForm] = useState<ManualFoodForm>(emptyManualForm);
+  const [nutrientsOpen, setNutrientsOpen] = useState(false);
+  const [draftQuery, setDraftQuery] = useState("");
+  const manualNameRef = useRef<HTMLInputElement>(null);
+  const draftFoods = useMemo(() => {
+    const normalized = normalizeSearchText(draftQuery);
+    return normalized
+      ? baseFoods.filter(
+          (food) =>
+            normalizeSearchText(food.name).includes(normalized) ||
+            normalizeSearchText(food.id).includes(normalized),
+        )
+      : [];
+  }, [draftQuery]);
   // 同じ文言が続いても読み上げ直し・表示し直すよう、連番を持つ
   const [message, setMessage] = useState({ text: "", seq: 0 });
 
@@ -163,6 +187,7 @@ export function RegisterScreen({
       );
   }, [state.manualFoods, category, query]);
 
+  const visibleDraftFoods = draftFoods.slice(0, maxVisibleFoods);
   const visibleGroups = groups.slice(0, maxVisibleFoods);
   const visibleDetailedFoods = detailedFoods.slice(0, maxVisibleFoods);
   const commonCount = visibleGroups.filter(
@@ -196,6 +221,28 @@ export function RegisterScreen({
     });
   }
 
+  /** 明示選択した食品で全成分欄と来歴を置き換える（DES-MAN-02、DES-UI-44）。 */
+  function applyManualDraft(food: FoodItem) {
+    const draft = manualDraftFrom(food);
+    setManualForm((current) => ({
+      ...current,
+      sourceFoodId: draft.sourceFoodId,
+      nutrientsPer100g: Object.fromEntries(
+        nutrientDefinitions.map(({ key }) => [
+          key,
+          draft.nutrientsPer100g[key]?.toString() ?? "",
+        ]),
+      ) as ManualFoodForm["nutrientsPer100g"],
+    }));
+  }
+
+  /** 登録成功・クリアで開閉と検索も初期化する（DES-UI-43、44）。 */
+  function clearManualForm() {
+    setManualForm(emptyManualForm());
+    setNutrientsOpen(false);
+    setDraftQuery("");
+  }
+
   function addManualFood(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = manualForm.name.trim();
@@ -206,11 +253,14 @@ export function RegisterScreen({
       }));
       return;
     }
-    const food: FoodItem = {
+    const food: ManualFood = {
       id: localId("manual"),
       name,
       category: `手入力 / ${manualForm.category}`,
       refusePct: null,
+      ...(manualForm.sourceFoodId
+        ? { sourceFoodId: manualForm.sourceFoodId }
+        : {}),
       nutrientsPer100g: Object.fromEntries(
         nutrientDefinitions.map((definition) => [
           definition.key,
@@ -224,7 +274,7 @@ export function RegisterScreen({
       food,
       displayName: name,
     });
-    setManualForm(emptyManualForm());
+    clearManualForm();
   }
 
   return (
@@ -378,6 +428,18 @@ export function RegisterScreen({
             <span>検索語や棚を変えるか、下の手入力で追加してください。</span>
           </div>
         )}
+        {query.trim() !== "" && total === 0 && rememberedFoods.length === 0 && (
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              setManualForm((current) => ({ ...current, name: query.trim() }));
+              manualNameRef.current?.focus();
+            }}
+          >
+            この名前で手入力
+          </button>
+        )}
       </section>
 
       {rememberedFoods.length > 0 && (
@@ -407,6 +469,9 @@ export function RegisterScreen({
                   {number !== null ? `（${number}）` : ""}
                 </strong>
                 <small>手入力 / {shelf}</small>
+                {food.sourceFoodId && (
+                  <small>{draftSourceLabel(food.sourceFoodId)}</small>
+                )}
               </button>
             ))}
           </div>
@@ -423,6 +488,7 @@ export function RegisterScreen({
           <span>食材名</span>
           <input
             required
+            ref={manualNameRef}
             value={manualForm.name}
             onChange={(event) =>
               setManualForm((current) => ({
@@ -434,9 +500,10 @@ export function RegisterScreen({
           />
         </label>
 
-        <label className="form-field">
-          <span>棚</span>
+        <div className="form-field">
+          <label htmlFor="manual-food-shelf">棚</label>
           <select
+            id="manual-food-shelf"
             value={manualForm.category}
             onChange={(event) =>
               setManualForm((current) => ({
@@ -451,34 +518,81 @@ export function RegisterScreen({
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <div className="nutrient-input-grid">
-          {basicNutrientDefinitions.map((definition) => (
-            <label className="form-field" key={definition.key}>
-              <span>
-                {definition.label}（{definition.unit} / 100g）
-              </span>
+        <details
+          className="manual-nutrients"
+          open={nutrientsOpen}
+          onToggle={(event) => setNutrientsOpen(event.currentTarget.open)}
+        >
+          <summary>成分を入力・似た食品から下書き（任意）</summary>
+          <div className="section-stack">
+            <label className="search-field">
+              <span>似た食品を探す</span>
               <input
-                inputMode="decimal"
-                min="0"
-                onChange={(event) =>
-                  setManualForm((current) => ({
-                    ...current,
-                    nutrientsPer100g: {
-                      ...current.nutrientsPer100g,
-                      [definition.key]: event.target.value,
-                    },
-                  }))
-                }
-                placeholder="未入力ならデータなし"
-                step="any"
-                type="number"
-                value={manualForm.nutrientsPer100g[definition.key]}
+                type="search"
+                value={draftQuery}
+                onChange={(event) => setDraftQuery(event.target.value)}
+                placeholder="正式名称・食品番号で検索"
               />
             </label>
-          ))}
-        </div>
+            {draftQuery.trim() && (
+              <div
+                className="ingredient-name-list manual-draft-results"
+                role="group"
+                aria-label="下書き元の食品一覧"
+              >
+                {visibleDraftFoods.map((food) => (
+                  <button
+                    type="button"
+                    className="ingredient-name-button"
+                    key={food.id}
+                    onClick={() => applyManualDraft(food)}
+                  >
+                    <strong>{food.name}</strong>
+                    <small>食品番号 {food.id}</small>
+                    <span>この食品の成分で下書きを置き換える</span>
+                  </button>
+                ))}
+                {draftFoods.length > maxVisibleFoods && (
+                  <p>さらに絞り込んでください</p>
+                )}
+                {draftFoods.length === 0 && <p>該当する食品がありません</p>}
+              </div>
+            )}
+            <div className="nutrient-input-grid">
+              {nutrientDefinitions.map((definition) => (
+                <label className="form-field" key={definition.key}>
+                  <span>
+                    {definition.label}（{definition.unit} / 100g）
+                  </span>
+                  <input
+                    inputMode="decimal"
+                    min="0"
+                    onChange={(event) =>
+                      setManualForm((current) => ({
+                        ...current,
+                        nutrientsPer100g: {
+                          ...current.nutrientsPer100g,
+                          [definition.key]: event.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="未入力ならデータなし"
+                    step="any"
+                    type="number"
+                    value={manualForm.nutrientsPer100g[definition.key]}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        </details>
+        {manualForm.sourceFoodId && (
+          <p className="balance-note">
+            {draftSourceLabel(manualForm.sourceFoodId)}
+          </p>
+        )}
         <p className="balance-note">
           エネルギーを入れない食材は、栄養の判定には数えません。
         </p>
@@ -487,10 +601,7 @@ export function RegisterScreen({
           <button className="primary-button" type="submit">
             登録する
           </button>
-          <button
-            type="button"
-            onClick={() => setManualForm(emptyManualForm())}
-          >
+          <button type="button" onClick={clearManualForm}>
             入力をクリア
           </button>
         </div>

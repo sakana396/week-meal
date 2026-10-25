@@ -202,7 +202,9 @@ test("TC-FR-ING-15-06 旧分類はその他に表示し成分と来歴を保持�
   const button = page
     .getByRole("region", { name: "覚えた食材", exact: true })
     .getByRole("button");
-  await expect(button).toHaveText("旧食品手入力 / その他");
+  await expect(button).toHaveText(
+    "旧食品手入力 / その他下書き元: 食品番号 99999（現在の食品データにはありません）。登録値は手入力",
+  );
   await button.click();
   const food = await page.evaluate(
     () => JSON.parse(localStorage.getItem("weekmeal:state")!).manualFoods[0],

@@ -1099,3 +1099,21 @@ h3 {
   text-align: left;
   overflow-wrap: anywhere;
 }
+
+/* 成分の開閉と下書きの選択（DES-UI-43、44）。 */
+.manual-nutrients summary {
+  min-height: 44px;
+  padding: 12px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.manual-nutrients summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.manual-draft-results {
+  max-height: 320px;
+  overflow-y: auto;
+}

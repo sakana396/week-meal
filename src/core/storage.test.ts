@@ -426,3 +426,22 @@ describe("保存の版 2（DES-STO-08）", () => {
     },
   );
 });
+
+it.each(["99999", "", 123, null])(
+  "TC-FR-ING-16-03 来歴 %s の検査後も成分と登録行を往復で保つ",
+  (sourceFoodId) => {
+    const result = parseStoredState(
+      stored({ manualFoods: [{ ...manualFood, sourceFoodId }] }),
+      known,
+    );
+    expect(result.issue).toBeNull();
+    expect(result.state.items).toEqual(saved.items);
+    expect(result.state.manualFoods[0]).toEqual({
+      ...manualFood,
+      ...(sourceFoodId === "99999" ? { sourceFoodId } : {}),
+    });
+    expect(parseStoredState(serializeState(result.state), known).state).toEqual(
+      result.state,
+    );
+  },
+);
