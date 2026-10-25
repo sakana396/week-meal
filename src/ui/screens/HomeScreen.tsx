@@ -8,6 +8,7 @@ import type { AppState } from "../../core/basket";
 import { foodPresentation } from "../../core/catalog";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
+import { SupplementSuggestions } from "../components/SupplementSuggestions";
 import { ItemRow } from "../components/ItemRow";
 import type { Route } from "../route";
 
@@ -17,6 +18,7 @@ import type { Route } from "../route";
 export function HomeScreen({
   state,
   analysis,
+  revision,
   dispatch,
   navigate,
   findFood,
@@ -25,6 +27,7 @@ export function HomeScreen({
 }: {
   state: AppState;
   analysis: AnalysisResult;
+  revision: number;
   dispatch: (action: BasketSessionAction) => void;
   navigate: (route: Route) => void;
   findFood: (foodId: string) => FoodItem | undefined;
@@ -35,7 +38,8 @@ export function HomeScreen({
   const undoRef = useRef<HTMLButtonElement>(null);
   const previousRemoval = useRef<PendingRemoval | null>(null);
 
-  // 削除後は取り消しへ、復元後は戻った行の有効な操作へ移す（DES-UI-45）。
+  // 削除後は取り消しへ、復元時だけ戻った行へ移す（DES-UI-45）。
+  // 候補登録で取り消しが失効した場合は、候補見出しのフォーカスを保つ。
   useLayoutEffect(() => {
     const previous = previousRemoval.current;
     if (pendingRemoval) {
@@ -86,6 +90,12 @@ export function HomeScreen({
       </header>
       {notice}
       <BalancePanel analysis={analysis} profile={state.profile} />
+      <SupplementSuggestions
+        state={state}
+        analysis={analysis}
+        revision={revision}
+        dispatch={dispatch}
+      />
       {analysis.kind === "judged" && (
         <button
           className="link-button"

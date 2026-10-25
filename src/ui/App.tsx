@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { analyzeBasket } from "../core/analyze";
 import { toRegisteredItems } from "../core/basket";
-import { basketSessionReducer } from "../core/basketSession";
+import {
+  basketSessionReducer,
+  type BasketSessionState,
+  type BasketSessionAction,
+} from "../core/basketSession";
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
@@ -14,6 +18,22 @@ import { SettingsScreen } from "./screens/SettingsScreen";
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
 import "./App.css";
 
+/** 状態と候補予約を対応付ける revision（DES-UI-42）。 */
+function revisionReducer(
+  current: { session: BasketSessionState; revision: number },
+  action: BasketSessionAction,
+) {
+  const session = basketSessionReducer(current.session, action);
+  return session === current.session
+    ? current
+    : {
+        session,
+        revision:
+          current.revision +
+          (session.appState === current.session.appState ? 0 : 1),
+      };
+}
+
 /**
  * 画面全体（DES-UI-10）。状態は useReducer（P-02）、画面はハッシュで切り替える（P-01）。
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
@@ -22,9 +42,9 @@ import "./App.css";
 export default function App() {
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  const [session, dispatch] = useReducer(basketSessionReducer, {
-    appState: loaded.state,
-    pendingRemoval: null,
+  const [{ session, revision }, dispatch] = useReducer(revisionReducer, {
+    session: { appState: loaded.state, pendingRemoval: null },
+    revision: 0,
   });
   const state = session.appState;
   const [route, navigate] = useHashRoute();
@@ -65,10 +85,11 @@ export default function App() {
   return (
     <div className="app-shell">
       <Navigation navigate={navigate} route={route} />
-      <main className="content-panel">
+      <main className="content-panel" data-analysis-revision={revision}>
         {route === "home" && (
           <HomeScreen
             analysis={analysis}
+            revision={revision}
             dispatch={dispatch}
             findFood={findFood}
             navigate={navigate}
