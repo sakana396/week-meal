@@ -102,4 +102,4 @@
 | FR-NUT-06 | #54 | DES-SUG-01〜03 | TC-FR-NUT-06-04（単体部分） | src/core/suggestions.ts, src/core/suggestions.test.ts | core 実装済み（表示・保存・押下はGで検証） |
 | NFR-08 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-04, TC-FR-NUT-06-04、既存lint | src/core/suggestions.ts, src/core/balance.ts | 実装済み（純粋関数・入力不変） |
 | NFR-09 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05, TC-FR-BAL-07-01〜06, 08、既存の網羅率検査 | src/core/suggestions.test.ts | 実装済み（core 命令網羅率80%以上を検証） |
-| FR-ING-15 | #56 | DES-MAN-01, DES-STO-08, DES-UI-43（一覧） | TC-FR-ING-15-01〜09、TC-NFR-13-12, 13 | src/core/manualFoods.ts, src/core/basket.ts, src/core/storage.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-memory.spec.ts | 実装済み（単体テスト成功。既存 E2E 成功（ローカル・CI）。レビュー修正の TC-FR-ING-15-03 は期待値変更、07〜09 は追加済み。Claude Code による実行待ち） |
+| FR-ING-15 | #56 | DES-MAN-01, DES-STO-08, DES-UI-43（一覧） | TC-FR-ING-15-01〜09、TC-NFR-13-12, 13 | src/core/manualFoods.ts, src/core/basket.ts, src/core/storage.ts, src/ui/screens/RegisterScreen.tsx, e2e/manual-memory.spec.ts | 実装済み（単体テスト成功。E2E 成功（ローカル・CI）） |
