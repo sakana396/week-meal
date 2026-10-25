@@ -106,7 +106,10 @@ const other: FoodItem = {
     vitaminCMg: 6.0,
   },
 };
-const formOf = (page: Page) => page.locator("form");
+const formOf = (page: Page) =>
+  page.locator("form").filter({
+    has: page.getByRole("heading", { name: "手入力で追加", exact: true }),
+  });
 const nameOf = (form: Locator) =>
   form.getByRole("textbox", { name: "食材名", exact: true });
 const nutrientInput = (form: Locator, label: string) =>
@@ -132,6 +135,8 @@ for (const mode of ["簡易", "詳細"]) {
       .getByRole("button", { name: mode, exact: true })
       .click();
     const form = formOf(page);
+    await expect(page.locator("form")).toHaveCount(1);
+    await expect(form).toHaveCount(1);
     await nameOf(form).fill("編集中の名前");
     await form.getByLabel("棚", { exact: true }).selectOption("肉");
     await form.getByText(summary, { exact: true }).click();

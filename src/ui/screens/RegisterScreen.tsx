@@ -497,9 +497,10 @@ export function RegisterScreen({
           />
         </label>
 
-        <label className="form-field">
-          <span>棚</span>
+        <div className="form-field">
+          <label htmlFor="manual-food-shelf">棚</label>
           <select
+            id="manual-food-shelf"
             value={manualForm.category}
             onChange={(event) =>
               setManualForm((current) => ({
@@ -514,7 +515,7 @@ export function RegisterScreen({
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
         <details
           className="manual-nutrients"
