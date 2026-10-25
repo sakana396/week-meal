@@ -54,11 +54,7 @@ export function BalancePanel({
   );
 
   return (
-    <section
-      className="notice-panel"
-      data-alert={flagged.length > 0}
-      aria-label="栄養バランスの判定"
-    >
+    <section className="notice-panel" aria-label="栄養バランスの判定">
       <h3>
         {flagged.length > 0
           ? "偏りがあります"

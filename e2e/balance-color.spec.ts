@@ -89,6 +89,11 @@ for (const [ratio, proteinRatio, low] of [
   }) => {
     await loadFixture(page, ratio, proteinRatio);
     const home = page.getByRole("region", { name: "栄養バランスの判定" });
+    await expect(home).toHaveCSS("border-color", "rgb(216, 210, 199)");
+    await expect(home).toHaveCSS(
+      "background-color",
+      "rgba(255, 255, 255, 0.78)",
+    );
     for (const [name, color] of [
       ["ビタミンC", "rgb(255, 178, 0)"],
       ["たんぱく質", "rgb(255, 255, 0)"],
