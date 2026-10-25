@@ -61,7 +61,7 @@ npm run test:e2e -- --project=performance --workers=1 --output=test-results/perf
 
 axe の全結果（軽微な違反・判定保留を含む）は `test-results/functional/<テスト別ディレクトリ>/axe-<状態名>.json` に残る。状態名は `home-candidates`、`home-removal`、`register-collapsed`、`register-draft`、`register-remembered`、`balance`、`settings`、`foods`、`food-detail`。`--output` を省略したローカル実行では、いずれも `test-results/<テスト別ディレクトリ>/` の下に同名ファイルを残す。別々の呼び出しで両方の記録を保持するには、上記のように出力先を分ける。
 
-CI の upload 手順は `if: always()` で `test-results/` を artifact `playwright-results` として収集する設定。修正後の E2E 実行と CI artifact 内のファイルの確認は Claude Code が行うため、本修正時点では未確認。
+CI の upload 手順は `if: always()` で `test-results/` を artifact `playwright-results` として収集する設定。CI（run 40168004021）の artifact に performance.json 6 件と axe の JSON 36 件が残ることを確認した。
 
 CPU 4 倍は比較条件であり、中位スマートフォン相当の認定ではない。反復末に本人の端末、または本人・レビュアーと合意した端末と条件で同じ固定試料・4 操作・各 5 回を測り、次の様式で CI と別に記録する。実機ではブラウザ内の click capture・revision 監視・2 回の requestAnimationFrame の測定方式を維持する。専用 project を接続先の実機ブラウザで実行する場合は接続方法・画面幅・CPU 設定も記録する。端末や接続方法により実行できない場合は達成を未確認とし、CI の値で代用しない。
 

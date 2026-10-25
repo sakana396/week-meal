@@ -4,7 +4,7 @@
 - 日付: 2026-10-25
 - 実装者: Codex（コミットは Claude Code。`@axe-core/playwright@4.13.0` は Codex のサンドボックスがネットワークを使えないため Claude Code が入れた。E2E は Claude Code が実行した）
 - レビュアー: 実装者・コミットした Claude Code とは別の Claude Code サブエージェント
-- 結果: （再レビュー待ち）
+- 結果: 承認（2 回目の再レビューで承認）
 
 ## レビューの前の経緯
 
@@ -41,3 +41,12 @@
 | 4 | 軽微 | 計測の記録に作業差分の有無と PR の head がない | `workingTreeDirty`・`githubSha`・`githubHeadRef` を足した |
 
 PR の説明に Claude Code が「候補の計算は最大 28.1 ms で予算に収まった」と書いていたが、1 回の実行の値で、レビュアーの実行では 57.8 ms の回があった。説明を直した。
+
+## 再レビュー（1 回目）
+
+結果: 要修正（コードの修正 1〜4 は承認。文書の状態の表記が残った）。CI の最大 78 ms は run のログの `"maximumMs":77.5` と合うことを確かめた。
+
+| # | 重大度 | 指摘 | 対応 |
+|---|---|---|---|
+| 5 | 推奨 | test-spec-it03.md 2.5、traceability の NFR-03・NFR-06 の #62 の行、performance-measurement-it03.md に「Claude Code による確認待ち」「本修正時点では未確認」が残り、この記録と食い違う | Claude Code が確かめた事実（E2E 成功、CI の artifact にファイルが残る）に書き換えた |
+| 6 | 軽微 | この記録の結果の欄が「再レビュー待ち」のまま | 書いた |
