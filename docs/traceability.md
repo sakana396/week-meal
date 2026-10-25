@@ -11,7 +11,7 @@
 | FR-ING-04 | #3, #46, #59 | DES-CAT-04, DES-CAT-06, DES-FDB-04 | TC-FR-ING-04-01〜05（04 は順位取得とデータ重複検査） | src/core/catalog.ts（並び順）, src/data/integrity.test.ts（順位表の重複）, src/ui/screens/RegisterScreen.tsx（検索結果） | 実装済み（単体。画面の優先表示は IT02 の行を参照） |
 | FR-ING-05 | #3, #59 | DES-CAT-01〜03, DES-FDB-04 | TC-FR-ING-05-01〜10, TC-NFR-11-08 | src/core/catalog.ts（まとめ・代表食品）, src/data/foodDisplayNames.ts（代表食品の指定）, src/ui/screens/RegisterScreen.tsx（押して登録） | 実装済み（ゆではるさめの代表を明示。画面は IT02 の登録 E2E） |
 | FR-ING-06 | #3, #5 | DES-CAT-01 | TC-FR-ING-06-01〜20 | src/core/catalog.ts | 実装済み |
-| FR-ING-09 | #3, #4, #9, #20, #59 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（登録対象外の食品を出さない画面動作は TC-FR-ING-09-06 で検証済み） |
+| FR-ING-09 | #3, #4, #9, #20, #59 | DES-CAT-05, DES-FDB-01 | TC-FR-ING-09-01〜07, TC-FR-FDB-01-02 | src/core/catalog.ts, scripts/food-selection.json, src/ui/screens/RegisterScreen.tsx | 実装済み（米・パン・麺・調味料の棚がなく、しょうゆが出ないことを TC-FR-ING-09-06（E2E）で検証済み） |
 | FR-FDB-01 | #4, #20, #59 | DES-FDB-01, 02, 06 | TC-FR-FDB-01-01〜03 | scripts/food-selection.json, src/data/foods.json, src/data/integrity.test.ts | 実装済み（9 件を除外。原典再生成・候補関数の結合確認の未実施範囲は docs/04_test/food-selection-review-it03.md） |
 | FR-FDB-02 | #4, #59 | DES-FDB-01, 02, 06 | TC-FR-FDB-02-01〜04, TC-FR-FDB-01-03 | scripts/convert-mext-foods.py, scripts/food-selection.json, src/data/foods.json | 実装済み（今回は既存データを再絞り込み。原典 Excel からの再生成は未実施） |
 | FR-QTY-01 | #5 | DES-QTY-02 | TC-FR-QTY-01-01〜04 | src/core/quantity.ts | 実装済み（換算。個数 1 の登録は #9） |

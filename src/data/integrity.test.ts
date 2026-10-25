@@ -8,7 +8,6 @@ import {
   supermarketPriority,
 } from "../core/catalog";
 import type { FoodItem } from "../types";
-import { baseFoods } from "../ui/foodData";
 import {
   foodCategoryGroupAliases,
   foodGroupAliases,
@@ -21,13 +20,14 @@ import { supermarketFoodPriorities } from "./supermarketFoods";
 import { unitWeights } from "./unitWeights";
 
 // 定義データが食品データにあるものだけを参照していることを確かめる（DES-FDB-04、NFR-11）
+// UI の baseFoods と同じ配列を使い、data から ui への依存を避ける。
 const foods = foodsJson as FoodItem[];
 const foodIds = new Set(foods.map((food) => food.id));
 const groupNames = new Set(groupFoods(foods).map((group) => group.name));
 
 describe("食品データの整合性（DES-FDB-04）", () => {
   // DES-SUG-01 の候補集合の入口。候補選定関数自体は別 Issue の担当。
-  const candidates = groupFoods(baseFoods.filter(isRegistrable))
+  const candidates = groupFoods(foods.filter(isRegistrable))
     .filter((group) => supermarketPriority(group.name) !== null)
     .map(representativeFood);
 
@@ -45,7 +45,7 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     "TC-FR-FDB-01-03 除外した食品 %s（%s）は定義・同梱データ・候補集合にない",
     (id) => {
       expect(selection.some((entry) => entry.id === id)).toBe(false);
-      expect(baseFoods.some((food) => food.id === id)).toBe(false);
+      expect(foods.some((food) => food.id === id)).toBe(false);
       expect(candidates.some((food) => food.id === id)).toBe(false);
     },
   );
@@ -66,7 +66,7 @@ describe("食品データの整合性（DES-FDB-04）", () => {
     "07138",
   ])("TC-FR-FDB-01-03 維持する食品 %s は定義・同梱データに残る", (id) => {
     expect(selection.some((entry) => entry.id === id)).toBe(true);
-    expect(baseFoods.some((food) => food.id === id)).toBe(true);
+    expect(foods.some((food) => food.id === id)).toBe(true);
   });
 
   it("TC-FR-ING-04-04 順位表の名前は検索用の正規化後も重複しない（データの直接検査）", () => {
