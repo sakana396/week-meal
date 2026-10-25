@@ -126,10 +126,10 @@ test("TC-FR-ING-15-03 同名食品を棚・番号で区別し両モードの通�
     ).toBe(true);
     await expect(remembered.getByRole("button")).toHaveCount(3);
     await expect(remembered.getByRole("button").nth(0)).toHaveText(
-      "にんじん（1）手入力 / 野菜",
+      "にんじん（2）手入力 / 野菜",
     );
     await expect(remembered.getByRole("button").nth(2)).toHaveText(
-      "にんじん（2）手入力 / 野菜",
+      "にんじん（1）手入力 / 野菜",
     );
     await page.getByRole("searchbox", { name: "食材名" }).fill("に んじん");
     await expect(remembered.getByRole("button")).toHaveCount(3);
@@ -274,4 +274,109 @@ test("TC-NFR-13-12 版 1 を版 2 に移行し行・台帳・設定・順序を�
       .getByRole("region", { name: "覚えた食材", exact: true })
       .getByRole("button"),
   ).toHaveCount(2);
+});
+
+test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号を保ち新しい順に表示する", async ({
+  page,
+}) => {
+  await seed(page, [manual("manual-new"), manual("manual-old")]);
+  await page.goto("/#/register");
+  const remembered = page.getByRole("region", {
+    name: "覚えた食材",
+    exact: true,
+  });
+  const labels = (numbers: number[]) =>
+    numbers.map((number) => `自家製スープ（${number}）手入力 / 野菜`);
+  await expect(remembered.getByRole("button")).toHaveText(labels([2, 1]));
+  const form = page.locator("form");
+  await form
+    .getByRole("textbox", { name: "食材名", exact: true })
+    .fill("自家製スープ");
+  await form.getByRole("button", { name: "登録する", exact: true }).click();
+  await expect(remembered.getByRole("button")).toHaveText(labels([3, 2, 1]));
+  await page.reload();
+  for (const mode of ["簡易", "詳細"]) {
+    await page
+      .getByRole("group", { name: "入力モード選択", exact: true })
+      .getByRole("button", { name: mode, exact: true })
+      .click();
+    await page.getByRole("searchbox", { name: "食材名" }).fill("自家製");
+    await page
+      .getByRole("group", { name: "スーパーの棚を選択" })
+      .getByRole("button", { name: "野菜", exact: true })
+      .click();
+    await expect(remembered.getByRole("button")).toHaveText(labels([3, 2, 1]));
+    await remembered.getByRole("button").nth(2).click();
+  }
+  const stored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("weekmeal:state")!),
+  );
+  expect(stored.manualFoods.map((food: FoodItem) => food.id).slice(1)).toEqual([
+    "manual-new",
+    "manual-old",
+  ]);
+  expect(
+    stored.items.find(
+      (item: { foodId: string }) => item.foodId === "manual-old",
+    ).count,
+  ).toBe(2);
+});
+
+for (const name of ["", "   "]) {
+  test(`TC-FR-ING-15-08 名前が空の旧食品 ${JSON.stringify(name)} は名前なしと表示し再登録を無効にして保持する`, async ({
+    page,
+  }) => {
+    const food = manual("manual-unnamed", name);
+    await seed(page, [food], 1);
+    await page.goto("/#/register");
+    for (const mode of ["簡易", "詳細"]) {
+      await page
+        .getByRole("group", { name: "入力モード選択", exact: true })
+        .getByRole("button", { name: mode, exact: true })
+        .click();
+      const button = page
+        .getByRole("region", { name: "覚えた食材", exact: true })
+        .getByRole("button");
+      await expect(button).toHaveText("（名前なし）手入力 / 野菜");
+      await expect(button).toBeDisabled();
+    }
+    await page.reload();
+    const stored = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("weekmeal:state")!),
+    );
+    expect(stored.manualFoods).toEqual([food]);
+    expect(stored.items).toEqual([]);
+    await expect(page.locator('[data-alert="true"]')).toHaveCount(0);
+  });
+}
+
+test("TC-FR-ING-15-09 覚えた食品がないと区画を隠し登録後に表示し検索や棚が一致しなければ隠す", async ({
+  page,
+}) => {
+  await page.goto("/#/register");
+  const remembered = page.getByRole("region", {
+    name: "覚えた食材",
+    exact: true,
+  });
+  await expect(remembered).toHaveCount(0);
+  const form = page.locator("form");
+  await form
+    .getByRole("textbox", { name: "食材名", exact: true })
+    .fill("自家製スープ");
+  await form.getByRole("button", { name: "登録する", exact: true }).click();
+  await expect(remembered).toBeVisible();
+  await page.getByRole("searchbox", { name: "食材名" }).fill("該当しない名前");
+  await expect(remembered).toHaveCount(0);
+  await page.getByRole("searchbox").fill("");
+  await expect(remembered).toBeVisible();
+  await page
+    .getByRole("group", { name: "スーパーの棚を選択" })
+    .getByRole("button", { name: "肉", exact: true })
+    .click();
+  await expect(remembered).toHaveCount(0);
+  await page
+    .getByRole("group", { name: "スーパーの棚を選択" })
+    .getByRole("button", { name: "すべて", exact: true })
+    .click();
+  await expect(remembered).toBeVisible();
 });

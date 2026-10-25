@@ -142,7 +142,9 @@ export function RegisterScreen({
       const key = keyFor(food);
       totals.set(key, (totals.get(key) ?? 0) + 1);
     }
-    return state.manualFoods
+    // 番号は古い保存順で付け、表示は新しい順に戻す（DES-MAN-01、DES-UI-43）。
+    return [...state.manualFoods]
+      .reverse()
       .map((food) => {
         const key = keyFor(food);
         const number = (counts.get(key) ?? 0) + 1;
@@ -153,6 +155,7 @@ export function RegisterScreen({
           number: (totals.get(key) ?? 0) > 1 ? number : null,
         };
       })
+      .reverse()
       .filter(
         ({ food, shelf }) =>
           (category === "すべて" || shelf === category) &&
@@ -377,35 +380,38 @@ export function RegisterScreen({
         )}
       </section>
 
-      <section className="section-stack" aria-label="覚えた食材">
-        <div className="section-heading">
-          <h3>覚えた食材</h3>
-          <p>{rememberedFoods.length} 種類</p>
-        </div>
-        <div className="ingredient-name-list">
-          {rememberedFoods.map(({ food, shelf, number }) => (
-            <button
-              className="ingredient-name-button"
-              key={food.id}
-              type="button"
-              onClick={() =>
-                register({
-                  type: "register",
-                  id: localId("item"),
-                  foodId: food.id,
-                  displayName: food.name,
-                })
-              }
-            >
-              <strong>
-                {food.name}
-                {number !== null ? `（${number}）` : ""}
-              </strong>
-              <small>手入力 / {shelf}</small>
-            </button>
-          ))}
-        </div>
-      </section>
+      {rememberedFoods.length > 0 && (
+        <section className="section-stack" aria-label="覚えた食材">
+          <div className="section-heading">
+            <h3>覚えた食材</h3>
+            <p>{rememberedFoods.length} 種類</p>
+          </div>
+          <div className="ingredient-name-list">
+            {rememberedFoods.map(({ food, shelf, number }) => (
+              <button
+                className="ingredient-name-button"
+                key={food.id}
+                disabled={!food.name.trim()}
+                type="button"
+                onClick={() =>
+                  register({
+                    type: "register",
+                    id: localId("item"),
+                    foodId: food.id,
+                    displayName: food.name,
+                  })
+                }
+              >
+                <strong>
+                  {food.name.trim() ? food.name : "（名前なし）"}
+                  {number !== null ? `（${number}）` : ""}
+                </strong>
+                <small>手入力 / {shelf}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <form className="section-stack" onSubmit={addManualFood}>
         <div className="section-heading">
