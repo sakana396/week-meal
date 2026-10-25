@@ -41,9 +41,11 @@ jobs:
       - name: Playwright のブラウザを入れる
         run: npx playwright install --with-deps chromium
       - name: E2E テスト（スマートフォン幅と PC 幅）
-        run: npm run test:e2e
-      - name: 失敗したときの記録を残す
-        if: failure()
+        run: npm run test:e2e -- --project=mobile --project=desktop --output=test-results/functional
+      - name: 性能の計測（直列）
+        run: npm run test:e2e -- --project=performance --workers=1 --output=test-results/performance
+      - name: 計測と検査の記録を残す
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results

@@ -14,7 +14,14 @@ import { registerMessage } from "../registerMessage";
 import { scheduleSuggestions } from "../scheduleSuggestions";
 
 // 静的な候補集合はホームの再表示・状態変更で作り直さない（DES-SUG-01）。
+const candidateStart = performance.now();
 const candidates = supplementCandidates(baseFoods);
+// UI 側だけで初期生成と差分計算を分けて記録する（DES-PER-01）。
+performance.measure("weekmeal:candidate-initialization", {
+  start: candidateStart,
+  end: performance.now(),
+  detail: { count: candidates.length },
+});
 type CandidateView = { revision: number; suggestions: SupplementSuggestion[] };
 
 /** ホームで候補を提示し、安全に1単位登録する（DES-UI-42）。 */
@@ -59,6 +66,10 @@ export function SupplementSuggestions({
   useLayoutEffect(() => {
     if (!locked) return;
     heading.current?.focus({ preventScroll: true });
+  }, [locked]);
+
+  useLayoutEffect(() => {
+    if (!locked) return;
     // 登録で状態が変わらない場合も、次の計算結果を待たず固定を解く。
     if (registrationRevision.current === revision) {
       interactionLocked.current = false;
@@ -85,9 +96,16 @@ export function SupplementSuggestions({
     pending.current = null;
     return scheduleSuggestions(() => {
       if (committedRevision.current !== revision) return;
+      const start = performance.now();
       const suggestions = hasLow
         ? suggestSupplements(state, foodsById, candidates)
         : [];
+      performance.clearMeasures("weekmeal:candidate-calculation");
+      performance.measure("weekmeal:candidate-calculation", {
+        start,
+        end: performance.now(),
+        detail: { revision, count: candidates.length },
+      });
       if (committedRevision.current !== revision) return;
       const next = { revision, suggestions };
       setReady(next);

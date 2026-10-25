@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * E2E テストの設定（DES-E2E-01, 02, 06）。
+ * E2E テストの設定（DES-E2E-01, 02, 06、DES-PER-01）。
  * ビルドしたものを vite preview で配信し、スマートフォン幅と PC 幅の 2 つで試す。
  */
 export default defineConfig({
@@ -17,6 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
+      testIgnore: /performance\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 360, height: 740 },
@@ -26,9 +27,21 @@ export default defineConfig({
     },
     {
       name: "desktop",
+      testIgnore: /performance\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: "performance",
+      testMatch: /performance\.spec\.ts/,
+      fullyParallel: false,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 360, height: 740 },
+        hasTouch: true,
+        isMobile: true,
       },
     },
   ],
