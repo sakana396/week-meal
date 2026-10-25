@@ -362,7 +362,7 @@ it.each([
     null,
   ]),
 ] as [BalanceResult, number | null][])(
-  "TC-FR-BAL-07-04 下限比の欠損・異常値を扱う %j",
+  "TC-FR-BAL-07-07 下限比の欠損・異常値を扱う %j",
   (input, expected) => {
     expect(lowerTargetRatio(input)).toBe(expected);
   },
