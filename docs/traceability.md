@@ -102,3 +102,9 @@
 | FR-NUT-06 | #54 | DES-SUG-01〜03 | TC-FR-NUT-06-04（単体部分） | src/core/suggestions.ts, src/core/suggestions.test.ts | core 実装済み（表示・保存・押下はGで検証） |
 | NFR-08 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-04, TC-FR-NUT-06-04、既存lint | src/core/suggestions.ts, src/core/balance.ts | 実装済み（純粋関数・入力不変） |
 | NFR-09 | #54 | DES-SUG-01〜03 | TC-FR-BAL-06-01〜05, TC-FR-BAL-07-01〜06, 08、既存の網羅率検査 | src/core/suggestions.test.ts | 実装済み（core 命令網羅率80%以上を検証） |
+| FR-BAL-06 | #60 | DES-UI-42、DES-E2E-08 | TC-FR-BAL-06-06〜08 | src/ui/components/SupplementSuggestions.tsx, src/ui/screens/HomeScreen.tsx, src/ui/supplementPresentation.test.ts, src/ui/scheduleSuggestions.test.ts, e2e/supplement-suggestions.spec.ts | 実装済み（概算表示は単体で確認。同梱候補は全件目安重量あり。E2E 追加・未実行、Claude Code が実行） |
+| FR-BAL-07 | #60 | DES-UI-42 | TC-FR-BAL-07-02（注意表示） | src/ui/components/SupplementSuggestions.tsx, src/ui/supplementPresentation.test.ts | 実装済み（新しい過剰・不足・既存過剰の悪化を栄養素名で表示し、表示単体試験で確認） |
+| FR-NUT-06 | #60 | DES-UI-42 | TC-FR-NUT-06-04（画面部分） | src/ui/App.tsx, src/ui/components/SupplementSuggestions.tsx, e2e/supplement-suggestions.spec.ts | 実装済み（実際の判定と候補計算を分離。表示だけでは保存・判定不変、選んだ候補のみ登録する E2E 追加・未実行） |
+| FR-QTY-01 | #60 | DES-UI-42 | TC-FR-BAL-06-06、TC-FR-NUT-06-04 | src/ui/components/SupplementSuggestions.tsx, e2e/supplement-suggestions.spec.ts | 実装済み（既存 register action と registerMessage を再利用し1単位登録。E2E 追加・未実行） |
+| NFR-03 | #60 | DES-UI-42 | TC-NFR-03-03（候補の表示）、TC-FR-BAL-06-08（予約中止） | src/ui/App.tsx, src/ui/scheduleSuggestions.ts, src/ui/scheduleSuggestions.test.ts, src/ui/components/SupplementSuggestions.tsx | 実装済み（2回の描画コールバックとタイマー後に計算。revision で古い予約・結果を破棄し、画面反映時に候補 revision を更新。時間計測・予算判定は Issue I） |
+| QA-03 | #60 | DES-E2E-08 | TC-FR-BAL-06-06〜08、TC-FR-NUT-06-04 | e2e/supplement-suggestions.spec.ts | E2E 追加済み・未実行（mobile / desktop。連打・欄外へのマウス移動・キーボード・最新 revision・保存を検査。Claude Code が実行） |

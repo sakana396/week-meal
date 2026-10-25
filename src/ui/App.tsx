@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { analyzeBasket } from "../core/analyze";
-import { basketReducer, toRegisteredItems } from "../core/basket";
+import {
+  basketReducer,
+  toRegisteredItems,
+  type AppState,
+  type BasketAction,
+} from "../core/basket";
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
@@ -13,6 +18,17 @@ import { SettingsScreen } from "./screens/SettingsScreen";
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
 import "./App.css";
 
+/** 状態と候補予約を対応付ける revision（DES-UI-42）。 */
+function revisionReducer(
+  current: { state: AppState; revision: number },
+  action: BasketAction,
+) {
+  const state = basketReducer(current.state, action);
+  return state === current.state
+    ? current
+    : { state, revision: current.revision + 1 };
+}
+
 /**
  * 画面全体（DES-UI-10）。状態は useReducer（P-02）、画面はハッシュで切り替える（P-01）。
  * 起動時に保存データを読み込み、状態が変わるたびに書き出す（DES-UI-13）。
@@ -20,7 +36,10 @@ import "./App.css";
 export default function App() {
   const [browser] = useState(openBrowserStore);
   const [loaded] = useState(() => loadAppState(browser));
-  const [state, dispatch] = useReducer(basketReducer, loaded.state);
+  const [{ state, revision }, dispatch] = useReducer(revisionReducer, {
+    state: loaded.state,
+    revision: 0,
+  });
   const [route, navigate] = useHashRoute();
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
@@ -59,10 +78,11 @@ export default function App() {
   return (
     <div className="app-shell">
       <Navigation navigate={navigate} route={route} />
-      <main className="content-panel">
+      <main className="content-panel" data-analysis-revision={revision}>
         {route === "home" && (
           <HomeScreen
             analysis={analysis}
+            revision={revision}
             dispatch={dispatch}
             findFood={findFood}
             navigate={navigate}

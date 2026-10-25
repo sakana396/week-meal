@@ -3,6 +3,7 @@ import type { AppState, BasketAction } from "../../core/basket";
 import { foodPresentation } from "../../core/catalog";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
+import { SupplementSuggestions } from "../components/SupplementSuggestions";
 import { ItemRow } from "../components/ItemRow";
 import type { Route } from "../route";
 
@@ -12,6 +13,7 @@ import type { Route } from "../route";
 export function HomeScreen({
   state,
   analysis,
+  revision,
   dispatch,
   navigate,
   findFood,
@@ -19,6 +21,7 @@ export function HomeScreen({
 }: {
   state: AppState;
   analysis: AnalysisResult;
+  revision: number;
   dispatch: (action: BasketAction) => void;
   navigate: (route: Route) => void;
   findFood: (foodId: string) => FoodItem | undefined;
@@ -60,6 +63,12 @@ export function HomeScreen({
       </header>
       {notice}
       <BalancePanel analysis={analysis} profile={state.profile} />
+      <SupplementSuggestions
+        state={state}
+        analysis={analysis}
+        revision={revision}
+        dispatch={dispatch}
+      />
       {analysis.kind === "judged" && (
         <button
           className="link-button"
