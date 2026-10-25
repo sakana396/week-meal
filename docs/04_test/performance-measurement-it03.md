@@ -11,22 +11,22 @@
 5. Analyze page load を実行する。Performance スコアを転記し、JSON と HTML のレポートをエクスポートする。Lighthouse の版はレポートの `lighthouseVersion` でも確認する。レポートの保存先を振り返りから参照する。
 6. TC-NFR-04-01 の判定は必要項目の記録の有無とする。スコアに合否閾値を設けない。繰り返す場合は全スコアと各回の条件を残し、良い回だけを選ばない。
 
-記録様式（実測してから埋める）:
+記録（2026-10-25 に IT03 の振り返りで計測）:
 
 | 項目 | 実測記録 |
 |---|---|
-| 計測日時・担当 | |
-| コミット・作業差分 | |
-| ビルドコマンド・Node 版 | |
-| URL・配信方法 | |
-| 機器（CPU・メモリー）・OS | |
-| Chrome 版・Lighthouse 版 | |
-| モード・カテゴリ・端末設定 | Navigation / Performance / Mobile（実際の設定も記入） |
-| CPU・ネットワーク制限 | |
-| 保存データ・ストレージ消去・キャッシュ・拡張機能 | |
-| Performance スコア（全回） | |
-| JSON・HTML レポートの保存先 | |
-| 観測事項・前回との差 | |
+| 計測日時・担当 | 2026-10-25 19:22、Claude Code（IT03 の振り返り、Issue #74） |
+| コミット・作業差分 | ee43cf5（main の f6b680e に振り返りの文書だけを足したブランチ。アプリのコードは f6b680e と同じ） |
+| ビルドコマンド・Node 版 | `npm run build`、Node v22.23.2 |
+| URL・配信方法 | `npx vite preview --host 127.0.0.1 --port 4173 --strictPort`、http://127.0.0.1:4173/ |
+| 機器（CPU・メモリー）・OS | 開発者の PC の WSL2（Linux 6.18.54.1-microsoft-standard-WSL2、論理 CPU 12）。スマートフォンの実機ではない |
+| Chrome 版・Lighthouse 版 | Google Chrome for Testing 156.0.8078.4（Playwright の chromium-1248）、Lighthouse 13.5.0（CLI。作業用ディレクトリに入れ、リポジトリの依存には足していない） |
+| モード・カテゴリ・端末設定 | Navigation / Performance / Mobile。DevTools ではなく CLI（`lighthouse http://127.0.0.1:4173/ --only-categories=performance --form-factor=mobile --chrome-flags="--headless=new --no-sandbox"`） |
+| CPU・ネットワーク制限 | simulate（Lighthouse の既定）。CPU 4 倍、RTT 150 ms、下り 1,474.56 Kbps、上り 675 Kbps |
+| 保存データ・ストレージ消去・キャッシュ・拡張機能 | Lighthouse の既定（ストレージを消去）。保存データなしの初回表示。拡張機能なし（headless） |
+| Performance スコア（全回） | 98、98、98（3 回。FCP 1.8〜1.9 s、LCP 2.0 s、TBT 40〜60 ms、CLS 0、Speed Index 1.8〜1.9 s） |
+| JSON・HTML レポートの保存先 | JSON は `docs/04_test/lighthouse-it03/run1.json`〜`run3.json`（Prettier で整形）。HTML は JSON から作り直せるので保存していない |
+| 観測事項・前回との差 | 初回の計測。DevTools での計測ではなく、実機でもない。保存データの多い状態は測っていない |
 
 ## 操作時間の記録と実機相当の確認
 
