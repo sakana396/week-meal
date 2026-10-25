@@ -57,7 +57,11 @@ npm run test:e2e -- --project=performance --workers=1 --output=test-results/perf
 
 ### 添付 JSON と実機相当条件
 
-`test-results/` の添付 JSON に全測定値・操作別最大値・環境・コミット・候補件数・初期生成・差分準備と全候補計算の時間・判定後から候補反映までの時間・予算超過量を残す。登録画面を開く時間は Playwright の画面待機と通信を含む補助的な経過時間で、NFR-03 のクリック受信からの時間とは分ける。判定文言が変わらない試料でも revision の更新で完了を確認する。候補計算は UI の PerformanceMeasure、判定と候補反映は E2E が注入する MutationObserver で記録する。CI artifact は成功時も保存する。
+各 JSON は `testInfo.outputPath(ファイル名)` に UTF-8 で書き出してから `attach(name, { path })` で添付する。上記コマンドでは `test-results/performance/<テスト別ディレクトリ>/performance.json` に全測定値・操作別最大値・環境・コミット・作業差分の有無・GitHub の実行情報・候補件数・初期生成・差分準備と全候補計算の時間・判定後から候補反映までの時間・予算超過量を残す。登録画面を開く時間は Playwright の画面待機と通信を含む補助的な経過時間で、NFR-03 のクリック受信からの時間とは分ける。判定文言が変わらない試料でも revision の更新で完了を確認する。候補計算は UI の PerformanceMeasure、判定と候補反映は E2E が注入する MutationObserver で記録する。判定文言が変わらない試料の結果は `test-results/performance/<テスト別ディレクトリ>/unchanged-judgment.json` に残る。`performance.json` の `commit` は `git rev-parse HEAD`、`workingTreeDirty` は `git status --porcelain` が空でなければ `true`。`githubSha` と `githubHeadRef` は環境変数 `GITHUB_SHA`・`GITHUB_HEAD_REF` の値（未設定なら `null`）を記録する。pull_request の CI の HEAD はマージコミットになるため、これらを併せて読む。
+
+axe の全結果（軽微な違反・判定保留を含む）は `test-results/functional/<テスト別ディレクトリ>/axe-<状態名>.json` に残る。状態名は `home-candidates`、`home-removal`、`register-collapsed`、`register-draft`、`register-remembered`、`balance`、`settings`、`foods`、`food-detail`。`--output` を省略したローカル実行では、いずれも `test-results/<テスト別ディレクトリ>/` の下に同名ファイルを残す。別々の呼び出しで両方の記録を保持するには、上記のように出力先を分ける。
+
+CI の upload 手順は `if: always()` で `test-results/` を artifact `playwright-results` として収集する設定。修正後の E2E 実行と CI artifact 内のファイルの確認は Claude Code が行うため、本修正時点では未確認。
 
 CPU 4 倍は比較条件であり、中位スマートフォン相当の認定ではない。反復末に本人の端末、または本人・レビュアーと合意した端末と条件で同じ固定試料・4 操作・各 5 回を測り、次の様式で CI と別に記録する。実機ではブラウザ内の click capture・revision 監視・2 回の requestAnimationFrame の測定方式を維持する。専用 project を接続先の実機ブラウザで実行する場合は接続方法・画面幅・CPU 設定も記録する。端末や接続方法により実行できない場合は達成を未確認とし、CI の値で代用しない。
 
@@ -72,3 +76,5 @@ CPU 4 倍は比較条件であり、中位スマートフォン相当の認定�
 | JSON・観測事項 | |
 
 CI では時間の超過だけでは失敗にしない。revision 未更新、不整合、例外、計測不能は失敗とする。候補計算の 50 ms と候補反映の 100 ms は診断予算であり、NFR-03 の 100 ms と区別して内訳を査閲する。端末条件が合意できない場合、NFR-03 の達成は未確認として振り返りに残す。
+
+予算を超える回があり得る。超えた回は記録に残る。PR #73 のレビュアーからは、30 行・CPU 4 倍の候補登録で候補計算が 1 回 57.8 ms（50 ms の予算を 7.8 ms 超過）だったとの報告がある。時間超過は記録のみとする条件は変えない。

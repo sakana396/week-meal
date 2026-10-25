@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import os from "node:os";
 import { initialAppState, type AppState } from "../src/core/basket";
 import { nutrientDefinitions } from "../src/data/nutrients";
@@ -136,7 +137,7 @@ async function arm(page: Page, trackCandidates = false) {
 
 for (const size of [3, 30, 100]) {
   for (const rate of [1, 4]) {
-    test(`TC-NFR-03-01 TC-NFR-03-02 TC-NFR-03-03 ${size}行 CPU${rate}倍の判定と候補を計測`, async ({
+    test(`TC-NFR-03-01${size === 100 && rate === 4 ? " TC-NFR-03-03" : ""} ${size}行 CPU${rate}倍の判定と候補を計測`, async ({
       page,
       browser,
     }, testInfo) => {
@@ -151,6 +152,12 @@ for (const size of [3, 30, 100]) {
         commit: execFileSync("git", ["rev-parse", "HEAD"], {
           encoding: "utf8",
         }).trim(),
+        workingTreeDirty:
+          execFileSync("git", ["status", "--porcelain"], {
+            encoding: "utf8",
+          }).trim().length > 0,
+        githubSha: process.env.GITHUB_SHA ?? null,
+        githubHeadRef: process.env.GITHUB_HEAD_REF ?? null,
         environment: {
           os: `${os.platform()} ${os.release()}`,
           cpu: os.cpus()[0]?.model,
@@ -346,8 +353,10 @@ for (const size of [3, 30, 100]) {
           );
         }
       } finally {
+        const path = testInfo.outputPath("performance.json");
+        writeFileSync(path, JSON.stringify(report, null, 2), "utf8");
         await testInfo.attach("performance.json", {
-          body: JSON.stringify(report, null, 2),
+          path,
           contentType: "application/json",
         });
         await cdp.detach();
@@ -383,8 +392,10 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
   console.log(
     `[performance:unchanged-judgment] ${JSON.stringify({ rows: 3, cpuRate: 1, operation: "increment", ...result })}`,
   );
+  const path = testInfo.outputPath("unchanged-judgment.json");
+  writeFileSync(path, JSON.stringify(result, null, 2), "utf8");
   await testInfo.attach("unchanged-judgment.json", {
-    body: JSON.stringify(result),
+    path,
     contentType: "application/json",
   });
 });

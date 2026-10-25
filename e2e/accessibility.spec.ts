@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { writeFileSync } from "node:fs";
 import {
   expect,
   test,
@@ -18,8 +19,10 @@ const panel = (page: Page) =>
 /** 重大な違反を必須条件にし、全違反と判定保留を添付する（DES-E2E-07）。 */
 async function inspect(page: Page, info: TestInfo, state: string) {
   const result = await new AxeBuilder({ page }).analyze();
+  const path = info.outputPath(`axe-${state}.json`);
+  writeFileSync(path, JSON.stringify(result, null, 2), "utf8");
   await info.attach(`axe-${state}.json`, {
-    body: JSON.stringify(result, null, 2),
+    path,
     contentType: "application/json",
   });
   expect(
