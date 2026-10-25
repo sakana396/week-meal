@@ -1,5 +1,6 @@
 import type { FoodItem } from "../types";
 import type { RegisteredItem } from "./analyze";
+import type { ManualFood } from "./manualFoods";
 import { defaultProfile, type Profile } from "./profile";
 
 /** 登録した食材 1 行（DES-BSK） */
@@ -18,7 +19,7 @@ export type BasketEntry = {
 /** 画面の状態のうち、保存するもの（DES-BSK、ADR-0004） */
 export type AppState = {
   items: BasketEntry[];
-  manualFoods: FoodItem[];
+  manualFoods: ManualFood[];
   profile: Profile;
 };
 
@@ -28,7 +29,7 @@ export type BasketAction =
   | { type: "decrement"; id: string }
   | { type: "toggleUsedUp"; id: string }
   | { type: "remove"; id: string }
-  | { type: "addManualFood"; food: FoodItem; displayName: string; id: string }
+  | { type: "addManualFood"; food: ManualFood; displayName: string; id: string }
   | { type: "setProfile"; profile: Profile }
   | { type: "replace"; state: AppState };
 
@@ -113,12 +114,8 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
       const target = state.items.find((item) => item.id === action.id);
       if (!target) return state;
       const items = state.items.filter((item) => item.id !== action.id);
-      // 手入力の食品は、ほかの行から参照されていなければ一緒に消す（DES-BSK-04）
-      const stillUsed = items.some((item) => item.foodId === target.foodId);
-      const manualFoods = stillUsed
-        ? state.manualFoods
-        : state.manualFoods.filter((food) => food.id !== target.foodId);
-      return { ...state, items, manualFoods };
+      // 登録行を削除しても再登録用の台帳は残す（DES-MAN-01）。
+      return { ...state, items };
     }
     case "addManualFood": {
       const withFood = state.manualFoods.some(

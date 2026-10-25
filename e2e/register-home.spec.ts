@@ -238,6 +238,11 @@ test("TC-NFR-12-33 退避できない保存データは上書きせず知らせ�
   await page.goto("/#/");
   await expect(page.getByText(/退避もできませんでした/)).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
+  await openTab(page, "登録");
+  await registerFood(page, "にんじん");
+  await openTab(page, "ホーム");
+  await expect(itemRow(page, "にんじん")).toBeVisible();
+  await expect(page.getByText(/退避もできませんでした/)).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("weekmeal:state")),
   ).toBe("{壊れた");
