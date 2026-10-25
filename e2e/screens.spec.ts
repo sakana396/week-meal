@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openTab, registerFoods } from "./helpers";
+import { itemRow, openTab, registerFoods } from "./helpers";
 
 test("TC-FR-UI-05-08 2 品目では、栄養詳細はまだ判定できない旨と登録への入口を出す", async ({
   page,
@@ -51,10 +51,17 @@ test("TC-FR-STP-05-01 初めて開いたときの設定は、ご飯・中盛り�
   }
 });
 
-test("TC-FR-STP-01-02 設定を変えると、判定の主食の注記に反映される", async ({
+test("TC-FR-STP-01-02 主食と属性の設定を栄養詳細とホームの判定に反映し保存する", async ({
   page,
 }) => {
   await registerFoods(page, ["キャベツ", "にんじん", "豚肉"]);
+  // 固定試料（06061・06212・11115、各 1 単位）は、ご飯では炭水化物が適正、パン・大盛りでは不足。
+  await openTab(page, "ホーム");
+  const carbohydrate = page
+    .getByRole("region", { name: "栄養バランスの判定" })
+    .getByRole("listitem")
+    .filter({ hasText: "炭水化物" });
+  await expect(carbohydrate).toHaveCount(0);
   const iron = page
     .getByRole("region", { name: "判定する栄養素" })
     .locator(".detail-row")
@@ -68,6 +75,9 @@ test("TC-FR-STP-01-02 設定を変えると、判定の主食の注記に反映�
     .getByRole("group", { name: "盛り" })
     .getByRole("button", { name: "大盛り" })
     .click();
+  await openTab(page, "ホーム");
+  await expect(carbohydrate).toHaveText("不足炭水化物");
+  await expect(carbohydrate).toHaveAttribute("data-status", "low");
   await openTab(page, "詳細");
   const before = await iron.locator("small").innerText();
   await openTab(page, "設定");
@@ -115,6 +125,7 @@ test("TC-FR-STP-01-02 設定を変えると、判定の主食の注記に反映�
   await expect(
     page.getByText("主食はパン・大盛りとして計算しています"),
   ).toBeVisible();
+  await expect(carbohydrate).toHaveText("不足炭水化物");
 });
 
 test("TC-FR-STP-01-03 主食なしでは盛りを選べず、主食を戻すと前の盛りに戻る", async ({
@@ -269,9 +280,12 @@ test("TC-IF-02-01 モバイルのタップで登録から設定まで操作で�
     .getByRole("navigation", { name: "主要画面" })
     .getByRole("button", { name: "ホーム" })
     .tap();
+  const cabbage = itemRow(page, "キャベツ");
+  await expect(cabbage).toHaveCount(1);
+  await expect(cabbage.getByText("キャベツ", { exact: true })).toBeVisible();
   await expect(
-    page.getByText("キャベツ", { exact: true }).first(),
-  ).toBeVisible();
+    cabbage.getByRole("group", { name: "キャベツの個数" }),
+  ).toHaveText("−1 玉＋");
   await page
     .getByRole("navigation", { name: "主要画面" })
     .getByRole("button", { name: "設定" })
