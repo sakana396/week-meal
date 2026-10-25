@@ -126,3 +126,20 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     });
   });
 });
+
+it.each([
+  { version: 99, items: [] },
+  { version: 1, items: "不正" },
+  { version: 2, items: "不正" },
+])("TC-NFR-13-14 全体不正な保存データは原文のまま退避する（%j）", (stored) => {
+  const text = JSON.stringify(stored);
+  const store = memoryStore({ [storageKey]: text });
+  expect(loadAppState({ store, writable: true }, known)).toMatchObject({
+    state: initialAppState,
+    issue: "corrupted",
+    available: true,
+    backedUp: true,
+  });
+  expect(store.data[backupKey]).toBe(text);
+  expect(store.data[storageKey]).toBe(text);
+});

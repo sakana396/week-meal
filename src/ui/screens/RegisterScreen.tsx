@@ -11,6 +11,7 @@ import {
   supermarketPriority,
   type FoodGroup,
 } from "../../core/catalog";
+import { manualFoodShelf } from "../../core/manualFoods";
 import { foodShelf, type FoodShelf } from "../../data/foodShelves";
 import {
   basicNutrientDefinitions,
@@ -129,6 +130,35 @@ export function RegisterScreen({
           }),
     [filteredFoods, query, mode],
   );
+
+  // 台帳は新しい順のまま全件を対象とし、通常食品の表示上限に含めない（DES-UI-43）。
+  const rememberedFoods = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query);
+    const counts = new Map<string, number>();
+    const totals = new Map<string, number>();
+    const keyFor = (food: FoodItem) =>
+      JSON.stringify([food.name, manualFoodShelf(food) ?? "その他"]);
+    for (const food of state.manualFoods) {
+      const key = keyFor(food);
+      totals.set(key, (totals.get(key) ?? 0) + 1);
+    }
+    return state.manualFoods
+      .map((food) => {
+        const key = keyFor(food);
+        const number = (counts.get(key) ?? 0) + 1;
+        counts.set(key, number);
+        return {
+          food,
+          shelf: manualFoodShelf(food) ?? "その他",
+          number: (totals.get(key) ?? 0) > 1 ? number : null,
+        };
+      })
+      .filter(
+        ({ food, shelf }) =>
+          (category === "すべて" || shelf === category) &&
+          normalizeSearchText(food.name).includes(normalizedQuery),
+      );
+  }, [state.manualFoods, category, query]);
 
   const visibleGroups = groups.slice(0, maxVisibleFoods);
   const visibleDetailedFoods = detailedFoods.slice(0, maxVisibleFoods);
@@ -345,6 +375,36 @@ export function RegisterScreen({
             <span>検索語や棚を変えるか、下の手入力で追加してください。</span>
           </div>
         )}
+      </section>
+
+      <section className="section-stack" aria-label="覚えた食材">
+        <div className="section-heading">
+          <h3>覚えた食材</h3>
+          <p>{rememberedFoods.length} 種類</p>
+        </div>
+        <div className="ingredient-name-list">
+          {rememberedFoods.map(({ food, shelf, number }) => (
+            <button
+              className="ingredient-name-button"
+              key={food.id}
+              type="button"
+              onClick={() =>
+                register({
+                  type: "register",
+                  id: localId("item"),
+                  foodId: food.id,
+                  displayName: food.name,
+                })
+              }
+            >
+              <strong>
+                {food.name}
+                {number !== null ? `（${number}）` : ""}
+              </strong>
+              <small>手入力 / {shelf}</small>
+            </button>
+          ))}
+        </div>
       </section>
 
       <form className="section-stack" onSubmit={addManualFood}>
