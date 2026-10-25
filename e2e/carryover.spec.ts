@@ -81,12 +81,24 @@ test("TC-FR-ING-04-06 未検索ではよくある食材が先でそれ以外も�
   await expect(list.locator(".common-food-badge")).toHaveCount(0);
 });
 
-// 同梱データを foodPresentation・groupFoods・representativeFood に通して確認。
+// 代表食品は実装時に関数の出力で確認（自動テストではない）。
 // まぐろ: 10252 / 缶詰10260（魚）、はくさい: 06233（野菜）/ 漬物06236（豆腐・納豆）。
 // キャベツの漬物は同梱データにないため、漬物の検証にははくさいを使う。
-for (const [query, names] of [
-  ["まぐろ", ["まぐろ", "まぐろ（缶詰）"]],
-  ["はくさい", ["はくさい", "はくさいの漬物"]],
+for (const [query, entries] of [
+  [
+    "まぐろ",
+    [
+      ["まぐろ", "魚", "さく"],
+      ["まぐろ（缶詰）", "魚", "缶"],
+    ],
+  ],
+  [
+    "はくさい",
+    [
+      ["はくさい", "野菜", "1/4株"],
+      ["はくさいの漬物", "豆腐・納豆", "パック"],
+    ],
+  ],
 ] as const) {
   test(`TC-FR-ING-06-21 ${query}と加工品を別名で表示し別行で登録する`, async ({
     page,
@@ -96,7 +108,26 @@ for (const [query, names] of [
       .getByRole("searchbox", { name: "食材名", exact: true })
       .fill(query);
     const list = page.getByLabel("食材名一覧", { exact: true });
-    for (const name of names) {
+    const shelves = page.getByRole("group", { name: "スーパーの棚を選択" });
+    // 検索だけでも通常名と加工品が別ボタンで表示される。
+    for (const [name] of entries) {
+      await expect(list.getByText(name, { exact: true })).toBeVisible();
+    }
+    for (const [name, shelf] of entries) {
+      await shelves.getByRole("button", { name: shelf, exact: true }).click();
+      await expect(
+        shelves.getByRole("button", { name: shelf, exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
+      for (const [candidate, candidateShelf] of entries) {
+        const button = list.getByRole("button").filter({
+          has: page.getByText(candidate, { exact: true }),
+        });
+        if (candidateShelf === shelf) {
+          await expect(button).toBeVisible();
+        } else {
+          await expect(button).toHaveCount(0);
+        }
+      }
       await list
         .getByRole("button")
         .filter({ has: page.getByText(name, { exact: true }) })
@@ -106,11 +137,11 @@ for (const [query, names] of [
       );
     }
     await openTab(page, "ホーム");
-    for (const name of names) {
+    for (const [name, , unit] of entries) {
       await expect(itemRow(page, name)).toHaveCount(1);
       await expect(
         itemRow(page, name).getByRole("group", { name: `${name}の個数` }),
-      ).toContainText("1");
+      ).toHaveText(`−1 ${unit}＋`);
     }
   });
 }
@@ -208,7 +239,9 @@ test("TC-FR-NUT-05-04 一部欠損と全欠損と明示のゼロをホームと�
   await expect(panel).toContainText(
     "一部の食材にビタミンCのデータがないため、データのある食材だけで判定しています。",
   );
-  await expect(panel).toContainText("はデータがなく判定できません。");
+  await expect(
+    panel.locator("p").filter({ hasText: "はデータがなく判定できません。" }),
+  ).toContainText(/ビタミンD.*はデータがなく判定できません。/);
   await expect(
     panel.getByRole("listitem").filter({ hasText: "ビタミンD" }),
   ).toHaveCount(0);

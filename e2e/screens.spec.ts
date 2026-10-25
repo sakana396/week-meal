@@ -61,6 +61,14 @@ test("TC-FR-STP-01-02 主食と属性の設定を栄養詳細とホームの判�
     .getByRole("region", { name: "栄養バランスの判定" })
     .getByRole("listitem")
     .filter({ hasText: "炭水化物" });
+  await openTab(page, "詳細");
+  await expect(
+    page
+      .getByRole("region", { name: "判定する栄養素" })
+      .locator(".detail-row")
+      .filter({ has: page.getByText("炭水化物", { exact: true }) }),
+  ).toHaveAttribute("data-status", "ok");
+  await openTab(page, "ホーム");
   await expect(carbohydrate).toHaveCount(0);
   const iron = page
     .getByRole("region", { name: "判定する栄養素" })
