@@ -36,15 +36,16 @@ export function HomeScreen({
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
-  const previousRemoval = useRef<PendingRemoval | null>(null);
+  const previousRemoval = useRef<PendingRemoval | null>(pendingRemoval);
 
   // 削除後は取り消しへ、復元時だけ戻った行へ移す（DES-UI-45）。
+  // 初回表示に残る取り消しは新たな削除ではないため、画面移動のフォーカスを保つ。
   // 候補登録で取り消しが失効した場合は、候補見出しのフォーカスを保つ。
   useLayoutEffect(() => {
     const previous = previousRemoval.current;
-    if (pendingRemoval) {
+    if (pendingRemoval && pendingRemoval !== previous) {
       undoRef.current?.focus();
-    } else if (previous) {
+    } else if (!pendingRemoval && previous) {
       const row = Array.from(listRef.current?.children ?? []).find(
         (element) =>
           element.getAttribute("data-entry-id") === previous.entry.id,
@@ -107,10 +108,13 @@ export function HomeScreen({
       )}
       {pendingRemoval && (
         <div className="section-stack">
-          <p role="status">{pendingRemoval.entry.displayName}を削除しました</p>
+          <p id="removal-message" role="status">
+            {pendingRemoval.entry.displayName}を削除しました
+          </p>
           <button
             className="link-button"
             ref={undoRef}
+            aria-describedby="removal-message"
             onClick={() => dispatch({ type: "undoRemove" })}
             type="button"
           >
