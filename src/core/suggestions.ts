@@ -1,4 +1,5 @@
 import type { FoodItem, NutrientKey } from "../types";
+import { foodShelf, type FoodShelf } from "../data/foodShelves";
 import {
   defaultAnalysisData,
   minimumItemCount,
@@ -104,7 +105,7 @@ function excess(result: BalanceResult): number {
   return round(excessRatio(result) ?? 0);
 }
 
-/** 元の合計を一度求め、各候補の増分と主食だけを足して評価する（DES-SUG-01〜03）。 */
+/** 元の合計を一度求め、各候補の増分と主食だけを足して評価する（DES-SUG-01〜04）。 */
 export function suggestSupplements(
   state: AppState,
   foodsById: ReadonlyMap<string, FoodItem>,
@@ -163,8 +164,11 @@ export function suggestSupplements(
     }
     if (!names.has(item.displayName)) names.set(item.displayName, item);
   }
-  const evaluated: { suggestion: SupplementSuggestion; priority: number }[] =
-    [];
+  const evaluated: {
+    suggestion: SupplementSuggestion;
+    priority: number;
+    shelf: FoodShelf;
+  }[] = [];
   for (const candidate of candidates) {
     const { food, displayName, priority } = candidate;
     if (!((food.nutrientsPer100g.energyKcal ?? 0) > 0)) continue;
@@ -226,24 +230,39 @@ export function suggestSupplements(
         suggestion.worsenedHighKeys.push(next.key);
     }
     suggestion.improvement = round(suggestion.improvement);
-    if (suggestion.improvement > 0) evaluated.push({ suggestion, priority });
+    if (suggestion.improvement > 0)
+      evaluated.push({ suggestion, priority, shelf: foodShelf(food) });
   }
-  return evaluated
-    .sort(
-      (a, b) =>
-        Number(a.suggestion.newHighKeys.length > 0) -
-          Number(b.suggestion.newHighKeys.length > 0) ||
-        a.suggestion.newLowKeys.length - b.suggestion.newLowKeys.length ||
-        a.suggestion.worsenedHighKeys.length -
-          b.suggestion.worsenedHighKeys.length ||
-        b.suggestion.improvement - a.suggestion.improvement ||
-        a.priority - b.priority ||
-        (a.suggestion.foodId < b.suggestion.foodId
-          ? -1
-          : a.suggestion.foodId > b.suggestion.foodId
-            ? 1
-            : 0),
-    )
-    .slice(0, 3)
-    .map(({ suggestion }) => suggestion);
+  const ranked = evaluated.sort(
+    (a, b) =>
+      Number(a.suggestion.newHighKeys.length > 0) -
+        Number(b.suggestion.newHighKeys.length > 0) ||
+      a.suggestion.newLowKeys.length - b.suggestion.newLowKeys.length ||
+      a.suggestion.worsenedHighKeys.length -
+        b.suggestion.worsenedHighKeys.length ||
+      b.suggestion.improvement - a.suggestion.improvement ||
+      a.priority - b.priority ||
+      (a.suggestion.foodId < b.suggestion.foodId
+        ? -1
+        : a.suggestion.foodId > b.suggestion.foodId
+          ? 1
+          : 0),
+  );
+  /** 旧順位と安全性を保ち、直前と異なる棚を同じ安全性キー内で選ぶ（DES-SUG-04）。 */
+  const selected: SupplementSuggestion[] = [];
+  let previousShelf: FoodShelf | null = null;
+  while (ranked.length > 0 && selected.length < 3) {
+    const baseline = ranked[0].suggestion;
+    const alternateIndex = ranked.findIndex(
+      ({ suggestion, shelf }) =>
+        shelf !== previousShelf &&
+        suggestion.newHighKeys.length > 0 === baseline.newHighKeys.length > 0 &&
+        suggestion.newLowKeys.length === baseline.newLowKeys.length &&
+        suggestion.worsenedHighKeys.length === baseline.worsenedHighKeys.length,
+    );
+    const [chosen] = ranked.splice(alternateIndex < 0 ? 0 : alternateIndex, 1);
+    selected.push(chosen.suggestion);
+    previousShelf = chosen.shelf;
+  }
+  return selected;
 }
