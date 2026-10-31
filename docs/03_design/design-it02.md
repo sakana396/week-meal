@@ -8,7 +8,7 @@
 - 根拠: [SRS-001 v0.3](../02_requirements/srs.md)、[DES-IT01](design-it01.md)、[ADR-0004](../adr/0004-storage.md)、[REV-013](../reviews/REV-013-it02-decisions.md)
 - 取り込んだ文書: 画面設計メモ（旧 docs/screen-design.md）と画面遷移図（旧 docs/screen-flow.md）。内容は本書の 3・6 章に取り込み、メモは削除した（E-45）
 
-> IT04 注記（2026-10-31）: 本文の DES-BSK-01 の使い切った行再利用、DES-BSK-03、DES-BSK-06〜07 の `usedUp`、DES-STO-04 の `usedUp` 検査、DES-UI-20, 40 の使い切った表示、DES-E2E-03 の使い切った操作は、[DES-IT04](design-it04.md) の DES-SHP-01〜03、DES-STO-10〜11、DES-UI-46〜48、DES-E2E-10 で置き換える。本文は IT02 時点の記録として残す。
+> IT04 注記（2026-10-31）: 本文の DES-BSK-01 の使い切った行再利用、DES-BSK-02〜04, 06〜08 の行操作と `usedUp`、DES-STO-04 の `usedUp` 検査、DES-UI-10, 20, 21, 40 の経路・登録先と使い切った表示、DES-E2E-03 の使い切った操作は、[DES-IT04](design-it04.md) の DES-SHP-01〜03、DES-STO-10〜11、DES-UI-46〜48、DES-E2E-10 で置き換える。本文は IT02 時点の記録として残す。
 
 ## 1. 構成
 

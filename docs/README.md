@@ -24,7 +24,7 @@
 | 反復 | 反復 4（買い物の単位と公開）計画書 | [iterations/it04/plan.md](iterations/it04/plan.md) | v0.2 |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
-| 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.1 設計案 |
+| 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
 | 設計 | 保存方式 ADR | [adr/0004-storage.md](adr/0004-storage.md) | 採用 |
 | 設計 | 補う候補の選び方 ADR | [adr/0005-supplement-suggestions.md](adr/0005-supplement-suggestions.md) | 採用 |
 | 試験 | テスト仕様書（反復 2） | [04_test/test-spec-it02.md](04_test/test-spec-it02.md) | 追記中 |
