@@ -6,6 +6,8 @@
 - 対象: [反復 1 計画書](../iterations/it01/plan.md) の範囲
 - 根拠: [SRS-001](../02_requirements/srs.md)、[ADR-0001](../adr/0001-tech-stack.md)、[ADR-0002](../adr/0002-food-data.md)、[ADR-0003](../adr/0003-balance-calculation.md)
 
+> IT04 注記（2026-10-31）: 本文の DES-ANL-01 にある `usedUp` 除外と `RegisteredItem.usedUp` は、[DES-IT04](design-it04.md) の DES-SHP-03 で置き換える。換算・集計・判定の規則は継続する。
+
 ## 1. アーキテクチャ
 
 ### 1.1 パッケージ構成（DES-PKG）
