@@ -50,15 +50,35 @@ export default function App() {
     revision: 0,
   });
   const state = session.appState;
-  const [location, navigate] = useHashRoute();
+  const [location, navigate, replaceRoute] = useHashRoute();
   const { route, shoppingId, invalidShopping } = location;
-  const [routeNotice, setRouteNotice] = useState("");
+  const [routeNotice, setRouteNotice] = useState<{
+    text: string;
+    route: typeof route;
+    shoppingId?: string;
+  } | null>(null);
+  const visibleRouteNotice =
+    routeNotice?.route === route &&
+    routeNotice.shoppingId === (shoppingId ?? undefined)
+      ? routeNotice.text
+      : "";
   const previousRoute = useRef(location);
   useEffect(() => {
     if (previousRoute.current !== location)
       dispatch({ type: "clearPendingRemoval" });
+    if (
+      previousRoute.current !== location &&
+      routeNotice?.route === previousRoute.current.route &&
+      routeNotice.shoppingId ===
+        (previousRoute.current.shoppingId ?? undefined) &&
+      (routeNotice.route !== route ||
+        routeNotice.shoppingId !== (shoppingId ?? undefined))
+    )
+      queueMicrotask(() =>
+        setRouteNotice((current) => (current === routeNotice ? null : current)),
+      );
     previousRoute.current = location;
-  }, [location]);
+  }, [location, routeNotice, route, shoppingId]);
   useEffect(() => {
     if (
       route !== "register" ||
@@ -68,8 +88,8 @@ export default function App() {
     )
       return;
     const latest = latestShopping(state.shoppings);
-    if (latest) navigate("register", latest.id);
-  }, [route, shoppingId, state.shoppings, invalidShopping, navigate]);
+    if (latest) replaceRoute("register", latest.id);
+  }, [route, shoppingId, state.shoppings, invalidShopping, replaceRoute]);
   useEffect(() => {
     if (
       !invalidShopping &&
@@ -80,10 +100,13 @@ export default function App() {
     )
       return;
     queueMicrotask(() => {
-      setRouteNotice("指定した買い物が見つかりません");
-      navigate("history");
+      setRouteNotice({
+        text: "指定した買い物が見つかりません",
+        route: "history",
+      });
+      replaceRoute("history");
     });
-  }, [invalidShopping, shoppingId, state.shoppings, navigate]);
+  }, [invalidShopping, shoppingId, state.shoppings, replaceRoute]);
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
   useEffect(() => {
@@ -116,11 +139,14 @@ export default function App() {
     const next = basketReducer(state, { type: "createShopping", id, date });
     if (next === state) return;
     const latest = latestShopping(next.shoppings);
-    setRouteNotice(
-      latest?.id === id
-        ? "ホームの対象が新しい買い物に変わりました"
-        : "この買い物は最新ではありません",
-    );
+    setRouteNotice({
+      text:
+        latest?.id === id
+          ? "ホームの対象が新しい買い物に変わりました"
+          : "この買い物は最新ではありません",
+      route: "historyDetail",
+      shoppingId: id,
+    });
     dispatch({ type: "createShopping", id, date });
     navigate("historyDetail", id);
   }
@@ -135,11 +161,14 @@ export default function App() {
     });
     if (next === state) return;
     dispatch({ type: "setShoppingDate", shoppingId: id, date });
-    setRouteNotice(
-      before !== latestShopping(next.shoppings)?.id
-        ? "ホームの対象が変わりました"
-        : "買い物の日付を変更しました",
-    );
+    setRouteNotice({
+      text:
+        before !== latestShopping(next.shoppings)?.id
+          ? "ホームの対象が変わりました"
+          : "買い物の日付を変更しました",
+      route: route === "home" ? "home" : "historyDetail",
+      shoppingId: route === "home" ? undefined : id,
+    });
   }
 
   const selectedShopping = state.shoppings.find(
@@ -183,7 +212,7 @@ export default function App() {
             pendingRemoval={session.pendingRemoval}
             onCreateShopping={createShopping}
             onDateChange={changeShoppingDate}
-            routeNotice={routeNotice}
+            routeNotice={visibleRouteNotice}
           />
         )}
         {route === "register" && (
@@ -192,13 +221,18 @@ export default function App() {
             state={state}
             shoppingId={shoppingId}
             navigate={navigate}
+            replaceRoute={replaceRoute}
           />
         )}
         {route === "history" && (
           <div className="screen-stack">
             <h2>買い物の履歴</h2>
-            {routeNotice && <p role="status">{routeNotice}</p>}
-            <button type="button" onClick={() => navigate("home")}>
+            {visibleRouteNotice && <p role="status">{visibleRouteNotice}</p>}
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => navigate("home")}
+            >
               ホームへ戻る
             </button>
           </div>
@@ -210,13 +244,13 @@ export default function App() {
             analysis={selectedAnalysis}
             profile={state.profile}
             navigate={navigate}
-            notice={routeNotice}
+            notice={visibleRouteNotice}
             onDateChange={changeShoppingDate}
           />
         )}
         {route === "balance" && (
           <BalanceDetailScreen
-            analysis={analysis}
+            analysis={selectedAnalysis}
             navigate={navigate}
             profile={state.profile}
           />

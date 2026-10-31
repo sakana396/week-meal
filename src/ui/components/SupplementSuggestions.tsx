@@ -55,6 +55,7 @@ export function SupplementSuggestions({
   const interactionLocked = useRef(false);
   const pending = useRef<CandidateView | null>(null);
   const committedRevision = useRef(revision);
+  const registrationRevision = useRef<number | null>(null);
   const registrationPoint = useRef<{ x: number; y: number } | null>(null);
   const hasLow =
     analysis.kind === "judged" &&
@@ -71,6 +72,14 @@ export function SupplementSuggestions({
     if (!locked) return;
     heading.current?.focus({ preventScroll: true });
   }, [locked]);
+
+  // 登録で状態が変わらない場合も、次の計算結果を待たず固定を解く（DES-UI-42）。
+  useLayoutEffect(() => {
+    if (!locked || registrationRevision.current !== revision) return;
+    interactionLocked.current = false;
+    setLocked(false);
+    setHeight(undefined);
+  }, [locked, revision]);
 
   // 再配置で pointerleave が発生しても固定を解かない。実際の欄外移動で解く。
   useEffect(() => {
@@ -149,6 +158,7 @@ export function SupplementSuggestions({
   function register(suggestion: SupplementSuggestion) {
     if (interactionLocked.current || calculating) return;
     // React の再描画を待たず、同じ位置への連続イベントも止める。
+    registrationRevision.current = revision;
     interactionLocked.current = true;
     pending.current = null;
     setLocked(true);
@@ -199,6 +209,9 @@ export function SupplementSuggestions({
       }}
       onPointerEnter={(event) => {
         if (event.pointerType !== "touch") pointerInside.current = true;
+      }}
+      onPointerLeave={() => {
+        if (!interactionLocked.current) pointerInside.current = false;
       }}
       onBlur={(event) => {
         if (

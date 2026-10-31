@@ -68,6 +68,13 @@ test("TC-FR-NUT-07-01 ホームと買い物詳細はそれぞれの食材だけ�
   await expect(itemRow(page, "にんじん")).toHaveCount(0);
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
   await expect(page.getByText("判定にはあと少し食材が必要です")).toBeVisible();
+  await page.goto(`#/balance?shopping=${firstId}`);
+  await expect(
+    page.getByRole("heading", { name: "まだ判定できません" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "判定する栄養素（14 種）" }),
+  ).toBeVisible();
   await page.goto(`#/history/${firstId}`);
   await expect(page.getByText("にんじん", { exact: false })).toBeVisible();
   await expect(
@@ -91,4 +98,49 @@ test("TC-FR-NUT-07-01 ホームと買い物詳細はそれぞれの食材だけ�
       .getByRole("status")
       .filter({ hasText: "指定した買い物が見つかりません" }),
   ).toBeVisible();
+});
+
+test("TC-FR-ING-17-04 初回登録後に戻るとホームへ出られる", async ({ page }) => {
+  await page.goto("#/");
+  await page.getByRole("button", { name: "食材を登録" }).click();
+  await expect(page).toHaveURL(/#\/register$/);
+  await registerFood(page, "にんじん");
+  await expect(page).toHaveURL(/#\/register\?shopping=shopping-/);
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(itemRow(page, "にんじん")).toHaveCount(1);
+});
+
+test("TC-FR-UI-02-05 不明 ID の通知は履歴を離れると消える", async ({
+  page,
+}) => {
+  await page.goto("#/");
+  await page.goto("#/register?shopping=missing");
+  await expect(page).toHaveURL(/#\/history$/);
+  await expect(page.getByText("指定した買い物が見つかりません")).toBeVisible();
+  await page.getByRole("button", { name: "ホームへ戻る" }).click();
+  await expect(page.getByText("指定した買い物が見つかりません")).toHaveCount(0);
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/history$/);
+  await expect(page.getByText("指定した買い物が見つかりません")).toHaveCount(0);
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/$/);
+});
+
+test("TC-FR-ING-17-05 新しい買い物の通知は詳細を離れると消える", async ({
+  page,
+}) => {
+  await page.goto("#/");
+  await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(
+    page.getByText("ホームの対象が新しい買い物に変わりました"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "ホームへ戻る" }).click();
+  await expect(
+    page.getByText("ホームの対象が新しい買い物に変わりました"),
+  ).toHaveCount(0);
+  await page.goBack();
+  await expect(
+    page.getByText("ホームの対象が新しい買い物に変わりました"),
+  ).toHaveCount(0);
 });

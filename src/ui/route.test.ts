@@ -26,7 +26,9 @@ describe("routeFromHash（DES-UI-10）", () => {
   it.each([
     ["#/register?shopping=shopping-1", "register", "shopping-1"],
     ["#/history/shopping-1", "historyDetail", "shopping-1"],
-  ])("TC-FR-ING-17-03 %s の買い物 ID を解析する", (hash, route, shoppingId) => {
+    ["#/register?shopping=shopping%20one", "register", "shopping one"],
+    ["#/history/shopping%20one", "historyDetail", "shopping one"],
+  ])("TC-FR-UI-02-04 %s の買い物 ID を解析する", (hash, route, shoppingId) => {
     expect(routeFromHash(hash)).toEqual({
       route,
       shoppingId,
@@ -38,7 +40,9 @@ describe("routeFromHash（DES-UI-10）", () => {
     "#/register?shopping=",
     "#/register?shopping=a&shopping=b",
     "#/history/",
-  ])("TC-FR-ING-17-03 不正な対象 %s を検出する", (hash) => {
+    "#/history/%ZZ",
+    "#/history/a%2Fb",
+  ])("TC-FR-UI-02-04 不正な対象 %s を検出する", (hash) => {
     expect(routeFromHash(hash).invalidShopping).toBe(true);
   });
 });

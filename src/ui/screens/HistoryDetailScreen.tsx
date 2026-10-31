@@ -31,7 +31,7 @@ export function HistoryDetailScreen({
         </div>
       </header>
       {notice && <p role="status">{notice}</p>}
-      <label>
+      <label className="form-field shopping-date-field">
         買い物の日付{" "}
         <input
           aria-label="買い物の日付"
@@ -42,6 +42,7 @@ export function HistoryDetailScreen({
       </label>
       <button
         type="button"
+        className="primary-button"
         disabled={!validShoppingDate(date)}
         onClick={() => onDateChange(shopping.id, date)}
       >

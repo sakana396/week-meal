@@ -30,7 +30,12 @@ export const routeHashes: Record<Route, string> = {
 export function routeFromHash(hash: string): RouteLocation {
   const [path, query = ""] = hash.split("?", 2);
   if (path.startsWith("#/history/")) {
-    const id = path.slice("#/history/".length);
+    let id: string | null = null;
+    try {
+      id = decodeURIComponent(path.slice("#/history/".length));
+    } catch {
+      // 不正な符号化は未知の買い物として扱う。
+    }
     const valid = !!id && !id.includes("/") && !query;
     return {
       route: "historyDetail",
@@ -58,6 +63,7 @@ export function routeFromHash(hash: string): RouteLocation {
 export function useHashRoute(): [
   RouteLocation,
   (route: Route, shoppingId?: string) => void,
+  (route: Route, shoppingId?: string) => void,
 ] {
   const [location, setLocation] = useState<RouteLocation>(() =>
     routeFromHash(window.location.hash),
@@ -67,14 +73,30 @@ export function useHashRoute(): [
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
-  const navigate = useCallback((next: Route, shoppingId?: string) => {
+  const hashFor = useCallback((next: Route, shoppingId?: string) => {
     const hash =
       next === "historyDetail"
         ? `${routeHashes.historyDetail}${encodeURIComponent(shoppingId ?? "")}`
         : shoppingId
           ? `${routeHashes[next]}?shopping=${encodeURIComponent(shoppingId)}`
           : routeHashes[next];
-    if (window.location.hash !== hash) window.location.hash = hash;
+    return hash;
   }, []);
-  return [location, navigate];
+  const navigate = useCallback(
+    (next: Route, shoppingId?: string) => {
+      const hash = hashFor(next, shoppingId);
+      if (window.location.hash !== hash) window.location.hash = hash;
+    },
+    [hashFor],
+  );
+  /** 自動転送時はブラウザ履歴を増やさない（DES-UI-10、46）。 */
+  const replaceRoute = useCallback(
+    (next: Route, shoppingId?: string) => {
+      const hash = hashFor(next, shoppingId);
+      if (window.location.hash !== hash)
+        window.location.replace(new URL(hash, window.location.href).href);
+    },
+    [hashFor],
+  );
+  return [location, navigate, replaceRoute];
 }
