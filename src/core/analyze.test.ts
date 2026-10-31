@@ -14,10 +14,10 @@ import { defaultProfile, type Profile } from "./profile";
 const groups = groupFoods(foodsJson as FoodItem[]);
 
 /** 実際の食品データから、食材名の代表食品を個数つきで登録する */
-function item(displayName: string, count = 1, usedUp = false): RegisteredItem {
+function item(displayName: string, count = 1): RegisteredItem {
   const group = groups.find((candidate) => candidate.name === displayName);
   if (!group) throw new Error(`食材名がない: ${displayName}`);
-  return { food: representativeFood(group), displayName, count, usedUp };
+  return { food: representativeFood(group), displayName, count };
 }
 
 // キャベツ 1 玉、にんじん 3 本、豚肉 1 パック、鶏卵 6 個
@@ -44,11 +44,11 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     );
   });
 
-  it("TC-FR-NUT-06-01 使い切った食材と個数 0 の食材は数えない", () => {
+  it("TC-FR-NUT-06-01 個数 0 の食材は数えない", () => {
     const items = [
       basket[0],
       basket[1],
-      { ...basket[2], usedUp: true },
+      { ...basket[2], count: 0 },
       { ...basket[3], count: 0 },
     ];
     expect(analyzeBasket(items, defaultProfile)).toEqual({

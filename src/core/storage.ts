@@ -6,13 +6,15 @@ import {
   maximumCount,
   minimumCount,
   type AppState,
+  validShoppingDate,
   type BasketEntry,
+  type Shopping,
 } from "./basket";
 import type { ManualFood } from "./manualFoods";
 import { defaultProfile, type Profile } from "./profile";
 
 /** 保存データの版（DES-STO-07、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
-export const storageVersion = 2;
+export const storageVersion = 3;
 
 /** 手入力の食品の ID の接頭辞（DES-BSK-08） */
 export const manualFoodIdPrefix = "manual-";
@@ -24,37 +26,91 @@ export type StorageIssue =
 /** 移行の途中の保存データ */
 export type StoredState = { version: number } & Record<string, unknown>;
 
-export type Migrations = Record<number, (stored: StoredState) => StoredState>;
+/** 版 2 の移行先は画面が用意する（DES-STO-10）。 */
+export type MigrationContext = {
+  date: string;
+  shoppingIds: { usedUp: string; normal: string };
+};
+export type Migrations = Record<
+  number,
+  (stored: StoredState, context?: MigrationContext) => StoredState
+>;
+const migrations: Migrations = { 1: migrateV1ToV2, 2: migrateV2ToV3 };
 
-/**
- * 旧い版を 1 つ新しい版に直す関数（DES-STO-07、NFR-13）。
- * キーは移行前の版。
- */
-const migrations: Migrations = { 1: migrateV1ToV2 };
-
-/** 版 1 の全台帳・登録行・設定を保ち、移行後に通常の検査へ渡す（DES-STO-08）。 */
+/** 版 1 の台帳・登録行・設定を保つ（DES-STO-08）。 */
 export function migrateV1ToV2(stored: StoredState): StoredState {
   return { ...stored, version: 2 };
 }
 
-/** 状態を保存用の JSON 文字列にする（DES-STO-01、FR-SYS-01） */
+/** 使い切った行を別の買い物へ分ける（DES-STO-10）。 */
+export function migrateV2ToV3(
+  stored: StoredState,
+  context?: MigrationContext,
+): StoredState {
+  if (
+    !context ||
+    !validShoppingDate(context.date) ||
+    !context.shoppingIds.usedUp ||
+    !context.shoppingIds.normal ||
+    context.shoppingIds.usedUp === context.shoppingIds.normal ||
+    !Array.isArray(stored.items)
+  ) {
+    return stored;
+  }
+  const active = stored.items
+    .filter((value) => !isRecord(value) || value.usedUp !== true)
+    .map(stripUsedUp);
+  const used = stored.items
+    .filter((value) => isRecord(value) && value.usedUp === true)
+    .map(stripUsedUp);
+  const shoppings: Shopping[] = [];
+  if (used.length > 0)
+    shoppings.push({
+      id: context.shoppingIds.usedUp,
+      date: context.date,
+      origin: "usedUpMigration",
+      items: used as BasketEntry[],
+    });
+  if (active.length > 0 || used.length > 0)
+    shoppings.push({
+      id: context.shoppingIds.normal,
+      date: context.date,
+      origin: "normal",
+      items: active as BasketEntry[],
+    });
+  return {
+    version: 3,
+    shoppings,
+    manualFoods: stored.manualFoods,
+    profile: stored.profile,
+  };
+}
+
+function stripUsedUp(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const { id, foodId, displayName, count } = value;
+  return { id, foodId, displayName, count };
+}
+
+/** 版 3 の JSON に直す（DES-STO-10、12）。 */
 export function serializeState(state: AppState): string {
   return JSON.stringify({
     version: storageVersion,
-    items: state.items,
+    shoppings: state.shoppings,
     manualFoods: state.manualFoods,
     profile: state.profile,
   });
 }
 
 /**
- * 保存データを今の版まで 1 つずつ移行する（DES-STO-07）。
+ * 保存データを今の版まで 1 つずつ移行する（DES-STO-07、10）。
  * 移行の関数がない、例外を出す、版が上がらない・今の版を飛び越えるときは null を返す。
  */
 export function migrateStored(
   stored: StoredState,
   table: Migrations,
   targetVersion: number,
+  context?: MigrationContext,
 ): StoredState | null {
   let current = stored;
   while (current.version < targetVersion) {
@@ -62,19 +118,17 @@ export function migrateStored(
     if (!migrate) return null;
     let next: StoredState;
     try {
-      next = migrate(current);
+      next = migrate(current, context);
     } catch {
-      // 移行の関数が想定外の形のデータで失敗したときは、読めなかったものとして扱う
       return null;
     }
     if (
       !isRecord(next) ||
       typeof next.version !== "number" ||
-      !(next.version > current.version) ||
+      next.version !== current.version + 1 ||
       next.version > targetVersion
-    ) {
+    )
       return null;
-    }
     current = next;
   }
   return current;
@@ -157,43 +211,40 @@ function parseManualFood(
   };
 }
 
-/** 行を検査し、作り直す（DES-STO-04） */
+/** 行を検査し、余計なキーを落とす（DES-STO-11）。 */
 function parseEntry(
   value: unknown,
   usableFoodIds: ReadonlySet<string>,
 ): BasketEntry | null {
   if (!isRecord(value)) return null;
-  const { id, foodId, displayName, count, usedUp } = value;
-  const ok =
-    isNonEmptyString(id) &&
+  const { id, foodId, displayName, count } = value;
+  return isNonEmptyString(id) &&
     typeof foodId === "string" &&
     usableFoodIds.has(foodId) &&
     isNonEmptyString(displayName) &&
     typeof count === "number" &&
     Number.isInteger(count * 2) &&
     count >= minimumCount &&
-    count <= maximumCount &&
-    typeof usedUp === "boolean";
-  return ok ? { id, foodId, displayName, count, usedUp } : null;
+    count <= maximumCount
+    ? { id, foodId, displayName, count }
+    : null;
 }
 
-/**
- * 保存データを読み込む（DES-STO-02〜07、NFR-12, 13）。
- * - 保存データがなければ初期状態（問題なし）
- * - JSON として読めない・形が違う・版がない／新しすぎる／移行できないときは、初期状態と "corrupted"
- * - 形のおかしい行、使える食品のない行、ID が重複した行は捨て、捨てた件数を返す
- * - 手入力の食品は形を確かめ、おかしいものは捨て、未参照でも覚えた食品として残す（DES-STO-08）
- * - 設定の形が違う・ないときは初期値にし、profileReset で知らせる
- */
+/** 保存データを検査し、読み込める行だけ残す（DES-STO-10、11）。 */
 export function parseStoredState(
   text: string | null,
   knownFoodIds: ReadonlySet<string>,
   table: Migrations = migrations,
   targetVersion: number = storageVersion,
-): { state: AppState; issue: StorageIssue } {
-  const corrupted = { state: initialAppState, issue: "corrupted" as const };
-  if (text === null) return { state: initialAppState, issue: null };
-
+  context?: MigrationContext,
+): { state: AppState; issue: StorageIssue; migrated: boolean } {
+  const corrupted = {
+    state: initialAppState,
+    issue: "corrupted" as const,
+    migrated: false,
+  };
+  if (text === null)
+    return { state: initialAppState, issue: null, migrated: false };
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -206,42 +257,78 @@ export function parseStoredState(
     !Number.isInteger(parsed.version) ||
     parsed.version < 1 ||
     parsed.version > targetVersion
-  ) {
+  )
     return corrupted;
-  }
-
-  const stored = migrateStored(parsed as StoredState, table, targetVersion);
-  if (!stored || !Array.isArray(stored.items)) return corrupted;
-
+  const migrated = parsed.version < targetVersion;
+  const stored = migrateStored(
+    parsed as StoredState,
+    table,
+    targetVersion,
+    context,
+  );
+  if (!stored || !Array.isArray(stored.shoppings)) return corrupted;
+  const manualById = new Map<string, ManualFood>();
   const rawManualFoods = Array.isArray(stored.manualFoods)
     ? stored.manualFoods
     : [];
-  const manualById = new Map<string, ManualFood>();
   for (const value of rawManualFoods) {
     const food = parseManualFood(value, knownFoodIds);
     if (food && !manualById.has(food.id)) manualById.set(food.id, food);
   }
   const usableIds = new Set([...knownFoodIds, ...manualById.keys()]);
-
-  const seenIds = new Set<string>();
-  const items: BasketEntry[] = [];
-  for (const value of stored.items) {
-    const entry = parseEntry(value, usableIds);
-    if (!entry || seenIds.has(entry.id)) continue;
-    seenIds.add(entry.id);
-    items.push(entry);
+  const shoppingIds = new Set<string>();
+  const entryIds = new Set<string>();
+  const shoppings: Shopping[] = [];
+  let droppedItems = 0;
+  for (const value of stored.shoppings) {
+    if (
+      !isRecord(value) ||
+      !isNonEmptyString(value.id) ||
+      typeof value.date !== "string" ||
+      !validShoppingDate(value.date) ||
+      (value.origin !== "normal" && value.origin !== "usedUpMigration") ||
+      !Array.isArray(value.items)
+    ) {
+      droppedItems +=
+        isRecord(value) && Array.isArray(value.items)
+          ? Math.max(1, value.items.length)
+          : 1;
+      continue;
+    }
+    if (shoppingIds.has(value.id)) {
+      droppedItems += value.items.length;
+      continue;
+    }
+    shoppingIds.add(value.id);
+    const items: BasketEntry[] = [];
+    for (const raw of value.items) {
+      const entry = parseEntry(raw, usableIds);
+      if (!entry || entryIds.has(entry.id)) {
+        droppedItems++;
+        continue;
+      }
+      entryIds.add(entry.id);
+      items.push(entry);
+    }
+    shoppings.push({
+      id: value.id,
+      date: value.date,
+      origin: value.origin,
+      items,
+    });
   }
-  const manualFoods = [...manualById.values()];
-
   const profile = parseProfile(stored.profile);
-  const droppedItems = stored.items.length - items.length;
   const issue: StorageIssue =
     droppedItems > 0 || !profile
       ? { droppedItems, profileReset: !profile }
       : null;
-
   return {
-    state: { items, manualFoods, profile: profile ?? defaultProfile },
+    state: {
+      shoppings,
+      manualFoods: [...manualById.values()],
+      profile: profile ?? defaultProfile,
+    },
     issue,
+    migrated,
   };
 }

@@ -9,7 +9,6 @@ const items: BasketEntry[] = ["先頭", "中間", "末尾"].map((displayName, i)
   foodId: "06212",
   displayName,
   count: 1.5,
-  usedUp: false,
 }));
 
 async function seed(
@@ -23,8 +22,10 @@ async function seed(
       localStorage.setItem(
         "weekmeal:state",
         JSON.stringify({
-          version: 2,
-          items: entries,
+          version: 3,
+          shoppings: [
+            { id: "s", date: "2026-10-31", origin: "normal", items: entries },
+          ],
           manualFoods,
           profile,
         }),
@@ -61,10 +62,12 @@ test("TC-FR-ING-14-01 中間行を1回で復元し通知とキーボードのフ
   ).toBeFocused();
   await expect(itemRow(page, "中間").getByRole("group")).toContainText("1.5");
   await expect(undo(page)).toHaveCount(0);
-  await expect.poll(async () => (await stored(page)).items).toEqual(items);
+  await expect
+    .poll(async () => (await stored(page)).shoppings[0].items)
+    .toEqual(items);
 });
 
-test("TC-FR-ING-14-02 使い切った手入力行を元の区画・順序に戻し成分と来歴を保つ", async ({
+test("TC-FR-ING-14-02 手入力行を元の順序に戻し成分と来歴を保つ", async ({
   page,
 }) => {
   const manualFood: ManualFood = {
@@ -80,30 +83,27 @@ test("TC-FR-ING-14-02 使い切った手入力行を元の区画・順序に戻�
     ) as ManualFood["nutrientsPer100g"],
     sourceFoodId: "06212",
   };
-  const entries = [
-    { ...items[0], usedUp: true },
-    { ...items[1], foodId: manualFood.id, usedUp: true },
-    items[2],
-  ];
+  const entries = [items[0], { ...items[1], foodId: manualFood.id }, items[2]];
   await seed(page, entries, [manualFood]);
-  await expect(names(page)).toHaveText(["末尾", "先頭", "中間"]);
+  await expect(names(page)).toHaveText(["先頭", "中間", "末尾"]);
   await itemRow(page, "中間")
     .getByRole("button", { name: "中間を削除", exact: true })
     .click();
   await undo(page).click();
-  await expect(names(page)).toHaveText(["末尾", "先頭", "中間"]);
-  await expect(itemRow(page, "中間")).toHaveAttribute("data-used-up", "true");
+  await expect(names(page)).toHaveText(["先頭", "中間", "末尾"]);
   await expect(
     itemRow(page, "中間").getByRole("button", {
-      name: "中間を使い切った から戻す",
+      name: "中間を 0.5 減らす",
       exact: true,
     }),
   ).toBeFocused();
-  await expect.poll(async () => (await stored(page)).items).toEqual(entries);
+  await expect
+    .poll(async () => (await stored(page)).shoppings[0].items)
+    .toEqual(entries);
   expect((await stored(page)).manualFoods).toEqual([manualFood]);
 });
 
-test("TC-FR-ING-14-03 連続削除は直前だけ戻し画面移動と設定変更では保持する", async ({
+test("TC-FR-ING-14-03 連続削除は直前だけ取り消せ、画面移動で通知を消す", async ({
   page,
 }) => {
   await seed(page);
@@ -112,13 +112,13 @@ test("TC-FR-ING-14-03 連続削除は直前だけ戻し画面移動と設定変�
       .getByRole("button", { name: `${name}を削除`, exact: true })
       .click();
   }
+  await undo(page).click();
+  await expect(names(page)).toHaveText(["先頭", "末尾"]);
+  await expect(undo(page)).toHaveCount(0);
   await openTab(page, "設定");
   await page.getByRole("button", { name: "大盛り", exact: true }).click();
   await openTab(page, "ホーム");
-  await expect(
-    page.getByRole("status").filter({ hasText: "末尾を削除しました" }),
-  ).toBeVisible();
-  await undo(page).click();
+  await expect(undo(page)).toHaveCount(0);
   await expect(names(page)).toHaveText(["先頭", "末尾"]);
   expect((await stored(page)).profile.portion).toBe("large");
   await expect(undo(page)).toHaveCount(0);
@@ -153,12 +153,12 @@ test("TC-FR-ING-14-05 削除は保存し取り消し情報は保存せず再読�
     .click();
   await expect(undo(page)).toBeVisible();
   await expect
-    .poll(async () => (await stored(page)).items)
+    .poll(async () => (await stored(page)).shoppings[0].items)
     .toEqual([items[0], items[2]]);
   expect(Object.keys(await stored(page)).sort()).toEqual([
-    "items",
     "manualFoods",
     "profile",
+    "shoppings",
     "version",
   ]);
   await page.reload();

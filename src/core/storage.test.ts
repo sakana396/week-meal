@@ -1,447 +1,196 @@
 import { describe, expect, it } from "vitest";
 import { nutrientDefinitions } from "../data/nutrients";
-import type { FoodItem } from "../types";
+import type { ManualFood } from "./manualFoods";
+import { initialAppState, type AppState } from "./basket";
 import {
-  basketReducer,
-  initialAppState,
-  maximumCount,
-  type AppState,
-  type BasketAction,
-} from "./basket";
-import { defaultProfile } from "./profile";
-import {
-  migrateStored,
+  migrateV2ToV3,
   parseStoredState,
   serializeState,
   storageVersion,
-  type Migrations,
+  type MigrationContext,
 } from "./storage";
 
-const known = new Set(["06212", "06153"]);
-const manualFood: FoodItem = {
-  id: "manual-1",
-  name: "自家製ぬか漬け",
-  category: "手入力 / 野菜",
-  refusePct: null,
-  nutrientsPer100g: {
-    ...(Object.fromEntries(
-      nutrientDefinitions.map((definition) => [definition.key, null]),
-    ) as FoodItem["nutrientsPer100g"]),
-    energyKcal: 30,
-  },
+const known = new Set(["06212"]);
+const context: MigrationContext = {
+  date: "2026-10-31",
+  shoppingIds: { usedUp: "old", normal: "current" },
 };
-
-const actions: BasketAction[] = [
-  { type: "register", id: "r1", foodId: "06212", displayName: "にんじん" },
-  { type: "increment", id: "r1" },
-  { type: "register", id: "r2", foodId: "06153", displayName: "玉ねぎ" },
-  { type: "toggleUsedUp", id: "r2" },
-  {
-    type: "addManualFood",
-    id: "m1",
-    food: manualFood,
-    displayName: "自家製ぬか漬け",
-  },
-  {
-    type: "setProfile",
-    profile: {
-      ...defaultProfile,
-      staple: "bread",
-      portion: "large",
-      sex: "female",
-    },
-  },
-];
-const saved: AppState = actions.reduce(basketReducer, initialAppState);
-
-function stored(overrides: Record<string, unknown>) {
-  return JSON.stringify({ ...JSON.parse(serializeState(saved)), ...overrides });
-}
-
-describe("serializeState・parseStoredState（DES-STO-01, 02）", () => {
-  it("TC-FR-SYS-01-02 書き出した状態を読み込むと、同じ状態に戻る（問題なし）", () => {
-    const result = parseStoredState(serializeState(saved), known);
-    expect(result).toEqual({ state: saved, issue: null });
+const entry = { id: "r1", foodId: "06212", displayName: "にんじん", count: 1 };
+const state: AppState = {
+  ...initialAppState,
+  shoppings: [
+    { id: "current", date: context.date, origin: "normal", items: [entry] },
+  ],
+};
+const version2 = (items: object[]) =>
+  JSON.stringify({
+    version: 2,
+    items,
+    manualFoods: [],
+    profile: state.profile,
   });
 
-  it("TC-FR-SYS-01-03 書き出した JSON に版番号が入る", () => {
-    expect(JSON.parse(serializeState(saved)).version).toBe(storageVersion);
+describe("保存版 3（DES-STO-10〜12）", () => {
+  it("TC-FR-SYS-01-11 買い物と設定を往復する", () => {
+    expect(JSON.parse(serializeState(state)).version).toBe(storageVersion);
+    expect(parseStoredState(serializeState(state), known).state).toEqual(state);
   });
-
-  it("TC-FR-SYS-01-04 保存データがなければ、初期状態（問題なし）（境界）", () => {
-    expect(parseStoredState(null, known)).toEqual({
-      state: initialAppState,
-      issue: null,
-    });
-  });
-});
-
-describe("壊れた保存データ（DES-STO-02, 03、NFR-12）", () => {
   it.each([
-    ["TC-NFR-12-01 JSON として読めない", "{not json"],
-    ["TC-NFR-12-02 オブジェクトでない", "[1,2,3]"],
-    ["TC-NFR-13-01 版番号がない", JSON.stringify({ items: [] })],
+    [[{ ...entry, usedUp: false }], ["normal"]],
+    [[{ ...entry, usedUp: true }], ["usedUpMigration", "normal"]],
     [
-      "TC-NFR-12-04 版番号が今より新しい",
-      stored({ version: storageVersion + 1 }),
+      [
+        { ...entry, usedUp: true },
+        { ...entry, id: "r2", usedUp: false },
+      ],
+      ["usedUpMigration", "normal"],
     ],
-    ["TC-NFR-13-03 版番号が 0 以下", stored({ version: 0 })],
-    ["TC-NFR-13-04 版番号が整数でない", stored({ version: 1.5 })],
-    ["TC-NFR-12-07 items が配列でない", stored({ items: "x" })],
-  ])("%s なら、初期状態と corrupted を返す（異常）", (_title, text) => {
-    expect(parseStoredState(text, known)).toEqual({
-      state: initialAppState,
-      issue: "corrupted",
+    [[], []],
+  ] as const)(
+    "TC-NFR-13-15 版 2 の有効行と使い切った行を分離",
+    (items, origins) => {
+      const result = parseStoredState(
+        version2([...items]),
+        known,
+        undefined,
+        undefined,
+        context,
+      );
+      expect(result.state.shoppings.map((shopping) => shopping.origin)).toEqual(
+        origins,
+      );
+      expect(result.state.shoppings.at(-1)?.origin ?? null).toBe(
+        origins.at(-1) ?? null,
+      );
+      expect(
+        result.state.shoppings
+          .flatMap((shopping) => shopping.items)
+          .every((row) => !Object.hasOwn(row, "usedUp")),
+      ).toBe(true);
+      expect(result.migrated).toBe(true);
+    },
+  );
+  it.each([{ usedUp: undefined }, { usedUp: "不正" }, { usedUp: 0 }])(
+    "TC-NFR-13-15 usedUp が真偽値でない行も通常の買い物に残す（%j）",
+    (extra) => {
+      const result = parseStoredState(
+        version2([{ ...entry, ...extra }]),
+        known,
+        undefined,
+        undefined,
+        context,
+      );
+      expect(result.state.shoppings[0].items).toEqual([entry]);
+    },
+  );
+  it("TC-FR-SYS-01-11 版 1 から連続移行", () => {
+    const old = version2([{ ...entry, usedUp: false }]).replace(
+      '"version":2',
+      '"version":1',
+    );
+    expect(
+      parseStoredState(old, known, undefined, undefined, context).state
+        .shoppings[0].items,
+    ).toEqual([entry]);
+  });
+  it("TC-NFR-12-37 未知の食品番号の行を捨てて件数を返す", () => {
+    const text = JSON.stringify({
+      ...JSON.parse(serializeState(state)),
+      shoppings: [
+        {
+          ...state.shoppings[0],
+          items: [entry, { ...entry, id: "r2", foodId: "removed" }],
+        },
+      ],
+    });
+    expect(parseStoredState(text, known)).toMatchObject({
+      issue: { droppedItems: 1, profileReset: false },
+      state,
     });
   });
-
-  it("TC-NFR-12-08 形のおかしい行と、知らない食品の行と、重複した ID の行を捨て、件数を返す", () => {
-    const text = stored({
-      items: [
-        {
-          id: "r1",
-          foodId: "06212",
-          displayName: "にんじん",
-          count: 2,
-          usedUp: false,
-        },
-        {
-          id: "r2",
-          foodId: "99999",
-          displayName: "なくなった食品",
-          count: 1,
-          usedUp: false,
-        },
-        {
-          id: "r3",
-          foodId: "06153",
-          displayName: "玉ねぎ",
-          count: "たくさん",
-          usedUp: false,
-        },
-        {
-          id: "r4",
-          foodId: "06153",
-          displayName: "玉ねぎ",
-          count: 0.2,
-          usedUp: false,
-        },
-        {
-          id: "r1",
-          foodId: "06153",
-          displayName: "玉ねぎ",
-          count: 1,
-          usedUp: false,
-        },
-        "壊れた行",
+  it("TC-NFR-12-37 版 2 の除外済み食品も移行後に捨てる", () => {
+    const old = version2([{ ...entry, foodId: "02032", usedUp: false }]);
+    const result = parseStoredState(old, known, undefined, undefined, context);
+    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.state.shoppings[0].items).toEqual([]);
+  });
+  it.each(["{", JSON.stringify({ version: 99, shoppings: [] })])(
+    "TC-NFR-12-38 壊れた保存データを初期状態に戻す",
+    (text) => {
+      expect(parseStoredState(text, known).issue).toBe("corrupted");
+    },
+  );
+  it("TC-NFR-12-38 重複した買い物 ID は先の買い物を採る", () => {
+    const text = JSON.stringify({
+      ...JSON.parse(serializeState(state)),
+      shoppings: [
+        state.shoppings[0],
+        { ...state.shoppings[0], items: [{ ...entry, id: "r2" }] },
       ],
     });
     const result = parseStoredState(text, known);
-    expect(result.state.items.map((item) => item.id)).toEqual(["r1"]);
-    expect(result.issue).toEqual({ droppedItems: 5, profileReset: false });
-  });
-
-  it("TC-NFR-12-09 設定の形が違えば初期値にし、そのことを返す", () => {
-    const result = parseStoredState(
-      stored({ profile: { sex: "other" } }),
-      known,
-    );
-    expect(result.state.profile).toEqual(defaultProfile);
-    expect(result.issue).toEqual({ droppedItems: 0, profileReset: true });
-  });
-
-  it("TC-NFR-12-10 設定がなくても初期値で読み込み、設定を戻したことを知らせる（境界）", () => {
-    const result = parseStoredState(stored({ profile: undefined }), known);
-    expect(result.state.profile).toEqual(defaultProfile);
-    expect(result.issue).toEqual({ droppedItems: 0, profileReset: true });
-  });
-
-  it("TC-NFR-12-11 手入力の食品の形が違えば捨て、それを参照する行も捨てる", () => {
-    const result = parseStoredState(
-      stored({ manualFoods: [{ id: "manual-1", name: 3 }] }),
-      known,
-    );
-    expect(result.state.manualFoods).toEqual([]);
-    expect(result.state.items.some((item) => item.foodId === "manual-1")).toBe(
-      false,
-    );
+    expect(result.state.shoppings).toEqual(state.shoppings);
     expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
   });
-
-  it("TC-NFR-12-12 手入力の食品の成分値が数でなければ捨てる（異常）", () => {
-    const broken = { ...manualFood, nutrientsPer100g: { energyKcal: "多い" } };
-    const result = parseStoredState(stored({ manualFoods: [broken] }), known);
-    expect(result.state.manualFoods).toEqual([]);
-  });
-
-  it("TC-NFR-12-13 手入力の食品がなくても読み込む（境界）", () => {
-    const result = parseStoredState(stored({ manualFoods: undefined }), known);
-    expect(result.state.manualFoods).toEqual([]);
-    expect(result.state.items.map((item) => item.id)).toEqual(["r2", "r1"]);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
-  });
-});
-
-describe("値の検査の境界（DES-STO-04〜06、REV-014）", () => {
-  const row = {
-    id: "r1",
-    foodId: "06212",
-    displayName: "にんじん",
-    count: 1,
-    usedUp: false,
-  };
-
   it.each([
-    ["TC-NFR-12-14 個数が 0.5 刻みでない", { ...row, count: 0.7 }],
-    ["TC-NFR-12-15 個数が上限を超える", { ...row, count: maximumCount + 0.5 }],
-    [
-      "TC-NFR-12-16 個数が JSON の 1e999（Infinity）",
-      { ...row, count: Number.POSITIVE_INFINITY },
-    ],
-    ["TC-NFR-12-17 食材名が空", { ...row, displayName: "" }],
-    ["TC-NFR-12-18 ID が空", { ...row, id: "" }],
-  ])("%s 行は捨てる（異常）", (_title, entry) => {
-    // JSON.stringify は Infinity を null にするので、1e999（読むと Infinity）に置き換える
-    const text = stored({ items: [entry], manualFoods: [] }).replace(
-      '"count":null',
-      '"count":1e999',
-    );
-    const result = parseStoredState(text, known);
-    expect(result.state.items).toEqual([]);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
-  });
-
-  it("TC-NFR-12-19 個数がちょうど上限なら読み込む（境界）", () => {
-    const result = parseStoredState(
-      stored({ items: [{ ...row, count: maximumCount }], manualFoods: [] }),
-      known,
-    );
-    expect(result.state.items[0].count).toBe(maximumCount);
-  });
-
-  it.each([
-    ["TC-NFR-12-20 廃棄率が 100 を超える", { refusePct: 120 }, 1],
-    ["TC-NFR-12-21 廃棄率が負", { refusePct: -1 }, 1],
-    ["TC-NFR-12-22 成分値が負", { nutrientsPer100g: { energyKcal: -5 } }, 1],
-    ["TC-NFR-12-23 ID が manual- で始まらない", { id: "x-1" }, 1],
-    // 行は食品データの 06212（にんじん）を指すことになるので、行は捨てない
-    ["TC-NFR-12-24 ID が食品番号とぶつかる", { id: "06212" }, 0],
-  ])("%s 手入力の食品は捨てる（異常）", (_title, override, dropped) => {
-    const broken = { ...manualFood, ...override };
-    const text = stored({
-      manualFoods: [broken],
-      items: [{ ...row, id: "m", foodId: broken.id, displayName: "自家製" }],
-    });
-    const result = parseStoredState(text, known);
-    expect(result.state.manualFoods).toEqual([]);
-    expect(result.issue).toEqual(
-      dropped > 0 ? { droppedItems: dropped, profileReset: false } : null,
-    );
-  });
-
-  it("TC-NFR-12-28 手入力の食品の成分のキーがなければ null にして読み込む（正常）", () => {
-    const sparse = { ...manualFood, nutrientsPer100g: { energyKcal: 30 } };
-    const result = parseStoredState(stored({ manualFoods: [sparse] }), known);
-    expect(result.state.manualFoods[0].nutrientsPer100g.energyKcal).toBe(30);
-    expect(result.state.manualFoods[0].nutrientsPer100g.proteinG).toBeNull();
-    expect(result.issue).toBeNull();
-  });
-
-  it("TC-NFR-12-25 同じ ID の手入力の食品が 2 つあれば、先のものだけ使う", () => {
-    const text = stored({
-      manualFoods: [manualFood, { ...manualFood, name: "別の名前" }],
-    });
-    expect(
-      parseStoredState(text, known).state.manualFoods.map((food) => food.name),
-    ).toEqual(["自家製ぬか漬け"]);
-  });
-
-  it("TC-NFR-12-26 どの行からも参照されない手入力の食品も覚える", () => {
-    const text = stored({
-      manualFoods: [manualFood, { ...manualFood, id: "manual-2" }],
-    });
-    expect(
-      parseStoredState(text, known).state.manualFoods.map((food) => food.id),
-    ).toEqual(["manual-1", "manual-2"]);
-  });
-
-  it("TC-NFR-12-27 余計なキーや __proto__ を状態に持ち込まない", () => {
+    { id: "", date: context.date, origin: "normal", items: [entry] },
+    { id: "bad", date: "2026-02-30", origin: "normal", items: [entry] },
+    { id: "bad", date: context.date, origin: "unknown", items: [entry] },
+    { id: "bad", date: context.date, origin: "normal", items: "不正" },
+  ])("TC-NFR-12-38 不正な買い物だけを破棄する（%j）", (invalid) => {
     const text = JSON.stringify({
-      version: 1,
-      items: [{ ...row, extra: "x", __proto__: { polluted: true } }],
-      manualFoods: [{ ...manualFood, extra: 1 }],
-      profile: { ...defaultProfile, extra: true },
-    }).replace('"items":[{', '"items":[{"__proto__":{"polluted":true},');
-    const result = parseStoredState(text, known);
-    expect(Object.keys(result.state.items[0]).sort()).toEqual([
-      "count",
-      "displayName",
-      "foodId",
-      "id",
-      "usedUp",
-    ]);
-    expect(Object.keys(result.state.profile).sort()).toEqual([
-      "ageGroup",
-      "portion",
-      "sex",
-      "staple",
-    ]);
-    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
-  });
-});
-
-describe("版の移行（DES-STO-07、NFR-13）", () => {
-  const table: Migrations = {
-    1: (old) => ({ ...old, version: 2, renamed: old.items }),
-    2: (old) => ({ ...old, version: 3, items: old.renamed }),
-  };
-
-  it("TC-NFR-13-05 旧い版を 1 つずつ今の版まで移行する", () => {
-    const migrated = migrateStored({ version: 1, items: ["x"] }, table, 3);
-    expect(migrated).toMatchObject({ version: 3, items: ["x"] });
-  });
-
-  it("TC-NFR-13-06 旧い版の保存データを、移行してから読み込む", () => {
-    const old = JSON.stringify({
-      version: 1,
-      items: [],
-      profile: defaultProfile,
+      ...JSON.parse(serializeState(state)),
+      shoppings: [state.shoppings[0], invalid],
     });
-    const moveItems: Migrations = {
-      1: (stored) => ({ ...stored, version: 2 }),
-    };
-    expect(parseStoredState(old, known, moveItems, 2)).toEqual({
-      state: { items: [], manualFoods: [], profile: defaultProfile },
-      issue: null,
+    expect(parseStoredState(text, known)).toMatchObject({
+      state,
+      issue: { droppedItems: 1, profileReset: false },
     });
   });
-
-  it("TC-NFR-13-07 移行の関数がなければ corrupted（異常）", () => {
-    expect(migrateStored({ version: 1 }, {}, 2)).toBeNull();
-    expect(
-      parseStoredState(JSON.stringify({ version: 1, items: [] }), known, {}, 2)
-        .issue,
-    ).toBe("corrupted");
-  });
-
-  it("TC-NFR-13-08 移行しても版が上がらなければ止める（無限ループにしない。異常）", () => {
-    expect(
-      migrateStored({ version: 1 }, { 1: (stored) => stored }, 2),
-    ).toBeNull();
-  });
-
-  it("TC-NFR-13-10 移行の関数が例外を出したら止める（異常）", () => {
-    const throwing: Migrations = {
-      1: () => {
-        throw new Error("想定外の形");
-      },
-    };
-    expect(migrateStored({ version: 1 }, throwing, 2)).toBeNull();
-  });
-
-  it("TC-NFR-13-11 移行で今の版を飛び越えたら止める（異常）", () => {
-    expect(
-      migrateStored(
-        { version: 1 },
-        { 1: (stored) => ({ ...stored, version: 5 }) },
-        2,
-      ),
-    ).toBeNull();
-  });
-
-  it("TC-NFR-13-09 今の版なら何もしない（境界）", () => {
-    const current = { version: storageVersion, items: [] };
-    expect(migrateStored(current, {}, storageVersion)).toBe(current);
-  });
-});
-
-describe("保存の版 2（DES-STO-08）", () => {
-  it("TC-NFR-13-12 版 1 の全台帳・登録行・設定・順序を引き継ぎ版 2 で保存する", () => {
-    const expected = {
-      ...saved,
-      manualFoods: [{ ...manualFood, id: "manual-unused" }, manualFood],
-    };
+  it("TC-NFR-12-38 不正個数と重複行 ID を個別に捨てる", () => {
     const text = JSON.stringify({
-      ...expected,
-      version: 1,
-      pendingRemoval: { id: "temporary" },
-    });
-    const result = parseStoredState(text, known);
-    expect(result).toEqual({ state: expected, issue: null });
-    const serialized = JSON.parse(serializeState(result.state));
-    expect(serialized.version).toBe(2);
-    expect(Object.keys(serialized).sort()).toEqual([
-      "items",
-      "manualFoods",
-      "profile",
-      "version",
-    ]);
-    expect(parseStoredState(JSON.stringify(serialized), known).state).toEqual(
-      expected,
-    );
-  });
-
-  it.each(["99999", "", 123, null])(
-    "TC-NFR-13-13 未参照の台帳と有効な来歴だけを往復で残す（%s）",
-    (sourceFoodId) => {
-      const text = stored({
-        items: [],
-        manualFoods: [{ ...manualFood, sourceFoodId }],
-      });
-      const result = parseStoredState(text, known);
-      expect(result.issue).toBeNull();
-      expect(result.state.manualFoods).toEqual([
+      ...JSON.parse(serializeState(state)),
+      shoppings: [
         {
-          ...manualFood,
-          ...(sourceFoodId === "99999" ? { sourceFoodId } : {}),
+          ...state.shoppings[0],
+          items: [entry, entry, { ...entry, id: "r3", count: 0.3 }],
         },
-      ]);
-      expect(
-        parseStoredState(serializeState(result.state), known, {}).state,
-      ).toEqual(result.state);
-    },
-  );
-
-  it.each([1, 2])(
-    "TC-NFR-13-14 版 %s でも個別の不正と余計なキーを検査する",
-    (version) => {
-      const result = parseStoredState(
-        stored({
-          version,
-          manualFoods: [
-            manualFood,
-            { ...manualFood, name: 123 },
-            { ...manualFood, extra: true },
-          ],
-          items: [...saved.items, { ...saved.items[0], id: "bad", count: -1 }],
-          extra: true,
-        }),
-        known,
-      );
-      expect(result.state).toEqual(saved);
-      expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
-      expect(
-        parseStoredState(stored({ version, items: "bad" }), known).issue,
-      ).toBe("corrupted");
-    },
-  );
-});
-
-it.each(["99999", "", 123, null])(
-  "TC-FR-ING-16-03 来歴 %s の検査後も成分と登録行を往復で保つ",
-  (sourceFoodId) => {
-    const result = parseStoredState(
-      stored({ manualFoods: [{ ...manualFood, sourceFoodId }] }),
-      known,
-    );
-    expect(result.issue).toBeNull();
-    expect(result.state.items).toEqual(saved.items);
-    expect(result.state.manualFoods[0]).toEqual({
-      ...manualFood,
-      ...(sourceFoodId === "99999" ? { sourceFoodId } : {}),
+      ],
     });
-    expect(parseStoredState(serializeState(result.state), known).state).toEqual(
-      result.state,
-    );
-  },
-);
+    expect(parseStoredState(text, known).issue).toEqual({
+      droppedItems: 2,
+      profileReset: false,
+    });
+  });
+  it("TC-FR-SYS-01-12 代表試料の JSON 長を測る", () => {
+    const sample = {
+      ...state,
+      manualFoods: Array.from({ length: 100 }, (_, index): ManualFood => ({
+        id: `manual-${index}`,
+        name: `手入力${index}`,
+        category: "手入力 / 野菜",
+        refusePct: null,
+        nutrientsPer100g: Object.fromEntries(
+          nutrientDefinitions.map(({ key }) => [key, null]),
+        ) as ManualFood["nutrientsPer100g"],
+      })),
+      shoppings: Array.from({ length: 100 }, (_, index) => ({
+        ...state.shoppings[0],
+        id: `s${index}`,
+        items: Array.from({ length: 30 }, (_, row) => ({
+          ...entry,
+          id: `r${index}-${row}`,
+        })),
+      })),
+    };
+    expect(serializeState(sample).length).toBeGreaterThan(100000);
+  });
+  it("TC-NFR-13-15 移行用 ID が重複したら移行しない", () => {
+    expect(
+      migrateV2ToV3(
+        { version: 2, items: [] },
+        { ...context, shoppingIds: { usedUp: "same", normal: "same" } },
+      ).version,
+    ).toBe(2);
+  });
+});

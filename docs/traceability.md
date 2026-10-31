@@ -68,8 +68,8 @@
 | FR-STP-04 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01, 02 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-NUT-06 | #24 | DES-BSK-07 | TC-FR-NUT-06-03 | src/core/basket.ts | 実装済み（IT01 の analyzeBasket と合わせて） |
 | FR-ING-10 | #24, #27 | DES-BSK-02, 04, DES-UI-40 | TC-FR-ING-10-01〜08 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
-| FR-ING-11 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-11-01, 02 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
-| FR-ING-12 | #24, #27 | DES-BSK-03, DES-UI-40 | TC-FR-ING-12-01, TC-FR-ING-11-02 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
+| FR-ING-11 | #24, #27, #84 | DES-BSK-03, DES-UI-40 → DES-SHP-01〜03 | TC-FR-ING-11-01, 02 → TC-FR-ING-17-01、TC-FR-NUT-07-01 | src/core/basket.ts, src/ui/components/ItemRow.tsx | IT04 で要求・操作を廃止（旧実装と試験は履歴） |
+| FR-ING-12 | #24, #27, #84 | DES-BSK-03, DES-UI-40 → DES-SHP-02 | TC-FR-ING-12-01 → TC-FR-ING-20-01 | src/core/basket.ts, src/ui/components/ItemRow.tsx | IT04 で要求・操作を廃止（旧実装と試験は履歴） |
 | FR-ING-13 | #34 | DES-UI-36 | （査閲: 1 食ごとの記録の入口がない） | src/ui/ | 実装済み |
 | FR-QTY-04 | #24, #27 | DES-BSK-02 | TC-FR-QTY-04-01〜04, TC-FR-ING-10-07, 08 | src/core/basket.ts, src/ui/components/ItemRow.tsx | 実装済み |
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01〜03 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
@@ -131,3 +131,16 @@
 | NFR-04、QA-04 | #74 | DES-PER-02 | TC-NFR-04-01 | docs/04_test/performance-measurement-it03.md, docs/04_test/lighthouse-it03/ | 記録済み（2026-10-25、Lighthouse 13.5.0 の CLI、モバイル、3 回とも 98。開発者の PC の WSL2 で、実機ではない。IT03-RETRO 2 章） |
 | NFR-06 | #62 | DES-E2E-07 | TC-NFR-06-01, 02 | e2e/accessibility.spec.ts, .github/workflows/ci.yml | 全画面と新操作の展開状態で axe を実行し critical / serious 0件を必須化。軽微な違反・判定保留を含む全結果を outputPath に書き出して path 添付。CI 設定の保存先は `test-results/functional/<テスト別ディレクトリ>/axe-<状態名>.json`（ローカルの --output 省略時は `test-results/<テスト別ディレクトリ>/`）。手入力の名前・棚は対象フォーム内で検索。E2E 成功（ローカル・CI）。CI（run 40168004021）の artifact に performance.json と axe の JSON が残ることを確認 |
 | IF-02〜05、QA-03 | #62 | DES-E2E-05, 07, 08、DES-UI-42, 45 | TC-NFR-06-01, 02 | e2e/accessibility.spec.ts, src/ui/screens/HomeScreen.tsx, src/ui/components/SupplementSuggestions.tsx | 新操作を Tab / Enter / Space、フォーカス、44px、横スクロールなしで両画面幅検査。一連のキーボード操作は候補登録後も候補欄が残る各10単位の4食材を使用。削除通知を取り消しボタンの説明に関連付け、画面移動では古い取り消しへフォーカスせず、候補固定開始時だけ見出しにフォーカス。E2E 成功（ローカル・CI）。全機能の実演範囲は本人の確認事項 |
+
+## 反復 4（IT04）
+
+| 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
+|---|---|---|---|---|---|
+| FR-ING-17 | #84 | DES-SHP-01, 02 | TC-FR-ING-17-01, 02（単体） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx | core・既存画面の最小追従を実装済み |
+| FR-ING-18 | #84 | DES-SHP-01, 02 | TC-FR-ING-18-01（単体） | src/core/basket.ts | core 実装済み。日付編集画面は #85 |
+| FR-NUT-07 | #84 | DES-SHP-03 | TC-FR-NUT-07-01, 02（単体） | src/core/basket.ts, src/core/shoppingAnalysis.ts, src/core/suggestions.ts, src/ui/App.tsx, src/ui/screens/HomeScreen.tsx | 最新の買い物の分析・候補を実装済み。履歴画面は #86 |
+| FR-ING-19、FR-ING-20 | #84 | DES-SHP-02 | TC-FR-ING-19-02、TC-FR-ING-20-01、TC-FR-ING-20-02（単体） | src/core/basket.ts, src/core/basketSession.ts | 買い物 ID 付き操作と削除の core を実装済み。画面は #86 |
+| FR-SYS-01 | #84 | DES-STO-10, 12 | TC-FR-SYS-01-01〜04, 11, 12（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 保存版 3 と旧ケースの往復を検証済み |
+| NFR-12 | #84 | DES-STO-11 | TC-NFR-12-01〜28, 37, 38（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 版 3 の破損・個別除外・台帳・退避を検証済み |
+| NFR-13 | #84 | DES-STO-10 | TC-NFR-13-01〜15（単体） | src/core/storage.ts, src/core/storageRegression.test.ts | 版 1・2 から版 3 への移行を検証済み |
+| NFR-08 | #84 | DES-SHP-01〜03, DES-STO-10〜12 | lint、TC-FR-NUT-07-01, 02 | src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |

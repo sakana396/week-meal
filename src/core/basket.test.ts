@@ -1,397 +1,275 @@
 import { describe, expect, it } from "vitest";
+import foodsJson from "../data/foods.json";
 import type { FoodItem } from "../types";
 import {
   basketReducer,
   initialAppState,
+  latestShopping,
   toRegisteredItems,
+  validShoppingDate,
   type AppState,
-  type BasketAction,
 } from "./basket";
 import { defaultProfile } from "./profile";
+import { analyzeShopping } from "./shoppingAnalysis";
+import { suggestSupplements } from "./suggestions";
 
-function food(id: string): FoodItem {
-  return {
-    id,
-    name: id,
-    category: "野菜類",
-    refusePct: 0,
-    nutrientsPer100g: {},
-  } as FoodItem;
-}
-
-function apply(state: AppState, ...actions: BasketAction[]) {
-  return actions.reduce(basketReducer, state);
-}
-
-const carrot: BasketAction = {
-  type: "register",
-  id: "r1",
+const today = "2026-10-31";
+const base: AppState = {
+  ...initialAppState,
+  shoppings: [{ id: "a", date: today, origin: "normal", items: [] }],
+};
+const register = (shoppingId = "a", id = "r1") => ({
+  type: "register" as const,
+  shoppingId,
+  id,
   foodId: "06212",
   displayName: "にんじん",
-};
-const onion: BasketAction = {
-  type: "register",
-  id: "r2",
-  foodId: "06153",
-  displayName: "玉ねぎ",
-};
-
-describe("basketReducer の登録（DES-BSK-01）", () => {
-  it("TC-FR-ING-01-01 食材を個数 1 で一覧の先頭に足す", () => {
-    const state = apply(initialAppState, carrot, onion);
-    expect(
-      state.items.map((item) => [item.displayName, item.count, item.usedUp]),
-    ).toEqual([
-      ["玉ねぎ", 1, false],
-      ["にんじん", 1, false],
-    ]);
-  });
-
-  it("TC-FR-ING-01-02 同じ食材をもう一度登録すると、行を増やさず個数を 1 増やす", () => {
-    const state = apply(initialAppState, carrot, { ...carrot, id: "r9" });
-    expect(state.items).toHaveLength(1);
-    expect(state.items[0]).toMatchObject({ id: "r1", count: 2 });
-  });
-
-  it("TC-FR-ING-01-03 使い切った食材をもう一度登録すると、使い切ったを外して個数 1 に戻す（境界）", () => {
-    const state = apply(
-      initialAppState,
-      carrot,
-      { type: "increment", id: "r1" },
-      { type: "toggleUsedUp", id: "r1" },
-      { ...carrot, id: "r9" },
-    );
-    expect(state.items[0]).toMatchObject({ count: 1, usedUp: false });
-  });
-
-  it("TC-FR-ING-01-05 再登録しても個数は 999 を超えない（境界）", () => {
-    const base = apply(initialAppState, carrot);
-    const state = { ...base, items: [{ ...base.items[0], count: 998.5 }] };
-    expect(basketReducer(state, { ...carrot, id: "r9" }).items[0].count).toBe(
-      999,
-    );
-  });
-
-  it("TC-FR-ING-01-04 同じ食材名でも食品番号が違えば別の行にする（詳細モードで別の状態を選んだとき）", () => {
-    const boiled: BasketAction = {
-      type: "register",
-      id: "r3",
-      foodId: "06213",
-      displayName: "にんじん",
-    };
-    expect(apply(initialAppState, carrot, boiled).items).toHaveLength(2);
-  });
 });
 
-describe("basketReducer の個数・使い切った・削除（DES-BSK-02〜04）", () => {
-  it("TC-FR-QTY-04-01 個数を 0.5 ずつ増やす", () => {
-    const state = apply(initialAppState, carrot, {
+describe("買い物の状態（DES-SHP-01〜03）", () => {
+  it("TC-FR-ING-17-01 新しい買い物は空で作成し入力を変えない", () => {
+    const before = basketReducer(base, register());
+    const after = basketReducer(before, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    expect(after.shoppings[1]).toEqual({
+      id: "b",
+      date: today,
+      origin: "normal",
+      items: [],
+    });
+    expect(before.shoppings).toHaveLength(1);
+    expect(
+      basketReducer(after, { type: "createShopping", id: "b", date: today }),
+    ).toBe(after);
+  });
+  it.each(["2026-02-29", "2026-13-01", "2026-04-31", "2026-1-01", ""])(
+    "TC-FR-ING-18-01 不正日付 %s を拒否",
+    (date) => {
+      expect(validShoppingDate(date)).toBe(false);
+      expect(
+        basketReducer(base, { type: "setShoppingDate", shoppingId: "a", date }),
+      ).toBe(base);
+    },
+  );
+  it("TC-FR-ING-18-01 日付と同日の作成順で最新を選ぶ", () => {
+    const two = basketReducer(base, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    expect(latestShopping(two.shoppings)?.id).toBe("b");
+    const changed = basketReducer(two, {
+      type: "setShoppingDate",
+      shoppingId: "a",
+      date: "2026-11-01",
+    });
+    expect(latestShopping(changed.shoppings)?.id).toBe("a");
+    expect(changed.shoppings.map((shopping) => shopping.id)).toEqual([
+      "a",
+      "b",
+    ]);
+    expect(
+      basketReducer(changed, {
+        type: "setShoppingDate",
+        shoppingId: "missing",
+        date: today,
+      }),
+    ).toBe(changed);
+  });
+  it("TC-FR-ING-17-02 初回登録で買い物を原子的に作る", () => {
+    const action = { ...register(), initialShopping: { id: "a", date: today } };
+    const state = basketReducer(initialAppState, action);
+    expect(state.shoppings[0].items).toHaveLength(1);
+    expect(basketReducer(initialAppState, register())).toBe(initialAppState);
+  });
+  it("TC-FR-ING-19-02 操作は指定した買い物だけに適用する", () => {
+    const two = basketReducer(base, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    const first = basketReducer(two, register());
+    const second = basketReducer(first, register("b", "r2"));
+    expect(second.shoppings.map((shopping) => shopping.items.length)).toEqual([
+      1, 1,
+    ]);
+    const incremented = basketReducer(second, {
       type: "increment",
+      shoppingId: "a",
       id: "r1",
     });
-    expect(state.items[0].count).toBe(1.5);
-  });
-
-  it("TC-FR-QTY-04-02 個数を 0.5 ずつ減らす", () => {
-    const state = apply(initialAppState, carrot, {
-      type: "decrement",
-      id: "r1",
-    });
-    expect(state.items[0].count).toBe(0.5);
-  });
-
-  it("TC-FR-QTY-04-03 0.5 からは減らさない（境界）", () => {
-    const state = apply(
-      initialAppState,
-      carrot,
-      { type: "decrement", id: "r1" },
-      { type: "decrement", id: "r1" },
-    );
-    expect(state.items[0].count).toBe(0.5);
-  });
-
-  it("TC-FR-QTY-04-04 999 からは増やさない（境界）", () => {
-    const at999 = apply(initialAppState, carrot);
-    const state = { ...at999, items: [{ ...at999.items[0], count: 999 }] };
+    expect(incremented.shoppings[0].items[0].count).toBe(1.5);
+    expect(incremented.shoppings[1]).toBe(second.shoppings[1]);
     expect(
-      basketReducer(state, { type: "increment", id: "r1" }).items[0].count,
-    ).toBe(999);
+      basketReducer(incremented, { type: "remove", shoppingId: "b", id: "r1" }),
+    ).toBe(incremented);
   });
-
-  it("TC-FR-ING-11-01 使い切ったにすると、行は残して使い切ったにする", () => {
-    const state = apply(initialAppState, carrot, {
-      type: "toggleUsedUp",
-      id: "r1",
-    });
-    expect(state.items[0]).toMatchObject({ usedUp: true, count: 1 });
-  });
-
-  it("TC-FR-ING-12-01 使い切ったは 1 回の操作で取り消せる", () => {
-    const state = apply(
-      initialAppState,
-      carrot,
-      { type: "toggleUsedUp", id: "r1" },
-      { type: "toggleUsedUp", id: "r1" },
-    );
-    expect(state.items[0].usedUp).toBe(false);
-  });
-
-  it("TC-FR-ING-10-01 削除すると行がなくなる", () => {
-    const state = apply(initialAppState, carrot, onion, {
-      type: "remove",
-      id: "r1",
-    });
-    expect(state.items.map((item) => item.id)).toEqual(["r2"]);
-  });
-
-  it.each<[string, BasketAction]>([
-    [
-      "TC-FR-ING-10-02 知らない ID を増やそうとしても状態を変えない（異常）",
-      { type: "increment", id: "x" },
-    ],
-    [
-      "TC-FR-ING-10-03 知らない ID を減らそうとしても状態を変えない（異常）",
-      { type: "decrement", id: "x" },
-    ],
-    [
-      "TC-FR-ING-10-04 知らない ID を使い切ったにしても状態を変えない（異常）",
-      { type: "toggleUsedUp", id: "x" },
-    ],
-    [
-      "TC-FR-ING-10-05 知らない ID を削除しても状態を変えない（異常）",
-      { type: "remove", id: "x" },
-    ],
-  ])("%s", (_title, action) => {
-    const state = apply(initialAppState, carrot);
-    expect(basketReducer(state, action)).toBe(state);
-  });
-
-  function deepFreeze<T>(value: T): T {
-    if (typeof value === "object" && value !== null) {
-      Object.values(value).forEach(deepFreeze);
-      Object.freeze(value);
-    }
-    return value;
-  }
-
-  it.each<BasketAction>([
-    { ...carrot, id: "r9" },
-    { type: "register", id: "r8", foodId: "06153", displayName: "玉ねぎ" },
-    { type: "increment", id: "r1" },
-    { type: "decrement", id: "r1" },
-    { type: "toggleUsedUp", id: "r1" },
-    { type: "remove", id: "r1" },
-    {
-      type: "addManualFood",
-      id: "m9",
-      food: food("manual-9"),
-      displayName: "手入力",
-    },
-    { type: "setProfile", profile: { ...defaultProfile, sex: "male" } },
-  ])("TC-FR-ING-10-06 引数の状態を変えない（$type）", (action) => {
-    const state = deepFreeze(apply(initialAppState, carrot));
-    const snapshot = structuredClone(state);
-    expect(() => basketReducer(state, action)).not.toThrow();
-    expect(state).toEqual(snapshot);
-  });
-});
-
-describe("basketReducer の手入力と設定（DES-BSK-04, 05）", () => {
-  const manual: BasketAction = {
-    type: "addManualFood",
-    id: "m1",
-    food: food("manual-1"),
-    displayName: "自家製ぬか漬け",
-  };
-
-  it("TC-FR-ING-08-01 手入力の食品を足し、個数 1 で登録する", () => {
-    const state = apply(initialAppState, manual);
-    expect(state.manualFoods.map((item) => item.id)).toEqual(["manual-1"]);
-    expect(state.items[0]).toMatchObject({
-      foodId: "manual-1",
-      displayName: "自家製ぬか漬け",
-      count: 1,
-    });
-  });
-
-  it("TC-FR-ING-08-02 手入力の食品の行を消しても、覚えた食品は残る", () => {
-    const state = apply(initialAppState, manual, { type: "remove", id: "m1" });
-    expect(state.manualFoods).toEqual([manual.food]);
-  });
-
-  it("TC-FR-ING-08-03 同じ手入力の食品をもう一度足しても、食品は 1 つのまま個数を増やす（境界）", () => {
-    const state = apply(initialAppState, manual, { ...manual, id: "m2" });
-    expect(state.manualFoods).toHaveLength(1);
-    expect(state.items[0].count).toBe(2);
-  });
-
-  it("TC-FR-ING-08-04 同じ手入力の食品をほかの行がまだ使っていれば、行を消しても食品は残す（境界）", () => {
-    const shared = food("manual-2");
-    const state = apply(
-      initialAppState,
-      {
-        type: "addManualFood",
-        id: "a",
-        food: shared,
-        displayName: "スープ（朝）",
-      },
-      {
-        type: "addManualFood",
-        id: "b",
-        food: shared,
-        displayName: "スープ（夜）",
-      },
-      { type: "remove", id: "a" },
-    );
-    expect(state.manualFoods.map((item) => item.id)).toEqual(["manual-2"]);
-    expect(state.items.map((item) => item.id)).toEqual(["b"]);
-  });
-
-  it("TC-FR-ING-08-05 食品データの食品の行を消しても、手入力の食品は変わらない", () => {
-    const state = apply(initialAppState, manual, carrot, {
-      type: "remove",
-      id: "r1",
-    });
-    expect(state.manualFoods.map((item) => item.id)).toEqual(["manual-1"]);
-  });
-
-  it("TC-FR-STP-01-01 設定（主食・盛り・性別・年齢区分）を置き換える", () => {
-    const profile = {
-      staple: "bread" as const,
-      portion: "large" as const,
-      sex: "female" as const,
-      ageGroup: "65-74" as const,
+  it("TC-FR-ING-20-01 買い物削除でも台帳と設定を保つ", () => {
+    const withFood = {
+      ...base,
+      manualFoods: [
+        {
+          id: "manual-1",
+          name: "料理",
+          category: "手入力 / 野菜",
+          refusePct: null,
+          nutrientsPer100g:
+            {} as AppState["manualFoods"][number]["nutrientsPer100g"],
+        },
+      ],
     };
-    expect(
-      apply(initialAppState, { type: "setProfile", profile }).profile,
-    ).toEqual(profile);
+    const removed = basketReducer(withFood, {
+      type: "removeShopping",
+      shoppingId: "a",
+    });
+    expect(removed.shoppings).toEqual([]);
+    expect(removed.manualFoods).toBe(withFood.manualFoods);
+    expect(removed.profile).toBe(withFood.profile);
   });
-
-  it("TC-FR-SYS-01-01 状態をまるごと置き換える（保存データの読み込み）", () => {
-    const loaded = apply(initialAppState, carrot);
+  it("TC-FR-ING-20-02 最新と最後の買い物を削除する", () => {
+    const two = basketReducer(base, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    const one = basketReducer(two, { type: "removeShopping", shoppingId: "b" });
+    expect(latestShopping(one.shoppings)?.id).toBe("a");
     expect(
-      basketReducer(initialAppState, { type: "replace", state: loaded }),
-    ).toBe(loaded);
+      latestShopping(
+        basketReducer(one, { type: "removeShopping", shoppingId: "a" })
+          .shoppings,
+      ),
+    ).toBeNull();
+    expect(
+      basketReducer(one, { type: "removeShopping", shoppingId: "missing" }),
+    ).toBe(one);
   });
-});
-
-describe("toRegisteredItems（DES-BSK-07）", () => {
-  it("TC-FR-NUT-06-03 食品データと手入力から食品を引き、見つからない行は除く", () => {
-    const state = apply(
-      initialAppState,
-      carrot,
-      {
-        type: "register",
-        id: "r4",
-        foodId: "99999",
-        displayName: "なくなった食品",
-      },
-      {
-        type: "addManualFood",
-        id: "m1",
-        food: food("manual-1"),
-        displayName: "自家製",
-      },
-      { type: "toggleUsedUp", id: "r1" },
-      { type: "increment", id: "r1" },
+  it("TC-FR-NUT-07-01 日付が新しい買い物だけを分析し合算しない", () => {
+    const foods = new Map(
+      (foodsJson as FoodItem[]).map((food) => [food.id, food]),
     );
-    const foods = new Map([["06212", food("06212")]]);
-    expect(
-      toRegisteredItems(state, foods).map((item) => [
-        item.displayName,
-        item.food.id,
-        item.count,
-        item.usedUp,
-      ]),
-    ).toEqual([
-      ["自家製", "manual-1", 1, false],
-      ["にんじん", "06212", 1.5, true],
-    ]);
-  });
-});
-
-describe("覚えた食品（DES-MAN-01）", () => {
-  it("TC-FR-ING-15-01 削除した食品を同じ ID で再登録でき、未登録の台帳は分析に混ざらない", () => {
-    const input = apply(initialAppState, {
-      type: "addManualFood",
-      id: "m1",
-      food: food("manual-1"),
-      displayName: "自家製",
-    });
-    const removed = basketReducer(input, { type: "remove", id: "m1" });
-    expect(removed.manualFoods).toEqual(input.manualFoods);
-    expect(toRegisteredItems(removed, new Map())).toEqual([]);
-    const restored = basketReducer(removed, {
-      type: "register",
-      id: "m2",
-      foodId: "manual-1",
-      displayName: "自家製",
-    });
-    expect(restored.items).toEqual([
+    const shoppings = [
       {
-        id: "m2",
-        foodId: "manual-1",
-        displayName: "自家製",
-        count: 1,
-        usedUp: false,
+        id: "older",
+        date: "2026-10-30",
+        origin: "normal" as const,
+        items: [
+          { id: "r1", foodId: "06061", displayName: "キャベツ", count: 1 },
+          { id: "r2", foodId: "06212", displayName: "にんじん", count: 1 },
+          { id: "r3", foodId: "11115", displayName: "豚肉", count: 1 },
+        ],
       },
-    ]);
-    expect(input.items).toHaveLength(1);
+      {
+        id: "newer",
+        date: "2026-10-31",
+        origin: "normal" as const,
+        items: [{ id: "r4", foodId: "12004", displayName: "鶏卵", count: 1 }],
+      },
+    ];
+    const state = { ...initialAppState, shoppings };
+    expect(
+      analyzeShopping(latestShopping(shoppings), state, foods),
+    ).toMatchObject({ kind: "insufficient", itemCount: 1 });
+    expect(analyzeShopping(shoppings[0], state, foods).kind).toBe("judged");
   });
-
-  it.each([false, true])(
-    "TC-FR-ING-15-02 再登録で加算または使い切った解除し台帳を増やさない（usedUp=%s）",
-    (usedUp) => {
-      const input = apply(initialAppState, {
-        type: "addManualFood",
-        id: "m1",
-        food: food("manual-1"),
-        displayName: "自家製",
-      });
-      const state = {
-        ...input,
-        items: [{ ...input.items[0], count: 2, usedUp }],
-      };
-      const result = basketReducer(state, {
-        type: "register",
-        id: "new",
-        foodId: "manual-1",
-        displayName: "自家製",
-      });
-      expect(result.items).toEqual([
-        { ...state.items[0], count: usedUp ? 1 : 3, usedUp: false },
-      ]);
-      expect(result.manualFoods).toBe(state.manualFoods);
-      expect(state.items[0].usedUp).toBe(usedUp);
-    },
-  );
-});
-
-it("TC-FR-ING-15-03 同じ名前の新規手入力は別 ID で保存し覚えた順を保つ", () => {
-  const first = {
-    ...food("manual-first"),
-    name: "自家製",
-    nutrientsPer100g: { energyKcal: 10 },
-  } as FoodItem;
-  const second = {
-    ...first,
-    id: "manual-second",
-    nutrientsPer100g: { ...first.nutrientsPer100g, energyKcal: 20 },
-  };
-  const state = apply(
-    initialAppState,
-    { type: "addManualFood", id: "first", food: first, displayName: "自家製" },
+  it("TC-FR-NUT-07-01・02 分析対象は選んだ買い物のみ", () => {
+    const state = basketReducer(base, register());
+    expect(analyzeShopping(state.shoppings[0], state, new Map()).kind).toBe(
+      "insufficient",
+    );
+    expect(toRegisteredItems(null, [], new Map())).toEqual([]);
+    expect(
+      analyzeShopping(null, { ...state, profile: defaultProfile }, new Map()),
+    ).toMatchObject({ kind: "insufficient", itemCount: 0 });
+  });
+  it.each([
+    { ids: [], count: 0, noData: [] },
+    { ids: ["06061", "06212"], count: 2, noData: [] },
     {
-      type: "addManualFood",
-      id: "second",
-      food: second,
-      displayName: "自家製",
+      ids: ["06061", "06212", "missingEnergy"],
+      count: 2,
+      noData: ["missingEnergy"],
+    },
+  ])("TC-FR-NUT-07-02 未判定と候補: $ids", ({ ids, count, noData }) => {
+    const foods = new Map(
+      (foodsJson as FoodItem[]).map((food) => [food.id, food]),
+    );
+    const withEnergy = foods.get("06212");
+    if (withEnergy)
+      foods.set("missingEnergy", {
+        ...withEnergy,
+        id: "missingEnergy",
+        nutrientsPer100g: { ...withEnergy.nutrientsPer100g, energyKcal: null },
+      });
+    const shopping = {
+      ...base.shoppings[0],
+      items: ids.map((foodId, index) => ({
+        id: `r${index}`,
+        foodId,
+        displayName: foodId,
+        count: 1,
+      })),
+    };
+    const state = { ...base, shoppings: [shopping] };
+    expect(analyzeShopping(shopping, state, foods)).toMatchObject({
+      kind: "insufficient",
+      itemCount: count,
+      noDataItems: noData,
+    });
+    const candidate = foods.get("06212");
+    expect(
+      suggestSupplements(
+        state,
+        foods,
+        candidate
+          ? [{ food: candidate, displayName: "にんじん", priority: 1 }]
+          : [],
+      ),
+    ).toEqual([]);
+  });
+  it.each([
+    { date: "2026-11-02", latest: "a", kind: "judged" },
+    { date: "2026-10-29", latest: "b", kind: "insufficient" },
+  ])(
+    "TC-FR-NUT-07-02 日付変更で最新を再分析する（$date）",
+    ({ date, latest, kind }) => {
+      const foods = new Map(
+        (foodsJson as FoodItem[]).map((food) => [food.id, food]),
+      );
+      const older = {
+        ...base.shoppings[0],
+        items: [
+          { id: "r1", foodId: "06061", displayName: "キャベツ", count: 1 },
+          { id: "r2", foodId: "06212", displayName: "にんじん", count: 1 },
+          { id: "r3", foodId: "11115", displayName: "豚肉", count: 1 },
+        ],
+      };
+      const newer = { ...older, id: "b", date: "2026-11-01", items: [] };
+      const state = { ...base, shoppings: [older, newer] };
+      expect(
+        analyzeShopping(latestShopping(state.shoppings), state, foods).kind,
+      ).toBe("insufficient");
+      const changed = basketReducer(state, {
+        type: "setShoppingDate",
+        shoppingId: "a",
+        date,
+      });
+      expect(latestShopping(changed.shoppings)?.id).toBe(latest);
+      expect(
+        analyzeShopping(latestShopping(changed.shoppings), changed, foods).kind,
+      ).toBe(kind);
     },
   );
-  expect(state.manualFoods).toEqual([second, first]);
-  expect(state.items.map(({ foodId }) => foodId)).toEqual([
-    "manual-second",
-    "manual-first",
-  ]);
-  expect(first.nutrientsPer100g.energyKcal).toBe(10);
+  it("TC-FR-ING-19-02 行 ID は買い物全体で一意にする", () => {
+    const first = basketReducer(base, register());
+    const two = basketReducer(first, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    expect(basketReducer(two, register("b", "r1"))).toBe(two);
+  });
 });

@@ -835,10 +835,6 @@ h3 {
   list-style: none;
 }
 
-.food-row[data-used-up="true"] {
-  opacity: 0.55;
-}
-
 /* 登録したことのお知らせ（P-09）。一覧をスクロールしても見えるよう、画面の下に固定する */
 /* 空のときも読み上げの領域は残し（display: none にしない）、screen-stack の間隔だけ打ち消す */
 .register-message:empty {
@@ -893,10 +889,6 @@ h3 {
   background: #ffffff;
 }
 
-.item-row[data-used-up="true"] {
-  opacity: 0.55;
-}
-
 .item-name {
   display: grid;
   gap: 2px;
@@ -914,7 +906,7 @@ h3 {
   gap: 6px;
 }
 
-/* 削除は押し間違えにくいよう、使い切ったから離す */
+/* 削除の操作間隔を確保する */
 .item-actions {
   gap: 16px;
 }

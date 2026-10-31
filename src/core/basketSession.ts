@@ -5,63 +5,81 @@ import {
   type BasketEntry,
 } from "./basket";
 
-/** 直前に削除した行と、保存する配列内の位置（DES-BSK-09）。 */
-export type PendingRemoval = { entry: BasketEntry; index: number };
-
-/** 保存しない削除の取り消し情報を、保存対象と分離する（DES-BSK-09）。 */
+/** 直前に削除した買い物・行・位置（DES-SHP-02）。 */
+export type PendingRemoval = {
+  shoppingId: string;
+  entry: BasketEntry;
+  index: number;
+};
+/** 保存しない取り消し情報（DES-SHP-02）。 */
 export type BasketSessionState = {
   appState: AppState;
   pendingRemoval: PendingRemoval | null;
 };
+/** 買い物操作と取り消し（DES-SHP-02）。 */
+export type BasketSessionAction =
+  BasketAction | { type: "undoRemove" } | { type: "clearPendingRemoval" };
 
-/** 通常の食材操作と、直前の削除の取り消し（DES-BSK-09）。 */
-export type BasketSessionAction = BasketAction | { type: "undoRemove" };
-
-/** 行の参照が変わっても、内容が同じなら有効な食材操作ではない（DES-BSK-09）。 */
-function sameItems(before: BasketEntry[], after: BasketEntry[]): boolean {
-  return (
-    before.length === after.length &&
-    before.every((item, index) => {
-      const next = after[index];
-      return (
-        item.id === next.id &&
-        item.foodId === next.foodId &&
-        item.displayName === next.displayName &&
-        item.count === next.count &&
-        item.usedUp === next.usedUp
-      );
-    })
-  );
-}
-
-/** 行だけを復元し、設定や手入力の台帳を巻き戻さない（DES-BSK-09）。 */
+/** 行だけを元の位置へ戻す（DES-SHP-02）。 */
 export function basketSessionReducer(
   state: BasketSessionState,
   action: BasketSessionAction,
 ): BasketSessionState {
+  if (action.type === "clearPendingRemoval")
+    return state.pendingRemoval ? { ...state, pendingRemoval: null } : state;
   if (action.type === "undoRemove") {
-    if (!state.pendingRemoval) return state;
-    const { entry, index } = state.pendingRemoval;
-    const items = [...state.appState.items];
-    items.splice(index, 0, entry);
-    return { appState: { ...state.appState, items }, pendingRemoval: null };
-  }
-  const appState = basketReducer(state.appState, action);
-  if (action.type === "replace") return { appState, pendingRemoval: null };
-  if (action.type === "remove") {
-    const index = state.appState.items.findIndex(
-      (item) => item.id === action.id,
+    const pending = state.pendingRemoval;
+    if (!pending) return state;
+    const shopping = state.appState.shoppings.find(
+      (entry) => entry.id === pending.shoppingId,
     );
-    if (index < 0) return state;
+    if (
+      !shopping ||
+      shopping.items.some((item) => item.id === pending.entry.id)
+    )
+      return { ...state, pendingRemoval: null };
+    const items = [...shopping.items];
+    items.splice(pending.index, 0, pending.entry);
     return {
-      appState,
-      pendingRemoval: { entry: state.appState.items[index], index },
+      appState: {
+        ...state.appState,
+        shoppings: state.appState.shoppings.map((entry) =>
+          entry === shopping ? { ...entry, items } : entry,
+        ),
+      },
+      pendingRemoval: null,
     };
   }
-  return {
-    appState,
-    pendingRemoval: sameItems(state.appState.items, appState.items)
-      ? state.pendingRemoval
-      : null,
-  };
+  const appState = basketReducer(state.appState, action);
+  if (appState === state.appState) return state;
+  if (action.type === "remove") {
+    const shopping = state.appState.shoppings.find(
+      (entry) => entry.id === action.shoppingId,
+    );
+    const index =
+      shopping?.items.findIndex((entry) => entry.id === action.id) ?? -1;
+    return {
+      appState,
+      pendingRemoval:
+        shopping && index >= 0
+          ? {
+              shoppingId: action.shoppingId,
+              entry: shopping.items[index],
+              index,
+            }
+          : null,
+    };
+  }
+  if (action.type === "setProfile")
+    return { appState, pendingRemoval: state.pendingRemoval };
+  if (action.type === "replace" || action.type === "removeShopping")
+    return { appState, pendingRemoval: null };
+  if (action.type === "createShopping")
+    return { appState, pendingRemoval: state.pendingRemoval };
+  if (
+    action.type === "setShoppingDate" &&
+    state.pendingRemoval?.shoppingId === action.shoppingId
+  )
+    return { appState, pendingRemoval: state.pendingRemoval };
+  return { appState, pendingRemoval: null };
 }

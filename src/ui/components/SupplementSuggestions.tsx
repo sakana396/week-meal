@@ -1,6 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AnalysisResult } from "../../core/analyze";
-import type { AppState, BasketAction } from "../../core/basket";
+import {
+  latestShopping,
+  type AppState,
+  type BasketAction,
+} from "../../core/basket";
 import {
   supplementCandidates,
   suggestSupplements,
@@ -122,7 +126,10 @@ export function SupplementSuggestions({
     pending.current = null;
     setLocked(true);
     setHeight(list.current?.getBoundingClientRect().height);
+    const shopping = latestShopping(state.shoppings);
+    if (!shopping) return;
     const action: BasketAction = {
+      shoppingId: shopping.id,
       type: "register",
       id: localId("item"),
       foodId: suggestion.foodId,

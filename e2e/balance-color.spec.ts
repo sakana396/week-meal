@@ -42,13 +42,19 @@ function fixture(vitaminRatio: number, proteinRatio: number): AppState {
   return {
     profile,
     manualFoods,
-    items: manualFoods.map((food) => ({
-      id: food.id,
-      foodId: food.id,
-      displayName: food.name,
-      count: 1,
-      usedUp: false,
-    })),
+    shoppings: [
+      {
+        id: "s",
+        date: "2026-10-31",
+        origin: "normal",
+        items: manualFoods.map((food) => ({
+          id: food.id,
+          foodId: food.id,
+          displayName: food.name,
+          count: 1,
+        })),
+      },
+    ],
   };
 }
 

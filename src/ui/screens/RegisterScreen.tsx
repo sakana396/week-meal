@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { AppState, BasketAction } from "../../core/basket";
+import {
+  latestShopping,
+  type AppState,
+  type BasketAction,
+} from "../../core/basket";
 import {
   foodPresentation,
   groupFoods,
@@ -22,6 +26,7 @@ import type { FoodItem, NutrientKey } from "../../types";
 import { baseFoods } from "../foodData";
 import { parseManualValue } from "../format";
 import { localId } from "../ids";
+import { localDate } from "../localDate";
 import { registerMessage } from "../registerMessage";
 
 const maxVisibleFoods = 80;
@@ -195,9 +200,20 @@ export function RegisterScreen({
   ).length;
   const total = mode === "simple" ? groups.length : detailedFoods.length;
 
-  function register(action: BasketAction) {
-    const text = registerMessage(state, action);
-    dispatch(action);
+  function register(
+    action: Extract<BasketAction, { type: "register" | "addManualFood" }>,
+  ) {
+    const shopping = latestShopping(state.shoppings);
+    const initialShopping = shopping
+      ? undefined
+      : { id: localId("shopping"), date: localDate() };
+    const targeted = {
+      ...action,
+      shoppingId: shopping?.id ?? initialShopping?.id ?? "",
+      initialShopping,
+    };
+    const text = registerMessage(state, targeted);
+    dispatch(targeted);
     setMessage((current) => ({ text, seq: current.seq + 1 }));
   }
 
@@ -205,6 +221,7 @@ export function RegisterScreen({
     const food = representativeFood(group);
     register({
       type: "register",
+      shoppingId: "",
       id: localId("item"),
       foodId: food.id,
       displayName: group.name,
@@ -215,6 +232,7 @@ export function RegisterScreen({
     const displayName = foodPresentation(food.name, food.category).name;
     register({
       type: "register",
+      shoppingId: "",
       id: localId("item"),
       foodId: food.id,
       displayName,
@@ -270,6 +288,7 @@ export function RegisterScreen({
     };
     register({
       type: "addManualFood",
+      shoppingId: "",
       id: localId("item"),
       food,
       displayName: name,
@@ -458,6 +477,7 @@ export function RegisterScreen({
                 onClick={() =>
                   register({
                     type: "register",
+                    shoppingId: "",
                     id: localId("item"),
                     foodId: food.id,
                     displayName: food.name,

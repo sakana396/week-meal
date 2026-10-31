@@ -9,23 +9,34 @@ import { itemRow } from "./helpers";
 const initial: AppState = {
   profile: defaultProfile,
   manualFoods: [],
-  items: [
-    ["06061", "キャベツ"],
-    ["06212", "にんじん"],
-    ["11115", "豚肉"],
-    ["12004", "鶏卵"],
-  ].map(([foodId, displayName], index) => ({
-    id: `item-${index}`,
-    foodId,
-    displayName,
-    count: 1,
-    usedUp: false,
-  })),
+  shoppings: [
+    {
+      id: "s",
+      date: "2026-10-31",
+      origin: "normal",
+      items: [
+        ["06061", "キャベツ"],
+        ["06212", "にんじん"],
+        ["11115", "豚肉"],
+        ["12004", "鶏卵"],
+      ].map(([foodId, displayName], index) => ({
+        id: `item-${index}`,
+        foodId,
+        displayName,
+        count: 1,
+      })),
+    },
+  ],
 };
 // 各食材10単位では、先頭10173の追加後も不足が残り、残る2候補の順位も変わる。
 const rotating: AppState = {
   ...initial,
-  items: initial.items.map((item) => ({ ...item, count: 10 })),
+  shoppings: [
+    {
+      ...initial.shoppings[0],
+      items: initial.shoppings[0].items.map((item) => ({ ...item, count: 10 })),
+    },
+  ],
 };
 const panel = (page: Page) =>
   page.getByRole("region", { name: "不足を補う候補" });
@@ -36,7 +47,7 @@ async function seed(page: Page, state = initial) {
     if (!sessionStorage.getItem("suggestions-seeded")) {
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 1, ...state }),
+        JSON.stringify({ version: 3, ...state }),
       );
       sessionStorage.setItem("suggestions-seeded", "true");
     }
@@ -82,13 +93,19 @@ function syntheticState(kind: "balanced" | "no-candidate"): AppState {
   return {
     profile,
     manualFoods,
-    items: manualFoods.map((food) => ({
-      id: `item-${food.id}`,
-      foodId: food.id,
-      displayName: food.name,
-      count: 1,
-      usedUp: false,
-    })),
+    shoppings: [
+      {
+        id: "s",
+        date: "2026-10-31",
+        origin: "normal",
+        items: manualFoods.map((food) => ({
+          id: `item-${food.id}`,
+          foodId: food.id,
+          displayName: food.name,
+          count: 1,
+        })),
+      },
+    ],
   };
 }
 
@@ -120,16 +137,21 @@ test("TC-FR-BAL-06-06 TC-FR-NUT-06-04 候補表示では登録・判定・保存
   await expect(balance).not.toHaveText(beforeBalance);
   const expected = basketReducer(initial, {
     type: "register",
+    shoppingId: "s",
     id: "expected",
     foodId: chosen.foodId,
     displayName: chosen.displayName,
   });
   await expect
-    .poll(async () => JSON.parse((await saved(page))!).items.length)
-    .toBe(expected.items.length);
+    .poll(
+      async () => JSON.parse((await saved(page))!).shoppings[0].items.length,
+    )
+    .toBe(expected.shoppings[0].items.length);
   const actual = JSON.parse((await saved(page))!) as AppState;
-  expect(actual.items.map((item) => ({ ...item, id: "比較対象外" }))).toEqual(
-    expected.items.map((item) => ({ ...item, id: "比較対象外" })),
+  expect(
+    actual.shoppings[0].items.map((item) => ({ ...item, id: "比較対象外" })),
+  ).toEqual(
+    expected.shoppings[0].items.map((item) => ({ ...item, id: "比較対象外" })),
   );
   await page.reload();
   await expect(itemRow(page, chosen.displayName)).toHaveCount(1);
@@ -210,8 +232,8 @@ test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と
       .locator("ul")
       .evaluate((element) => element.getBoundingClientRect().height),
   ).toBe(listHeight);
-  expect(JSON.parse((await saved(page))!).items).toHaveLength(
-    rotating.items.length + 1,
+  expect(JSON.parse((await saved(page))!).shoppings[0].items).toHaveLength(
+    rotating.shoppings[0].items.length + 1,
   );
   // DES-UI-42: PC のマウスを欄外へ移し、固定した並びを解放する。
   await page.mouse.move(0, 0);
@@ -274,8 +296,8 @@ test("TC-FR-BAL-06-08 再計算前後に通知と空き枠を押しても同じ�
     "data-candidates-revision",
     oldRevision!,
   );
-  expect(JSON.parse((await saved(page))!).items).toHaveLength(
-    initial.items.length + 1,
+  expect(JSON.parse((await saved(page))!).shoppings[0].items).toHaveLength(
+    initial.shoppings[0].items.length + 1,
   );
   await page.mouse.move(0, 0);
   await expect(panel(page)).toHaveCount(0);
@@ -284,7 +306,12 @@ test("TC-FR-BAL-06-08 再計算前後に通知と空き枠を押しても同じ�
 test("TC-FR-BAL-06-08 キーボードで登録し、計算待ちの個数変更では最新revisionだけを反映する", async ({
   page,
 }) => {
-  const state = { ...initial, items: initial.items.slice(1) };
+  const state = {
+    ...initial,
+    shoppings: [
+      { ...initial.shoppings[0], items: initial.shoppings[0].items.slice(1) },
+    ],
+  };
   await seed(page, state);
   await ready(page);
   // タイマーを止め、未実行の古い候補予約が残る間に次の操作をする。
@@ -312,15 +339,21 @@ test("TC-FR-BAL-06-08 キーボードで登録し、計算待ちの個数変更�
   ).toBeFocused();
   const expected = basketReducer(before, {
     type: "register",
+    shoppingId: "s",
     id: "expected",
     foodId,
     displayName: name,
   });
   expect(
-    JSON.parse((await saved(page))!).items.map(
-      (item: AppState["items"][number]) => ({ ...item, id: "比較対象外" }),
+    JSON.parse((await saved(page))!).shoppings[0].items.map(
+      (item: AppState["shoppings"][number]["items"][number]) => ({
+        ...item,
+        id: "比較対象外",
+      }),
     ),
-  ).toEqual(expected.items.map((item) => ({ ...item, id: "比較対象外" })));
+  ).toEqual(
+    expected.shoppings[0].items.map((item) => ({ ...item, id: "比較対象外" })),
+  );
 });
 
 test("TC-FR-BAL-06-07 候補なしを説明し、未判定・不足なしでは候補欄を出さない", async ({
@@ -334,13 +367,21 @@ test("TC-FR-BAL-06-07 候補なしを説明し、未判定・不足なしでは�
   ).toBeVisible();
   for (const next of [
     syntheticState("balanced"),
-    { ...initial, items: initial.items.slice(0, 2) },
+    {
+      ...initial,
+      shoppings: [
+        {
+          ...initial.shoppings[0],
+          items: initial.shoppings[0].items.slice(0, 2),
+        },
+      ],
+    },
   ]) {
     await page.evaluate(
       (next) =>
         localStorage.setItem(
           "weekmeal:state",
-          JSON.stringify({ version: 1, ...next }),
+          JSON.stringify({ version: 3, ...next }),
         ),
       next,
     );

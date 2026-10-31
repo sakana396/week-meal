@@ -13,7 +13,12 @@ import {
   referenceFor,
   type BalanceResult,
 } from "./balance";
-import { maximumCount, toRegisteredItems, type AppState } from "./basket";
+import {
+  latestShopping,
+  maximumCount,
+  toRegisteredItems,
+  type AppState,
+} from "./basket";
 import {
   groupFoods,
   isRegistrable,
@@ -114,10 +119,13 @@ export function suggestSupplements(
   data: AnalysisData = defaultAnalysisData,
 ): SupplementSuggestion[] {
   if (candidates.length === 0) return [];
-  const items = toRegisteredItems(state, foodsById);
+  const items = toRegisteredItems(
+    latestShopping(state.shoppings),
+    state.manualFoods,
+    foodsById,
+  );
   const active = items.filter(
     (item) =>
-      !item.usedUp &&
       Number.isFinite(item.count) &&
       item.count > 0 &&
       item.food.nutrientsPer100g.energyKcal !== null,
@@ -168,10 +176,9 @@ export function suggestSupplements(
     const { food, displayName, priority } = candidate;
     if (!((food.nutrientsPer100g.energyKcal ?? 0) > 0)) continue;
     const item = existing.get(food.id)?.get(displayName);
-    const count =
-      item && !item.usedUp
-        ? Math.min(item.count + 1, maximumCount) - item.count
-        : 1;
+    const count = item
+      ? Math.min(item.count + 1, maximumCount) - item.count
+      : 1;
     if (!(count > 0)) continue;
     const amount = edibleGrams(food, weightFor(displayName), count);
     const after = judge(
