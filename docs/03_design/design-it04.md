@@ -110,7 +110,7 @@ flowchart LR
 
 ### 7.1 GitHub Pages（DES-DEP-01, 02）
 
-Vite `base` は dev・build・preview の全 command で常に `/week-meal/` とする。`command === "build"` だけで切り替えない。`npm run dev` のポート 5173 は維持し、URL は `http://localhost:5173/week-meal/` に変わる。公開 URL は `https://sakana396.github.io/week-meal/`。Pages の `build_type=workflow` は 2026-10-27 に有効化済み（IT04-PLAN P-10）。`main` への push で GitHub Actions が `npm ci`、型・lint・書式・単体テスト・ビルド・E2E の成功を確認した後、配信 job で `actions/upload-pages-artifact` により `dist` から Pages artifact を作り、`deploy-pages` で配信する。配信 job は `if: github.ref == 'refs/heads/main' && github.event_name == 'push'` とし、ワークフローの `concurrency: pages` で重複配信を制御する。PR では配信せず検証だけ行う。`pages: write` と `id-token: write` は配信 job にだけ付け、`environment: github-pages` に URL を記録する。現行 CI は check / e2e の 2 job であり、配信 job は新設する。ローカルの `vite preview` に対し Playwright の `webServer.url` と `baseURL` をともに `http://localhost:4173/week-meal/`（末尾 `/` あり）とする。既存 E2E の約 30 か所の `page.goto("/#/...")` とヘルパーの同形式を `page.goto("#/...")` の相対指定に改め、base の外へ移動しないようにする。E2E のポート衝突は `--strictPort` の失敗として分かるようにし、並列起動しない。公開 URL では手動の登録→判定→再読み込みを確認し、localhost の localStorage は移さない（E-73）。通信監査で登録・設定を送る fetch / XHR がないことを確認する。既存の ADR-0001 の静的サイト方針に沿うため、新たな技術選定 ADR は不要と判断する。
+Vite `base` は dev・build・preview の全 command で常に `/week-meal/` とする。`command === "build"` だけで切り替えない。`npm run dev` のポート 5173 は維持し、URL は `http://localhost:5173/week-meal/` に変わる。Vite の dev サーバーは `/` を base へ転送するので古い URL でも開ける。localStorage はオリジン単位なので、パスが変わっても dev のデータは残る。ルートの `README.md` の `http://localhost:5173/` と `dev:docker`（LAN から開く場合）の案内は F で直す。公開 URL は `https://sakana396.github.io/week-meal/`。Pages の `build_type=workflow` は 2026-10-27 に有効化済み（IT04-PLAN P-10）。`main` への push で GitHub Actions が `npm ci`、型・lint・書式・単体テスト・ビルド・E2E の成功を確認した後、配信 job で `actions/upload-pages-artifact` により `dist` から Pages artifact を作り、`deploy-pages` で配信する。配信 job は `if: github.ref == 'refs/heads/main' && github.event_name == 'push'` とし、ワークフローの `concurrency: pages` で重複配信を制御する。PR では配信せず検証だけ行う。`pages: write` と `id-token: write` は配信 job にだけ付け、`environment: github-pages` に URL を記録する。現行 CI は check / e2e の 2 job であり、配信 job は新設する。ローカルの `vite preview` に対し Playwright の `webServer.url` と `baseURL` をともに `http://localhost:4173/week-meal/`（末尾 `/` あり）とする。既存 E2E の約 30 か所の `page.goto("/#/...")` とヘルパーの同形式を `page.goto("#/...")` の相対指定に改め、base の外へ移動しないようにする。E2E のポート衝突は `--strictPort` の失敗として分かるようにし、並列起動しない。公開 URL では手動の登録→判定→再読み込みを確認し、localhost の localStorage は移さない（E-73）。通信監査で登録・設定を送る fetch / XHR がないことを確認する。既存の ADR-0001 の静的サイト方針に沿うため、新たな技術選定 ADR は不要と判断する。
 
 ### 7.2 計測と E2E（DES-PER-03, 04、DES-E2E-10）
 
@@ -132,6 +132,8 @@ Lighthouse は反復末に**公開 URL**で mobile 設定の Performance を手�
 
 A は `usedUp` と `toggleUsedUp` の削除と同時に `ItemRow`・`HomeScreen`・`registerMessage`・既存 E2E をコンパイル・動作可能な最小形へ追従させ、単独で全ゲートを通せる境界とする。`traceability.md` の FR-ING-11・12 の行、および `usedUp` 前提の既存テストの更新・廃止も A が担う。B は新しい画面操作と作成後の遷移を完成し、C は詳細の編集・削除を加える。D は balance と色・E2E、E は `suggestions.ts` と候補 E2E、F は base と E2E 全体を触るため、A・D・E・F は同時着手せず A→D→E→F の順に依存させて衝突を避ける。F は C の画面 E2E が完成してから E2E 全体の URL を変更する。C・G は各依存が閉じてから着手する。Issue 番号は起票時に付くため、ここでは案の記号を使う。
 
+B〜E で新しく書く E2E は、最初から相対の `page.goto("#/...")` で書く。相対の指定は今の base `/` でも `/week-meal/` でも動くので、F で書き直さずに済む。B が作る「作成後の詳細」の最小表示（例: `#/history/<id>` に食材一覧と判定だけを出す）は、Issue の起票のときに範囲を具体的に書く。
+
 ## 9. 設計と SRS の対応
 
 | 要求 | 設計 |
@@ -151,7 +153,8 @@ FR-ING-11・12 は SRS v0.5 で削除済み。対応する新規実装はない�
 ## 10. レビューで確かめる点・計画・要求への提案
 
 - **レビューで確かめる点**: 使い切った行を別の移行用買い物に残す方式、買い物削除の確認、紫の尺度、候補の交互選択、Pages の配信権限と E2E base。いずれもエージェントの設計判断であり、本人の発言として扱わない。
-- **計画・要求への提案**: なし。P-09 の「版 2 の食材は 1 つの買い物にまとめる」を有効行のまとまりに適用し、使い切った行だけ別の移行用買い物に残す。これは P-09 が設計書に委ねた扱いで、データを黙って捨てず、使い切った行だけの移行でもホームを空の通常買い物にするための具体化である。
+- **計画への提案**: P-11 は「過剰の色・棚のばらつき・公開は main から並べて作る」としていたが、8 章では A→B→C、A→D→E、C・E→F の直列寄りにした。D と E が `suggestions.ts`・`balance.ts` を、F が E2E 全体を触り、E2E のポート 4173 も共有なので、並べても速さが上がりにくく衝突を避ける効果が大きいため。P-11 はエージェントの判断なので、振り返りで本人が確かめる。
+- **要求への提案**: なし。P-09 の「版 2 の食材は 1 つの買い物にまとめる」を有効行のまとまりに適用し、使い切った行だけ別の移行用買い物に残す。これは P-09 が設計書に委ねた扱いで、データを黙って捨てず、使い切った行だけの移行でもホームを空の通常買い物にするための具体化である。
 - IT03 振り返り 5 章の実機条件と Lighthouse の本人の記入は未確認。達成したものとして記さない。保存データの容量見積もりとコントラストの端点計算も実機・全色の実測ではない。
 
 ## 11. 変更履歴
@@ -159,4 +162,4 @@ FR-ING-11・12 は SRS v0.5 で削除済み。対応する新規実装はない�
 | 版 | 日付 | 内容 |
 | --- | --- | --- |
 | 0.1 | 2026-10-31 | IT04 の状態・履歴・移行・色・候補・公開・性能の設計案と Issue 分割案 |
-| 0.2 | 2026-10-31 | レビュー（REV-042）の指摘への対応、E-75 |
+| 0.2 | 2026-10-31 | レビュー（REV-042）の指摘への対応、E-75。再レビューの指摘（P-11 からの変更、E2E の書き方、dev の URL）への対応 |
