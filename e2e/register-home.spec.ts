@@ -166,26 +166,6 @@ test("TC-FR-ING-10-08 999 個では増やせない", async ({ page }) => {
   ).toBeDisabled();
 });
 
-test("TC-FR-ING-11-02 使い切ったにすると下にまとまり、戻せる", async ({
-  page,
-}) => {
-  await registerFoods(page, ["にんじん", "キャベツ"]);
-  await openTab(page, "ホーム");
-  await itemRow(page, "キャベツ")
-    .getByRole("button", { name: "キャベツを使い切った" })
-    .click();
-  const rows = page.locator(".item-row");
-  await expect(rows.last()).toContainText("キャベツ");
-  await expect(rows.last()).toHaveAttribute("data-used-up", "true");
-  await itemRow(page, "キャベツ")
-    .getByRole("button", { name: "キャベツを使い切った から戻す" })
-    .click();
-  await expect(itemRow(page, "キャベツ")).toHaveAttribute(
-    "data-used-up",
-    "false",
-  );
-});
-
 test("TC-FR-SYS-01-10 登録した食材と設定は、再読み込みしても残る", async ({
   page,
 }) => {

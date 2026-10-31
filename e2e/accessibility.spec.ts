@@ -148,23 +148,29 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
     (state) => {
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 2, ...state }),
+        JSON.stringify({ version: 3, ...state }),
       );
     },
     {
       ...initialAppState,
-      items: [
-        ["06061", "キャベツ"],
-        ["06212", "にんじん"],
-        ["11115", "豚肉"],
-        ["12004", "鶏卵"],
-      ].map(([foodId, displayName], index) => ({
-        id: `keyboard-${index}`,
-        foodId,
-        displayName,
-        count: 10,
-        usedUp: false,
-      })),
+      shoppings: [
+        {
+          id: "s",
+          date: "2026-10-31",
+          origin: "normal",
+          items: [
+            ["06061", "キャベツ"],
+            ["06212", "にんじん"],
+            ["11115", "豚肉"],
+            ["12004", "鶏卵"],
+          ].map(([foodId, displayName], index) => ({
+            id: `keyboard-${index}`,
+            foodId,
+            displayName,
+            count: 10,
+          })),
+        },
+      ],
     },
   );
   await page.reload();

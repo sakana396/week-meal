@@ -31,7 +31,6 @@ export type RegisteredItem = {
   /** 登録一覧の食材名（目安重量を引くキー） */
   displayName: string;
   count: number;
-  usedUp: boolean;
 };
 
 /** 判定に必要な、主食を除いた食材の最低品目数（TBD-12 の仮置き、DES-BAL-05） */
@@ -77,7 +76,7 @@ export const defaultAnalysisData: AnalysisData = {
 
 /**
  * 登録した食材から偏りを判定する（DES-ANL-01、FR-NUT-06、FR-BAL-05）。
- * 使い切った食材と個数 0 以下の食材を除き、エネルギーのデータがある食材が
+ * 個数 0 以下の食材を除き、エネルギーのデータがある食材が
  * 主食を除いて 3 品目未満なら判定しない（DES-ANL-03）。
  * 量を換算し、主食を盛りの比率で足し、1,000 kcal あたりに直して基準値と比べる。
  */
@@ -87,7 +86,7 @@ export function analyzeBasket(
   data: AnalysisData = defaultAnalysisData,
 ): AnalysisResult {
   const counted = items.filter(
-    (item) => !item.usedUp && Number.isFinite(item.count) && item.count > 0,
+    (item) => Number.isFinite(item.count) && item.count > 0,
   );
   // エネルギーのデータがない食材は割合を求められないので、3 品目の数に入れない（DES-ANL-03）
   const active = counted.filter(

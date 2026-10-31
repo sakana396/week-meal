@@ -77,7 +77,7 @@ test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食�
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("weekmeal:state")!),
   );
-  expect(stored.items[0].foodId).toBe(original);
+  expect(stored.shoppings[0].items[0].foodId).toBe(original);
   expect(stored.manualFoods).toHaveLength(1);
 });
 
@@ -160,7 +160,9 @@ test("TC-FR-ING-15-03 同名食品を棚・番号で区別し両モードの通�
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
   expect(
     await page.evaluate(
-      () => JSON.parse(localStorage.getItem("weekmeal:state")!).items[0].foodId,
+      () =>
+        JSON.parse(localStorage.getItem("weekmeal:state")!).shoppings[0]
+          .items[0].foodId,
     ),
   ).toBe("manual-meat");
 });
@@ -214,7 +216,7 @@ test("TC-FR-ING-15-06 旧分類はその他に表示し成分と来歴を保持�
   expect(food.nutrientsPer100g.energyKcal).toBe(30);
 });
 
-test("TC-NFR-13-12 版 1 を版 2 に移行し行・台帳・設定・順序を保存する", async ({
+test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保存する", async ({
   page,
 }) => {
   const profile = {
@@ -259,17 +261,23 @@ test("TC-NFR-13-12 版 1 を版 2 に移行し行・台帳・設定・順序を�
   );
   await page.goto("/#/");
   await page.reload();
-  await expect(itemRow(page, "登録食品")).toBeVisible();
+  await expect(itemRow(page, "登録食品")).toHaveCount(0);
+  await expect(itemRow(page, "にんじん")).toBeVisible();
+  const migrated = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("weekmeal:state")!),
+  );
+  expect(migrated.version).toBe(3);
   expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("weekmeal:state")!),
-    ),
-  ).toEqual({
-    version: 2,
-    items,
-    manualFoods: foods,
-    profile,
-  });
+    migrated.shoppings.map((shopping: { origin: string; items: unknown[] }) => [
+      shopping.origin,
+      shopping.items.length,
+    ]),
+  ).toEqual([
+    ["usedUpMigration", 1],
+    ["normal", 1],
+  ]);
+  expect(migrated.manualFoods).toEqual(foods);
+  expect(migrated.profile).toEqual(profile);
   await openTab(page, "登録");
   await expect(
     page
@@ -318,7 +326,7 @@ test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号�
     "manual-old",
   ]);
   expect(
-    stored.items.find(
+    stored.shoppings[0].items.find(
       (item: { foodId: string }) => item.foodId === "manual-old",
     ).count,
   ).toBe(2);
@@ -347,7 +355,7 @@ for (const name of ["", "   "]) {
       JSON.parse(localStorage.getItem("weekmeal:state")!),
     );
     expect(stored.manualFoods).toEqual([food]);
-    expect(stored.items).toEqual([]);
+    expect(stored.shoppings).toEqual([]);
     await expect(page.locator('[data-alert="true"]')).toHaveCount(0);
   });
 }

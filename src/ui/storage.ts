@@ -3,8 +3,10 @@ import {
   parseStoredState,
   serializeState,
   type StorageIssue,
+  type MigrationContext,
 } from "../core/storage";
 import { knownFoodIds } from "./foodData";
+import { localId } from "./ids";
 
 /** 保存先のキー（ADR-0004） */
 export const storageKey = "weekmeal:state";
@@ -70,12 +72,24 @@ export function loadAppState(
   } catch {
     return unavailable;
   }
-  const { state, issue } = parseStoredState(text, foodIds);
-  if (issue !== "corrupted" || text === null) {
+  const now = new Date();
+  const date = `${now.getFullYear().toString().padStart(4, "0")}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+  const context: MigrationContext = {
+    date,
+    shoppingIds: { usedUp: localId("shopping"), normal: localId("shopping") },
+  };
+  const { state, issue, migrated } = parseStoredState(
+    text,
+    foodIds,
+    undefined,
+    undefined,
+    context,
+  );
+  if (issue !== "corrupted" && !migrated) {
     return { state, issue, backedUp: false, available: writable };
   }
   let backedUp = false;
-  if (writable) {
+  if (writable && text !== null) {
     try {
       store.setItem(backupKey, text);
       backedUp = true;

@@ -16,10 +16,12 @@ export function registerMessage(state: AppState, action: BasketAction): string {
   if (action.type !== "register" && action.type !== "addManualFood") return "";
   const foodId = action.type === "register" ? action.foodId : action.food.id;
   const find = (target: AppState) =>
-    target.items.find(
-      (item) =>
-        item.foodId === foodId && item.displayName === action.displayName,
-    );
+    target.shoppings
+      .find((shopping) => shopping.id === action.shoppingId)
+      ?.items.find(
+        (item) =>
+          item.foodId === foodId && item.displayName === action.displayName,
+      );
   const before = find(state);
   const after = find(basketReducer(state, action));
   if (!after) return "";
@@ -27,7 +29,7 @@ export function registerMessage(state: AppState, action: BasketAction): string {
     ? unitWeights[action.displayName].unit
     : "つ（概算）";
   const amount = `${formatCount(after.count)} ${unit}`;
-  if (before && !before.usedUp && before.count >= maximumCount) {
+  if (before && before.count >= maximumCount) {
     return `${action.displayName}はこれ以上増やせません（${amount}）`;
   }
   return `${action.displayName}を登録しました（${amount}）`;

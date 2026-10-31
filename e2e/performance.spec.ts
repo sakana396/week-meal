@@ -34,13 +34,19 @@ function fixture(size: number): AppState {
   ];
   return {
     ...initialAppState,
-    items: Array.from({ length: size }, (_, i) => ({
-      id: `perf-${i}`,
-      foodId: foods[i % 3][0],
-      displayName: i < 3 ? foods[i][1] : `負荷試料${i}`,
-      count: 10,
-      usedUp: false,
-    })),
+    shoppings: [
+      {
+        id: "s",
+        date: "2026-10-31",
+        origin: "normal",
+        items: Array.from({ length: size }, (_, i) => ({
+          id: `perf-${i}`,
+          foodId: foods[i % 3][0],
+          displayName: i < 3 ? foods[i][1] : `負荷試料${i}`,
+          count: 10,
+        })),
+      },
+    ],
     manualFoods: Array.from({ length: size }, (_, i) => ({
       refusePct: null,
       nutrientsPer100g: Object.fromEntries(
@@ -178,7 +184,7 @@ for (const size of [3, 30, 100]) {
           "register",
           "candidate",
           "increment",
-          "usedUp",
+          "remove",
         ] as const) {
           const values: number[] = [];
           const calculationValues: number[] = [];
@@ -188,7 +194,7 @@ for (const size of [3, 30, 100]) {
               (state) =>
                 localStorage.setItem(
                   "weekmeal:state",
-                  JSON.stringify({ version: 2, ...state }),
+                  JSON.stringify({ version: 3, ...state }),
                 ),
               fixture(size),
             );
@@ -232,7 +238,7 @@ for (const size of [3, 30, 100]) {
                       name:
                         operation === "increment"
                           ? "キャベツを 0.5 増やす"
-                          : "キャベツを使い切った",
+                          : "キャベツを削除",
                       exact: true,
                     });
             // Playwright のスクロール・待機は計測開始より前。捕捉対象の次の click だけを測る。
@@ -242,10 +248,10 @@ for (const size of [3, 30, 100]) {
               await button.focus();
               await page.mouse.move(0, 0);
             }
-            // 3行から使い切ると判定対象が2行になり、候補欄自体が消える。
+            // 3行から削除すると判定対象が2行になり、候補欄自体が消える。
             const trackCandidates =
               operation !== "register" &&
-              !(size === 3 && operation === "usedUp");
+              !(size === 3 && operation === "remove");
             await arm(page, trackCandidates);
             if (operation === "candidate") await button.press("Enter");
             else await button.click();
@@ -371,13 +377,16 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
   const state = fixture(3);
   // 同じ食品3行・主食なしでは、個数を変えても栄養の割合と判定文言は変わらない。
   state.profile = { ...state.profile, staple: "none" };
-  state.items = state.items.map((item) => ({ ...item, foodId: "06061" }));
+  state.shoppings[0].items = state.shoppings[0].items.map((item) => ({
+    ...item,
+    foodId: "06061",
+  }));
   await page.goto("/#/");
   await page.evaluate(
     (state) =>
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 2, ...state }),
+        JSON.stringify({ version: 3, ...state }),
       ),
     state,
   );

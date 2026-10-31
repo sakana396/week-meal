@@ -24,6 +24,8 @@ function memoryStore(initial: Record<string, string> = {}): KeyValueStore & {
 
 const known = new Set(["06212"]);
 const saved = basketReducer(initialAppState, {
+  shoppingId: "s",
+  initialShopping: { id: "s", date: "2026-10-31" },
   type: "register",
   id: "r1",
   foodId: "06212",
@@ -42,6 +44,47 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     });
   });
 
+  it("TC-NFR-13-15 版 2 の原文を退避してから版 3 に書き込める", () => {
+    const old = JSON.stringify({
+      version: 2,
+      items: [
+        {
+          id: "r",
+          foodId: "06212",
+          displayName: "にんじん",
+          count: 1,
+          usedUp: false,
+        },
+      ],
+      manualFoods: [],
+      profile: initialAppState.profile,
+    });
+    const store = memoryStore({ [storageKey]: old });
+    const result = loadAppState({ store, writable: true }, known);
+    expect(result.available).toBe(true);
+    expect(result.state.shoppings[0].items[0].displayName).toBe("にんじん");
+    expect(store.data[backupKey]).toBe(old);
+    expect(saveAppState(store, result.state)).toBe(true);
+    expect(JSON.parse(store.data[storageKey]).version).toBe(3);
+  });
+  it("TC-NFR-12-38 版 2 の退避に失敗したら保存を止める", () => {
+    const old = JSON.stringify({
+      version: 2,
+      items: [],
+      manualFoods: [],
+      profile: initialAppState.profile,
+    });
+    const store: KeyValueStore = {
+      getItem: () => old,
+      setItem: () => {
+        throw new Error("quota");
+      },
+    };
+    expect(loadAppState({ store, writable: true }, known)).toMatchObject({
+      backedUp: false,
+      available: false,
+    });
+  });
   it("TC-NFR-12-29 読めない保存データは、書き出す前に退避する", () => {
     const store = memoryStore({ [storageKey]: "{壊れた" });
     const result = loadAppState({ store, writable: true }, known);

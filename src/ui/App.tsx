@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
-import { analyzeBasket } from "../core/analyze";
-import { toRegisteredItems } from "../core/basket";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { latestShopping } from "../core/basket";
+import { analyzeShopping } from "../core/shoppingAnalysis";
 import {
   basketSessionReducer,
   type BasketSessionState,
@@ -48,6 +48,12 @@ export default function App() {
   });
   const state = session.appState;
   const [route, navigate] = useHashRoute();
+  const previousRoute = useRef(route);
+  useEffect(() => {
+    if (previousRoute.current !== route)
+      dispatch({ type: "clearPendingRemoval" });
+    previousRoute.current = route;
+  }, [route]);
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
   useEffect(() => {
@@ -69,7 +75,7 @@ export default function App() {
     state.manualFoods.find((food) => food.id === foodId);
 
   const analysis = useMemo(
-    () => analyzeBasket(toRegisteredItems(state, foodsById), state.profile),
+    () => analyzeShopping(latestShopping(state.shoppings), state, foodsById),
     [state],
   );
 

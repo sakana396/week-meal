@@ -61,13 +61,19 @@ function state(): AppState {
   return {
     profile: { ...profile },
     manualFoods: [],
-    items: baseFoods.map((f) => ({
-      id: f.id,
-      foodId: f.id,
-      displayName: f.id,
-      count: 1,
-      usedUp: false,
-    })),
+    shoppings: [
+      {
+        id: "s",
+        date: "2026-10-31",
+        origin: "normal",
+        items: baseFoods.map((f) => ({
+          id: f.id,
+          foodId: f.id,
+          displayName: f.id,
+          count: 1,
+        })),
+      },
+    ],
   };
 }
 const data: AnalysisData = {
@@ -147,7 +153,7 @@ describe("補う候補（DES-SUG-01〜03）", () => {
     "TC-FR-BAL-06-02 %sなら空配列",
     (kind) => {
       const current = state();
-      if (kind === "2品目") current.items.pop();
+      if (kind === "2品目") current.shoppings[0].items.pop();
       const foods = baseFoods.map((f) =>
         food(
           f.id,
@@ -184,34 +190,44 @@ describe("補う候補（DES-SUG-01〜03）", () => {
       suggest([candidate("a"), candidate("zero", { vitaminCMg: 0 })]),
     ).toHaveLength(1);
   });
-  it.each([
-    { count: 1, usedUp: false },
-    { count: 998.5, usedUp: false },
-    { count: 999, usedUp: true },
-    { count: maximumCount, usedUp: false },
-  ])(
-    "TC-FR-BAL-06-04 登録と同じ追加を仮定する $count/$usedUp",
-    ({ count, usedUp }) => {
+  it.each([{ count: 1 }, { count: 998.5 }, { count: maximumCount }])(
+    "TC-FR-BAL-06-04 登録と同じ追加を仮定する $count",
+    ({ count }) => {
       const c = candidate("c");
       const current = state();
-      current.items.push({
+      current.shoppings[0].items.push({
         id: "c",
         foodId: c.food.id,
         displayName: c.displayName,
         count,
-        usedUp,
       });
       const snapshot = structuredClone(current);
       const suggestions = suggest([c], current, {
         ...data,
         unitWeights: { c: { unit: "個", purchaseG: 0.1, source: "テスト用" } },
       });
-      expect(suggestions).toHaveLength(
-        count === maximumCount && !usedUp ? 0 : 1,
-      );
+      expect(suggestions).toHaveLength(count === maximumCount ? 0 : 1);
       expect(current).toEqual(snapshot);
     },
   );
+  it("TC-FR-BAL-06-04 前の買い物の上限行は最新の買い物の候補を妨げない", () => {
+    const c = candidate("c");
+    const current = state();
+    current.shoppings.unshift({
+      id: "previous",
+      date: "2026-10-30",
+      origin: "normal",
+      items: [
+        {
+          id: "previous-c",
+          foodId: "c",
+          displayName: "c",
+          count: maximumCount,
+        },
+      ],
+    });
+    expect(suggest([c], current)).toHaveLength(1);
+  });
   it.each([
     { energyKcal: null },
     { energyKcal: 0 },
@@ -333,14 +349,18 @@ describe("補う候補（DES-SUG-01〜03）", () => {
     const map = new Map(baseFoods.map((f) => [f.id, f]));
     const snapshot = structuredClone({ current, candidates, map });
     const before = analyzeBasket(
-      toRegisteredItems(current, map),
+      toRegisteredItems(current.shoppings[0], current.manualFoods, map),
       current.profile,
       data,
     );
     suggestSupplements(current, map, candidates, data);
     expect({ current, candidates, map }).toEqual(snapshot);
     expect(
-      analyzeBasket(toRegisteredItems(current, map), current.profile, data),
+      analyzeBasket(
+        toRegisteredItems(current.shoppings[0], current.manualFoods, map),
+        current.profile,
+        data,
+      ),
     ).toEqual(before);
   });
 });
@@ -372,8 +392,12 @@ it.each([
 it.each(
   (["none", "rice", "bread", "noodle"] as const).flatMap((staple) =>
     (["small", "medium", "large"] as const).flatMap((portion) =>
-      ["新規", "既存", "使い切った", "998.5", "999", "欠損", "概算"].map(
-        (mode) => ({ staple, portion, mode }),
+      ["新規", "既存", "998.5", "999", "欠損", "概算", "前の買い物"].map(
+        (mode) => ({
+          staple,
+          portion,
+          mode,
+        }),
       ),
     ),
   ),
@@ -387,23 +411,31 @@ it.each(
       food(f.id, mode === "欠損" ? { vitaminAUg: null, proteinG: null } : {}),
     );
     const map = new Map([...foods, c.food].map((f) => [f.id, f]));
+    if (mode === "前の買い物") {
+      current.shoppings.unshift({
+        id: "previous",
+        date: "2026-10-30",
+        origin: "normal",
+        items: [
+          { id: "previous-c", foodId: "c", displayName: "c", count: 999 },
+        ],
+      });
+    }
     // エネルギー欠損の行は、既存の判定と同じく品目数と合計から除く。
     const noEnergy = food("noEnergy", { energyKcal: null });
     current.manualFoods.push(noEnergy);
-    current.items.push({
+    current.shoppings[0].items.push({
       id: "missing",
       foodId: noEnergy.id,
       displayName: "missing",
       count: 1,
-      usedUp: false,
     });
-    if (["既存", "使い切った", "998.5", "999"].includes(mode)) {
-      current.items.push({
+    if (["既存", "998.5", "999"].includes(mode)) {
+      current.shoppings[0].items.push({
         id: "c",
         foodId: "c",
         displayName: "c",
         count: mode === "998.5" ? 998.5 : mode === "999" ? 999 : 1,
-        usedUp: mode === "使い切った",
       });
     }
     const testData: AnalysisData = {
@@ -424,19 +456,25 @@ it.each(
         noodle: food("noodle"),
       },
     };
+    const target = current.shoppings.find((shopping) => shopping.id === "s")!;
     const before = analyzeBasket(
-      toRegisteredItems(current, map),
+      toRegisteredItems(target, current.manualFoods, map),
       current.profile,
       testData,
     );
     const added = basketReducer(current, {
       type: "register",
+      shoppingId: "s",
       id: "new",
       foodId: "c",
       displayName: "c",
     });
     const after = analyzeBasket(
-      toRegisteredItems(added, map),
+      toRegisteredItems(
+        added.shoppings.find((shopping) => shopping.id === "s")!,
+        added.manualFoods,
+        map,
+      ),
       added.profile,
       testData,
     );
@@ -589,27 +627,24 @@ it("TC-FR-BAL-06-05 現在不明の成分を0として改善量に加算しな�
 it("TC-FR-BAL-06-04 食品番号と表示名が両方一致する最初の行だけを使う", () => {
   const c = candidate("c");
   const current = state();
-  current.items.push({
+  current.shoppings[0].items.push({
     id: "different",
     foodId: "c",
     displayName: "別名",
-    count: 999,
-    usedUp: true,
+    count: 1,
   });
   expect(suggest([c], current)).toHaveLength(1);
-  current.items.push({
+  current.shoppings[0].items.push({
     id: "first",
     foodId: "c",
     displayName: "c",
     count: 999,
-    usedUp: false,
   });
-  current.items.push({
+  current.shoppings[0].items.push({
     id: "second",
     foodId: "c",
     displayName: "c",
     count: 1,
-    usedUp: true,
   });
   expect(suggest([c], current)).toEqual([]);
 });

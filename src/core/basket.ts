@@ -3,132 +3,216 @@ import type { RegisteredItem } from "./analyze";
 import type { ManualFood } from "./manualFoods";
 import { defaultProfile, type Profile } from "./profile";
 
-/** 登録した食材 1 行（DES-BSK） */
+/** 買い物内の登録行（DES-SHP-01）。 */
 export type BasketEntry = {
-  /** 登録ごとの ID（画面側で作って action に入れる） */
   id: string;
-  /** 食品番号。手入力の食品は manualFoods の id（"manual-" で始め、食品番号とぶつからないようにする） */
   foodId: string;
-  /** 登録一覧の食材名（目安重量を引くキー） */
   displayName: string;
-  /** 個数（0.5 刻み、0.5 以上 999 以下） */
   count: number;
-  usedUp: boolean;
 };
-
-/** 画面の状態のうち、保存するもの（DES-BSK、ADR-0004） */
-export type AppState = {
+/** 作成順を配列位置で保持する買い物（DES-SHP-01）。 */
+export type Shopping = {
+  id: string;
+  date: string;
+  origin: "normal" | "usedUpMigration";
   items: BasketEntry[];
+};
+/** 保存する状態（DES-SHP-01）。 */
+export type AppState = {
+  shoppings: Shopping[];
   manualFoods: ManualFood[];
   profile: Profile;
 };
-
+/** 買い物 ID は画面から渡す（DES-SHP-02）。 */
 export type BasketAction =
-  | { type: "register"; foodId: string; displayName: string; id: string }
-  | { type: "increment"; id: string }
-  | { type: "decrement"; id: string }
-  | { type: "toggleUsedUp"; id: string }
-  | { type: "remove"; id: string }
-  | { type: "addManualFood"; food: ManualFood; displayName: string; id: string }
+  | { type: "createShopping"; id: string; date: string }
+  | { type: "setShoppingDate"; shoppingId: string; date: string }
+  | {
+      type: "register";
+      shoppingId: string;
+      foodId: string;
+      displayName: string;
+      id: string;
+      initialShopping?: { id: string; date: string };
+    }
+  | {
+      type: "addManualFood";
+      shoppingId: string;
+      food: ManualFood;
+      displayName: string;
+      id: string;
+      initialShopping?: { id: string; date: string };
+    }
+  | {
+      type: "increment" | "decrement" | "remove";
+      shoppingId: string;
+      id: string;
+    }
+  | { type: "removeShopping"; shoppingId: string }
   | { type: "setProfile"; profile: Profile }
   | { type: "replace"; state: AppState };
 
-/** 個数の増減の幅と、下限・上限（DES-BSK-02、FR-QTY-04。上限は保存データの検査 DES-STO-04 と合わせる） */
 export const countStep = 0.5;
 export const minimumCount = 0.5;
 export const maximumCount = 999;
-
 export const initialAppState: AppState = {
-  items: [],
+  shoppings: [],
   manualFoods: [],
   profile: defaultProfile,
 };
 
-function updateItem(
+/** 実在する現地の暦日を検査する（DES-SHP-01）。 */
+export function validShoppingDate(date: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const [year, month, day] = date.split("-").map(Number);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= days[month - 1];
+}
+
+/** 日付、同日の作成順で最新を選ぶ（DES-SHP-01）。 */
+export function latestShopping(
+  shoppings: readonly Shopping[],
+): Shopping | null {
+  return shoppings.reduce<Shopping | null>(
+    (latest, shopping) =>
+      latest === null || shopping.date >= latest.date ? shopping : latest,
+    null,
+  );
+}
+
+function changeShopping(
   state: AppState,
-  id: string,
-  update: (item: BasketEntry) => BasketEntry,
+  shoppingId: string,
+  update: (shopping: Shopping) => Shopping,
 ): AppState {
-  if (!state.items.some((item) => item.id === id)) return state;
+  const index = state.shoppings.findIndex(
+    (shopping) => shopping.id === shoppingId,
+  );
+  if (index < 0) return state;
+  const original = state.shoppings[index];
+  const changed = update(original);
+  if (changed === original) return state;
   return {
     ...state,
-    items: state.items.map((item) => (item.id === id ? update(item) : item)),
+    shoppings: state.shoppings.map((shopping, position) =>
+      position === index ? changed : shopping,
+    ),
   };
 }
 
-/**
- * 同じ食材名かつ同じ食品番号の行があれば個数を増やし、なければ先頭に足す（DES-BSK-01）。
- * 詳細モードで同じ食材名の別の食品を選んだときは、栄養が違うので別の行にする。
- */
 function register(
-  state: AppState,
-  entry: Omit<BasketEntry, "count" | "usedUp">,
-): AppState {
-  const existing = state.items.find(
+  shopping: Shopping,
+  entry: Omit<BasketEntry, "count">,
+): Shopping {
+  const existing = shopping.items.find(
     (item) =>
-      item.displayName === entry.displayName && item.foodId === entry.foodId,
+      item.foodId === entry.foodId && item.displayName === entry.displayName,
   );
-  if (!existing) {
+  if (existing) {
+    if (existing.count >= maximumCount) return shopping;
     return {
-      ...state,
-      items: [{ ...entry, count: 1, usedUp: false }, ...state.items],
+      ...shopping,
+      items: shopping.items.map((item) =>
+        item === existing
+          ? { ...item, count: Math.min(maximumCount, item.count + 1) }
+          : item,
+      ),
     };
   }
-  return updateItem(state, existing.id, (item) =>
-    item.usedUp
-      ? { ...item, usedUp: false, count: 1 }
-      : { ...item, count: Math.min(item.count + 1, maximumCount) },
-  );
+  if (shopping.items.some((item) => item.id === entry.id)) return shopping;
+  return { ...shopping, items: [{ ...entry, count: 1 }, ...shopping.items] };
 }
 
-/**
- * 登録した食材と設定の状態を更新する（DES-BSK-01〜06）。
- * 引数を変えず、新しい状態を返す。知らない ID への操作は状態をそのまま返す。
- */
+/** 入力を変更せず買い物単位で操作する（DES-SHP-02）。 */
 export function basketReducer(state: AppState, action: BasketAction): AppState {
   switch (action.type) {
-    case "register":
-      return register(state, {
-        id: action.id,
-        foodId: action.foodId,
-        displayName: action.displayName,
-      });
-    case "increment":
-      return updateItem(state, action.id, (item) =>
-        item.count + countStep > maximumCount
-          ? item
-          : { ...item, count: item.count + countStep },
-      );
-    case "decrement":
-      return updateItem(state, action.id, (item) =>
-        item.count - countStep < minimumCount
-          ? item
-          : { ...item, count: item.count - countStep },
-      );
-    case "toggleUsedUp":
-      return updateItem(state, action.id, (item) => ({
-        ...item,
-        usedUp: !item.usedUp,
-      }));
-    case "remove": {
-      const target = state.items.find((item) => item.id === action.id);
-      if (!target) return state;
-      const items = state.items.filter((item) => item.id !== action.id);
-      // 登録行を削除しても再登録用の台帳は残す（DES-MAN-01）。
-      return { ...state, items };
-    }
-    case "addManualFood": {
-      const withFood = state.manualFoods.some(
-        (food) => food.id === action.food.id,
-      )
+    case "createShopping":
+      return !action.id ||
+        !validShoppingDate(action.date) ||
+        state.shoppings.some((shopping) => shopping.id === action.id)
         ? state
-        : { ...state, manualFoods: [action.food, ...state.manualFoods] };
-      return register(withFood, {
+        : {
+            ...state,
+            shoppings: [
+              ...state.shoppings,
+              { id: action.id, date: action.date, origin: "normal", items: [] },
+            ],
+          };
+    case "setShoppingDate":
+      return validShoppingDate(action.date)
+        ? changeShopping(state, action.shoppingId, (shopping) =>
+            shopping.date === action.date
+              ? shopping
+              : { ...shopping, date: action.date },
+          )
+        : state;
+    case "register":
+    case "addManualFood": {
+      if (
+        !action.id ||
+        !action.displayName ||
+        (action.type === "register" ? !action.foodId : !action.food.id)
+      )
+        return state;
+      const start =
+        state.shoppings.length === 0 &&
+        action.initialShopping &&
+        action.initialShopping.id === action.shoppingId
+          ? basketReducer(state, {
+              type: "createShopping",
+              ...action.initialShopping,
+            })
+          : state;
+      const entry = {
         id: action.id,
-        foodId: action.food.id,
+        foodId: action.type === "register" ? action.foodId : action.food.id,
         displayName: action.displayName,
-      });
+      };
+      const updated = changeShopping(start, action.shoppingId, (shopping) =>
+        register(shopping, entry),
+      );
+      if (updated === state || action.type === "register") return updated;
+      return updated.manualFoods.some((food) => food.id === action.food.id)
+        ? updated
+        : { ...updated, manualFoods: [action.food, ...updated.manualFoods] };
     }
+    case "increment":
+    case "decrement":
+      return changeShopping(state, action.shoppingId, (shopping) => {
+        const item = shopping.items.find((entry) => entry.id === action.id);
+        if (!item) return shopping;
+        const count =
+          item.count + (action.type === "increment" ? countStep : -countStep);
+        if (count < minimumCount || count > maximumCount) return shopping;
+        return {
+          ...shopping,
+          items: shopping.items.map((entry) =>
+            entry === item ? { ...entry, count } : entry,
+          ),
+        };
+      });
+    case "remove":
+      return changeShopping(state, action.shoppingId, (shopping) =>
+        shopping.items.some((item) => item.id === action.id)
+          ? {
+              ...shopping,
+              items: shopping.items.filter((item) => item.id !== action.id),
+            }
+          : shopping,
+      );
+    case "removeShopping":
+      return state.shoppings.some(
+        (shopping) => shopping.id === action.shoppingId,
+      )
+        ? {
+            ...state,
+            shoppings: state.shoppings.filter(
+              (shopping) => shopping.id !== action.shoppingId,
+            ),
+          }
+        : state;
     case "setProfile":
       return { ...state, profile: action.profile };
     case "replace":
@@ -136,25 +220,18 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
   }
 }
 
-/**
- * 分析用の登録食材に直す（DES-BSK-07）。食品データにも手入力にも見つからない行は除く。
- */
+/** 対象の買い物だけを分析用の行に直す（DES-SHP-03）。 */
 export function toRegisteredItems(
-  state: AppState,
+  shopping: Shopping | null,
+  manualFoods: readonly ManualFood[],
   foodsById: ReadonlyMap<string, FoodItem>,
 ): RegisteredItem[] {
-  const manualById = new Map(state.manualFoods.map((food) => [food.id, food]));
-  return state.items.flatMap((item) => {
+  if (!shopping) return [];
+  const manualById = new Map(manualFoods.map((food) => [food.id, food]));
+  return shopping.items.flatMap((item) => {
     const food = foodsById.get(item.foodId) ?? manualById.get(item.foodId);
     return food
-      ? [
-          {
-            food,
-            displayName: item.displayName,
-            count: item.count,
-            usedUp: item.usedUp,
-          },
-        ]
+      ? [{ food, displayName: item.displayName, count: item.count }]
       : [];
   });
 }

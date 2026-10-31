@@ -367,7 +367,14 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
     const stored = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("weekmeal:state")!),
     );
-    expect(stored.items).toEqual([item]);
+    expect(stored.shoppings[0].items).toEqual([
+      {
+        id: item.id,
+        foodId: item.foodId,
+        displayName: item.displayName,
+        count: item.count,
+      },
+    ]);
     expect(stored.manualFoods[0].nutrientsPer100g).toEqual(
       source.nutrientsPer100g,
     );
