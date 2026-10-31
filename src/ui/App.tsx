@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { latestShopping } from "../core/basket";
+import { latestShopping, basketReducer } from "../core/basket";
 import { analyzeShopping } from "../core/shoppingAnalysis";
 import {
   basketSessionReducer,
@@ -10,6 +10,9 @@ import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
 import { useHashRoute } from "./route";
+import { localId } from "./ids";
+import { localDate } from "./localDate";
+import { HistoryDetailScreen } from "./screens/HistoryDetailScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { BalanceDetailScreen } from "./screens/BalanceDetailScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
@@ -47,13 +50,63 @@ export default function App() {
     revision: 0,
   });
   const state = session.appState;
-  const [route, navigate] = useHashRoute();
-  const previousRoute = useRef(route);
+  const [location, navigate, replaceRoute] = useHashRoute();
+  const { route, shoppingId, invalidShopping } = location;
+  const [routeNotice, setRouteNotice] = useState<{
+    text: string;
+    route: typeof route;
+    shoppingId?: string;
+  } | null>(null);
+  const visibleRouteNotice =
+    routeNotice?.route === route &&
+    routeNotice.shoppingId === (shoppingId ?? undefined)
+      ? routeNotice.text
+      : "";
+  const previousRoute = useRef(location);
   useEffect(() => {
-    if (previousRoute.current !== route)
+    if (previousRoute.current !== location)
       dispatch({ type: "clearPendingRemoval" });
-    previousRoute.current = route;
-  }, [route]);
+    if (
+      previousRoute.current !== location &&
+      routeNotice?.route === previousRoute.current.route &&
+      routeNotice.shoppingId ===
+        (previousRoute.current.shoppingId ?? undefined) &&
+      (routeNotice.route !== route ||
+        routeNotice.shoppingId !== (shoppingId ?? undefined))
+    )
+      queueMicrotask(() =>
+        setRouteNotice((current) => (current === routeNotice ? null : current)),
+      );
+    previousRoute.current = location;
+  }, [location, routeNotice, route, shoppingId]);
+  useEffect(() => {
+    if (
+      route !== "register" ||
+      shoppingId ||
+      state.shoppings.length === 0 ||
+      invalidShopping
+    )
+      return;
+    const latest = latestShopping(state.shoppings);
+    if (latest) replaceRoute("register", latest.id);
+  }, [route, shoppingId, state.shoppings, invalidShopping, replaceRoute]);
+  useEffect(() => {
+    if (
+      !invalidShopping &&
+      !(
+        shoppingId &&
+        !state.shoppings.some((shopping) => shopping.id === shoppingId)
+      )
+    )
+      return;
+    queueMicrotask(() => {
+      setRouteNotice({
+        text: "指定した買い物が見つかりません",
+        route: "history",
+      });
+      replaceRoute("history");
+    });
+  }, [invalidShopping, shoppingId, state.shoppings, replaceRoute]);
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
   useEffect(() => {
@@ -79,6 +132,51 @@ export default function App() {
     [state],
   );
 
+  /** 買い物を空で作り、その詳細へ移る（DES-UI-46）。 */
+  function createShopping() {
+    const id = localId("shopping");
+    const date = localDate();
+    const next = basketReducer(state, { type: "createShopping", id, date });
+    if (next === state) return;
+    const latest = latestShopping(next.shoppings);
+    setRouteNotice({
+      text:
+        latest?.id === id
+          ? "ホームの対象が新しい買い物に変わりました"
+          : "この買い物は最新ではありません",
+      route: "historyDetail",
+      shoppingId: id,
+    });
+    dispatch({ type: "createShopping", id, date });
+    navigate("historyDetail", id);
+  }
+
+  /** 日付保存で最新の対象が変わることを知らせる（DES-UI-46）。 */
+  function changeShoppingDate(id: string, date: string) {
+    const before = latestShopping(state.shoppings)?.id;
+    const next = basketReducer(state, {
+      type: "setShoppingDate",
+      shoppingId: id,
+      date,
+    });
+    if (next === state) return;
+    dispatch({ type: "setShoppingDate", shoppingId: id, date });
+    setRouteNotice({
+      text:
+        before !== latestShopping(next.shoppings)?.id
+          ? "ホームの対象が変わりました"
+          : "買い物の日付を変更しました",
+      route: route === "home" ? "home" : "historyDetail",
+      shoppingId: route === "home" ? undefined : id,
+    });
+  }
+
+  const selectedShopping = state.shoppings.find(
+    (shopping) => shopping.id === shoppingId,
+  );
+  const selectedAnalysis = selectedShopping
+    ? analyzeShopping(selectedShopping, state, foodsById)
+    : analysis;
   const notice = (
     <StorageNotice
       available={loaded.available}
@@ -90,7 +188,17 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Navigation navigate={navigate} route={route} />
+      <Navigation
+        navigate={(next) =>
+          navigate(
+            next,
+            next === "register"
+              ? latestShopping(state.shoppings)?.id
+              : undefined,
+          )
+        }
+        route={route}
+      />
       <main className="content-panel" data-analysis-revision={revision}>
         {route === "home" && (
           <HomeScreen
@@ -102,14 +210,47 @@ export default function App() {
             notice={notice}
             state={state}
             pendingRemoval={session.pendingRemoval}
+            onCreateShopping={createShopping}
+            onDateChange={changeShoppingDate}
+            routeNotice={visibleRouteNotice}
           />
         )}
         {route === "register" && (
-          <RegisterScreen dispatch={dispatch} state={state} />
+          <RegisterScreen
+            dispatch={dispatch}
+            state={state}
+            shoppingId={shoppingId}
+            navigate={navigate}
+            replaceRoute={replaceRoute}
+          />
+        )}
+        {route === "history" && (
+          <div className="screen-stack">
+            <h2>買い物の履歴</h2>
+            {visibleRouteNotice && <p role="status">{visibleRouteNotice}</p>}
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => navigate("home")}
+            >
+              ホームへ戻る
+            </button>
+          </div>
+        )}
+        {route === "historyDetail" && selectedShopping && (
+          <HistoryDetailScreen
+            key={selectedShopping.id}
+            shopping={selectedShopping}
+            analysis={selectedAnalysis}
+            profile={state.profile}
+            navigate={navigate}
+            notice={visibleRouteNotice}
+            onDateChange={changeShoppingDate}
+          />
         )}
         {route === "balance" && (
           <BalanceDetailScreen
-            analysis={analysis}
+            analysis={selectedAnalysis}
             navigate={navigate}
             profile={state.profile}
           />
