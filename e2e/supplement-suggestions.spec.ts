@@ -38,6 +38,19 @@ const rotating: AppState = {
     },
   ],
 };
+// 棚分散後も先頭は10173。登録後は先頭だけが候補から消え、残る2件は維持される。
+const disappearingFirst: AppState = {
+  ...rotating,
+  shoppings: [
+    {
+      ...rotating.shoppings[0],
+      items: rotating.shoppings[0].items.map((item, index) => ({
+        ...item,
+        count: [8, 10, 10, 7][index],
+      })),
+    },
+  ],
+};
 const panel = (page: Page) =>
   page.getByRole("region", { name: "不足を補う候補" });
 const revision = (page: Page) =>
@@ -174,7 +187,7 @@ test("TC-FR-BAL-06-06 TC-FR-NUT-06-04 候補表示では登録・判定・保存
 test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と残る候補の順序を欄外移動まで保つ", async ({
   page,
 }) => {
-  await seed(page, rotating);
+  await seed(page, disappearingFirst);
   await ready(page);
   const slots = panel(page).locator("li");
   const buttons = panel(page).locator("button[data-food-id]");
@@ -247,12 +260,12 @@ test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と
       .evaluate((element) => element.getBoundingClientRect().height),
   ).toBe(listHeight);
   expect(JSON.parse((await saved(page))!).shoppings[0].items).toHaveLength(
-    rotating.shoppings[0].items.length + 1,
+    disappearingFirst.shoppings[0].items.length + 1,
   );
   // DES-UI-42: PC のマウスを欄外へ移し、固定した並びを解放する。
   await page.mouse.move(0, 0);
   await ready(page);
-  expect(await ids()).toEqual(["08001", "10173", "08013"]);
+  expect(await ids()).toEqual(["08028", "13003", "08013"]);
   await expect(buttons.first()).toBeEnabled();
 });
 
