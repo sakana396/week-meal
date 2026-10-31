@@ -11,6 +11,7 @@ import {
 } from "./basket";
 import { defaultProfile } from "./profile";
 import { analyzeShopping } from "./shoppingAnalysis";
+import { suggestSupplements } from "./suggestions";
 
 const today = "2026-10-31";
 const base: AppState = {
@@ -183,5 +184,92 @@ describe("買い物の状態（DES-SHP-01〜03）", () => {
     expect(
       analyzeShopping(null, { ...state, profile: defaultProfile }, new Map()),
     ).toMatchObject({ kind: "insufficient", itemCount: 0 });
+  });
+  it.each([
+    { ids: [], count: 0, noData: [] },
+    { ids: ["06061", "06212"], count: 2, noData: [] },
+    {
+      ids: ["06061", "06212", "missingEnergy"],
+      count: 2,
+      noData: ["missingEnergy"],
+    },
+  ])("TC-FR-NUT-07-02 未判定と候補: $ids", ({ ids, count, noData }) => {
+    const foods = new Map(
+      (foodsJson as FoodItem[]).map((food) => [food.id, food]),
+    );
+    const withEnergy = foods.get("06212");
+    if (withEnergy)
+      foods.set("missingEnergy", {
+        ...withEnergy,
+        id: "missingEnergy",
+        nutrientsPer100g: { ...withEnergy.nutrientsPer100g, energyKcal: null },
+      });
+    const shopping = {
+      ...base.shoppings[0],
+      items: ids.map((foodId, index) => ({
+        id: `r${index}`,
+        foodId,
+        displayName: foodId,
+        count: 1,
+      })),
+    };
+    const state = { ...base, shoppings: [shopping] };
+    expect(analyzeShopping(shopping, state, foods)).toMatchObject({
+      kind: "insufficient",
+      itemCount: count,
+      noDataItems: noData,
+    });
+    const candidate = foods.get("06212");
+    expect(
+      suggestSupplements(
+        state,
+        foods,
+        candidate
+          ? [{ food: candidate, displayName: "にんじん", priority: 1 }]
+          : [],
+      ),
+    ).toEqual([]);
+  });
+  it.each([
+    { date: "2026-11-02", latest: "a", kind: "judged" },
+    { date: "2026-10-29", latest: "b", kind: "insufficient" },
+  ])(
+    "TC-FR-NUT-07-02 日付変更で最新を再分析する（$date）",
+    ({ date, latest, kind }) => {
+      const foods = new Map(
+        (foodsJson as FoodItem[]).map((food) => [food.id, food]),
+      );
+      const older = {
+        ...base.shoppings[0],
+        items: [
+          { id: "r1", foodId: "06061", displayName: "キャベツ", count: 1 },
+          { id: "r2", foodId: "06212", displayName: "にんじん", count: 1 },
+          { id: "r3", foodId: "11115", displayName: "豚肉", count: 1 },
+        ],
+      };
+      const newer = { ...older, id: "b", date: "2026-11-01", items: [] };
+      const state = { ...base, shoppings: [older, newer] };
+      expect(
+        analyzeShopping(latestShopping(state.shoppings), state, foods).kind,
+      ).toBe("insufficient");
+      const changed = basketReducer(state, {
+        type: "setShoppingDate",
+        shoppingId: "a",
+        date,
+      });
+      expect(latestShopping(changed.shoppings)?.id).toBe(latest);
+      expect(
+        analyzeShopping(latestShopping(changed.shoppings), changed, foods).kind,
+      ).toBe(kind);
+    },
+  );
+  it("TC-FR-ING-19-02 行 ID は買い物全体で一意にする", () => {
+    const first = basketReducer(base, register());
+    const two = basketReducer(first, {
+      type: "createShopping",
+      id: "b",
+      date: today,
+    });
+    expect(basketReducer(two, register("b", "r1"))).toBe(two);
   });
 });

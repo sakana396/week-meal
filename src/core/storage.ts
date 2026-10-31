@@ -102,7 +102,10 @@ export function serializeState(state: AppState): string {
   });
 }
 
-/** 保存データを 1 版ずつ移行する（DES-STO-07、10）。 */
+/**
+ * 保存データを今の版まで 1 つずつ移行する（DES-STO-07、10）。
+ * 移行の関数がない、例外を出す、版が上がらない・今の版を飛び越えるときは null を返す。
+ */
 export function migrateStored(
   stored: StoredState,
   table: Migrations,
@@ -285,8 +288,13 @@ export function parseStoredState(
       !validShoppingDate(value.date) ||
       (value.origin !== "normal" && value.origin !== "usedUpMigration") ||
       !Array.isArray(value.items)
-    )
-      return corrupted;
+    ) {
+      droppedItems +=
+        isRecord(value) && Array.isArray(value.items)
+          ? Math.max(1, value.items.length)
+          : 1;
+      continue;
+    }
     if (shoppingIds.has(value.id)) {
       droppedItems += value.items.length;
       continue;

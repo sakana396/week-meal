@@ -7,11 +7,14 @@ import {
 } from "../core/storage";
 import { knownFoodIds } from "./foodData";
 import { localId } from "./ids";
+import { localDate } from "./localDate";
 
 /** 保存先のキー（ADR-0004） */
 export const storageKey = "weekmeal:state";
 /** 読めなかった保存データの退避先（DES-STO、ADR-0004） */
 export const backupKey = "weekmeal:state:backup";
+/** 移行・一部破棄した保存原文の退避先（DES-STO-10、11）。 */
+export const backupMigrationKey = "weekmeal:state:backup-migration";
 
 /** localStorage のうち、使う操作だけ */
 export type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
@@ -19,7 +22,7 @@ export type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
 export type LoadResult = {
   state: AppState;
   issue: StorageIssue;
-  /** 読めなかった保存データを退避したか */
+  /** 破損・移行・一部破棄した保存原文を退避したか */
   backedUp: boolean;
   /** 保存できるか（localStorage が使えるか） */
   available: boolean;
@@ -52,7 +55,7 @@ export function openBrowserStore(): BrowserStore {
 
 /**
  * 起動時に保存データを読み込む（DES-UI-13）。
- * 読めなかったときは、書き出す前に元の文字列を退避する（新しい版のデータを消さないため）。
+ * 破損・移行・一部破棄のときは、書き出す前に元の文字列を退避する（元のデータを消さないため）。
  * 退避できなかったときは、元のデータを上書きしないよう、書き出さない（available を false にする）。
  */
 export function loadAppState(
@@ -72,10 +75,8 @@ export function loadAppState(
   } catch {
     return unavailable;
   }
-  const now = new Date();
-  const date = `${now.getFullYear().toString().padStart(4, "0")}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
   const context: MigrationContext = {
-    date,
+    date: localDate(),
     shoppingIds: { usedUp: localId("shopping"), normal: localId("shopping") },
   };
   const { state, issue, migrated } = parseStoredState(
@@ -85,13 +86,16 @@ export function loadAppState(
     undefined,
     context,
   );
-  if (issue !== "corrupted" && !migrated) {
+  if (issue === null && !migrated) {
     return { state, issue, backedUp: false, available: writable };
   }
   let backedUp = false;
   if (writable && text !== null) {
     try {
-      store.setItem(backupKey, text);
+      store.setItem(
+        issue === "corrupted" ? backupKey : backupMigrationKey,
+        text,
+      );
       backedUp = true;
     } catch {
       backedUp = false;

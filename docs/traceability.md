@@ -139,7 +139,7 @@
 | FR-ING-17 | #84 | DES-SHP-01, 02 | TC-FR-ING-17-01, 02（単体） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx | core・既存画面の最小追従を実装済み |
 | FR-ING-18 | #84 | DES-SHP-01, 02 | TC-FR-ING-18-01（単体） | src/core/basket.ts | core 実装済み。日付編集画面は #85 |
 | FR-NUT-07 | #84 | DES-SHP-03 | TC-FR-NUT-07-01, 02（単体） | src/core/basket.ts, src/core/shoppingAnalysis.ts, src/core/suggestions.ts, src/ui/App.tsx, src/ui/screens/HomeScreen.tsx | 最新の買い物の分析・候補を実装済み。履歴画面は #86 |
-| FR-ING-19、FR-ING-20 | #84 | DES-SHP-02 | TC-FR-ING-19-02、TC-FR-ING-20-02（単体） | src/core/basket.ts, src/core/basketSession.ts | 買い物 ID 付き操作と削除の core を実装済み。画面は #86 |
+| FR-ING-19、FR-ING-20 | #84 | DES-SHP-02 | TC-FR-ING-19-02、TC-FR-ING-20-01、TC-FR-ING-20-02（単体） | src/core/basket.ts, src/core/basketSession.ts | 買い物 ID 付き操作と削除の core を実装済み。画面は #86 |
 | FR-SYS-01 | #84 | DES-STO-10, 12 | TC-FR-SYS-01-01〜04, 11, 12（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 保存版 3 と旧ケースの往復を検証済み |
 | NFR-12 | #84 | DES-STO-11 | TC-NFR-12-01〜28, 37, 38（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 版 3 の破損・個別除外・台帳・退避を検証済み |
 | NFR-13 | #84 | DES-STO-10 | TC-NFR-13-01〜15（単体） | src/core/storage.ts, src/core/storageRegression.test.ts | 版 1・2 から版 3 への移行を検証済み |

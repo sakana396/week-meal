@@ -26,15 +26,10 @@ import type { FoodItem, NutrientKey } from "../../types";
 import { baseFoods } from "../foodData";
 import { parseManualValue } from "../format";
 import { localId } from "../ids";
+import { localDate } from "../localDate";
 import { registerMessage } from "../registerMessage";
 
 const maxVisibleFoods = 80;
-
-/** 現地の日付を UI で作る（DES-SHP-01）。 */
-function localDate(): string {
-  const now = new Date();
-  return `${now.getFullYear().toString().padStart(4, "0")}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
-}
 
 type RegisterCategory = "すべて" | FoodShelf;
 type RegisterMode = "simple" | "detailed";

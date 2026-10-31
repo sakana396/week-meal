@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { basketReducer, initialAppState } from "../core/basket";
-import { serializeState } from "../core/storage";
+import { parseStoredState, serializeState } from "../core/storage";
 import {
   backupKey,
+  backupMigrationKey,
   loadAppState,
   saveAppState,
   storageKey,
@@ -63,9 +64,63 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     const result = loadAppState({ store, writable: true }, known);
     expect(result.available).toBe(true);
     expect(result.state.shoppings[0].items[0].displayName).toBe("にんじん");
-    expect(store.data[backupKey]).toBe(old);
+    expect(store.data[backupMigrationKey]).toBe(old);
     expect(saveAppState(store, result.state)).toBe(true);
     expect(JSON.parse(store.data[storageKey]).version).toBe(3);
+  });
+  it("TC-NFR-13-15 移行は破損データの退避先を上書きしない", () => {
+    const old = JSON.stringify({
+      version: 1,
+      items: [],
+      manualFoods: [],
+      profile: initialAppState.profile,
+    });
+    const store = memoryStore({
+      [storageKey]: old,
+      [backupKey]: "以前の破損原文",
+    });
+    loadAppState({ store, writable: true }, known);
+    expect(store.data[backupKey]).toBe("以前の破損原文");
+    expect(store.data[backupMigrationKey]).toBe(old);
+  });
+  it("TC-NFR-12-38 一部破棄の原文を保存前に退避する", () => {
+    const text = JSON.stringify({
+      ...JSON.parse(serializeState(saved)),
+      shoppings: [
+        saved.shoppings[0],
+        { id: "bad", date: "2026-02-30", origin: "normal", items: [] },
+      ],
+    });
+    const store = memoryStore({ [storageKey]: text });
+    expect(parseStoredState(text, known).issue).toEqual({
+      droppedItems: 1,
+      profileReset: false,
+    });
+    const result = loadAppState({ store, writable: true }, known);
+    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(store.data[backupMigrationKey]).toBe(text);
+    expect(store.data[storageKey]).toBe(text);
+    expect(saveAppState(store, result.state)).toBe(true);
+  });
+  it("TC-NFR-12-38 一部破棄の退避に失敗したら保存を止める", () => {
+    const text = JSON.stringify({
+      ...JSON.parse(serializeState(saved)),
+      shoppings: [
+        saved.shoppings[0],
+        { id: "bad", date: "不正", origin: "normal", items: [] },
+      ],
+    });
+    const store: KeyValueStore = {
+      getItem: () => text,
+      setItem: () => {
+        throw new Error("quota");
+      },
+    };
+    expect(loadAppState({ store, writable: true }, known)).toMatchObject({
+      issue: { droppedItems: 1, profileReset: false },
+      backedUp: false,
+      available: false,
+    });
   });
   it("TC-NFR-12-38 版 2 の退避に失敗したら保存を止める", () => {
     const old = JSON.stringify({

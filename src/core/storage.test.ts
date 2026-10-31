@@ -70,6 +70,19 @@ describe("保存版 3（DES-STO-10〜12）", () => {
       expect(result.migrated).toBe(true);
     },
   );
+  it.each([{ usedUp: undefined }, { usedUp: "不正" }, { usedUp: 0 }])(
+    "TC-NFR-13-15 usedUp が真偽値でない行も通常の買い物に残す（%j）",
+    (extra) => {
+      const result = parseStoredState(
+        version2([{ ...entry, ...extra }]),
+        known,
+        undefined,
+        undefined,
+        context,
+      );
+      expect(result.state.shoppings[0].items).toEqual([entry]);
+    },
+  );
   it("TC-FR-SYS-01-11 版 1 から連続移行", () => {
     const old = version2([{ ...entry, usedUp: false }]).replace(
       '"version":2',
@@ -101,17 +114,12 @@ describe("保存版 3（DES-STO-10〜12）", () => {
     expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
     expect(result.state.shoppings[0].items).toEqual([]);
   });
-  it.each([
-    "{",
-    JSON.stringify({ version: 99, shoppings: [] }),
-    JSON.stringify({
-      version: 3,
-      shoppings: [{ id: "a", date: "2026-02-30", origin: "normal", items: [] }],
-      profile: state.profile,
-    }),
-  ])("TC-NFR-12-38 壊れた保存データを初期状態に戻す", (text) => {
-    expect(parseStoredState(text, known).issue).toBe("corrupted");
-  });
+  it.each(["{", JSON.stringify({ version: 99, shoppings: [] })])(
+    "TC-NFR-12-38 壊れた保存データを初期状態に戻す",
+    (text) => {
+      expect(parseStoredState(text, known).issue).toBe("corrupted");
+    },
+  );
   it("TC-NFR-12-38 重複した買い物 ID は先の買い物を採る", () => {
     const text = JSON.stringify({
       ...JSON.parse(serializeState(state)),
@@ -123,6 +131,21 @@ describe("保存版 3（DES-STO-10〜12）", () => {
     const result = parseStoredState(text, known);
     expect(result.state.shoppings).toEqual(state.shoppings);
     expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+  });
+  it.each([
+    { id: "", date: context.date, origin: "normal", items: [entry] },
+    { id: "bad", date: "2026-02-30", origin: "normal", items: [entry] },
+    { id: "bad", date: context.date, origin: "unknown", items: [entry] },
+    { id: "bad", date: context.date, origin: "normal", items: "不正" },
+  ])("TC-NFR-12-38 不正な買い物だけを破棄する（%j）", (invalid) => {
+    const text = JSON.stringify({
+      ...JSON.parse(serializeState(state)),
+      shoppings: [state.shoppings[0], invalid],
+    });
+    expect(parseStoredState(text, known)).toMatchObject({
+      state,
+      issue: { droppedItems: 1, profileReset: false },
+    });
   });
   it("TC-NFR-12-38 不正個数と重複行 ID を個別に捨てる", () => {
     const text = JSON.stringify({

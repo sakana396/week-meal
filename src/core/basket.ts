@@ -170,6 +170,14 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
         foodId: action.type === "register" ? action.foodId : action.food.id,
         displayName: action.displayName,
       };
+      if (
+        start.shoppings.some(
+          (shopping) =>
+            shopping.id !== action.shoppingId &&
+            shopping.items.some((item) => item.id === entry.id),
+        )
+      )
+        return state;
       const updated = changeShopping(start, action.shoppingId, (shopping) =>
         register(shopping, entry),
       );

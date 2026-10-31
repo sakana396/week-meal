@@ -112,11 +112,14 @@ test("TC-FR-ING-14-03 連続削除は直前だけ取り消せ、画面移動で�
       .getByRole("button", { name: `${name}を削除`, exact: true })
       .click();
   }
+  await undo(page).click();
+  await expect(names(page)).toHaveText(["先頭", "末尾"]);
+  await expect(undo(page)).toHaveCount(0);
   await openTab(page, "設定");
   await page.getByRole("button", { name: "大盛り", exact: true }).click();
   await openTab(page, "ホーム");
   await expect(undo(page)).toHaveCount(0);
-  await expect(names(page)).toHaveText(["先頭"]);
+  await expect(names(page)).toHaveText(["先頭", "末尾"]);
   expect((await stored(page)).profile.portion).toBe("large");
   await expect(undo(page)).toHaveCount(0);
 });
