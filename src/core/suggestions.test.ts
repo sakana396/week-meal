@@ -94,6 +94,15 @@ function candidate(
     priority,
   };
 }
+function shelfCandidate(
+  id: string,
+  category: string,
+  changes: Partial<NutrientsPer100g> = {},
+  priority = 0,
+): SupplementCandidate {
+  const base = candidate(id, changes, priority);
+  return { ...base, food: { ...base.food, category } };
+}
 function suggest(
   candidates: SupplementCandidate[],
   current = state(),
@@ -661,3 +670,106 @@ it("TC-FR-BAL-06-03 注意条件が同じなら改善量の大きい候補が先
     "small",
   ]);
 });
+
+it.each([
+  {
+    name: "3棚",
+    categories: ["魚介類", "野菜類", "野菜類", "肉類", "魚介類"],
+    expected: ["a", "b", "d"],
+  },
+  {
+    name: "2棚",
+    categories: ["魚介類", "魚介類", "野菜類", "野菜類"],
+    expected: ["a", "c", "b"],
+  },
+  {
+    name: "分類できない候補はその他",
+    categories: ["魚介類", "魚介類", "未知の分類"],
+    expected: ["a", "c", "b"],
+  },
+  {
+    name: "1棚",
+    categories: ["魚介類", "魚介類", "魚介類"],
+    expected: ["a", "b", "c"],
+  },
+  { name: "候補0件", categories: [], expected: [] },
+  { name: "候補1件", categories: ["魚介類"], expected: ["a"] },
+  {
+    name: "候補2件",
+    categories: ["魚介類", "野菜類"],
+    expected: ["a", "b"],
+  },
+])("TC-FR-BAL-08-01 棚の分散と同点順: $name", ({ categories, expected }) => {
+  const candidates = categories.map((category, index) =>
+    shelfCandidate(String.fromCharCode(97 + index), category, {}, index),
+  );
+  expect(suggest(candidates).map(({ foodId }) => foodId)).toEqual(expected);
+});
+
+it("TC-FR-BAL-08-02 安全性の違う棚は繰り上げず、入力と評価値を変えない", () => {
+  const candidates = [
+    shelfCandidate("fish1", "魚介類", {}, 0),
+    shelfCandidate("fish2", "魚介類", {}, 1),
+    shelfCandidate("vegetable", "野菜類", { saltEquivalentG: 10 }, 2),
+    shelfCandidate("no-improvement", "肉類", { vitaminCMg: 0 }, 3),
+  ];
+  const snapshot = structuredClone(candidates);
+  const first = suggest(candidates);
+  expect(first.map(({ foodId }) => foodId)).toEqual([
+    "fish1",
+    "fish2",
+    "vegetable",
+  ]);
+  expect(first[2].newHighKeys).toContain("saltEquivalentG");
+  expect(suggest([candidates[3]])).toEqual([]);
+  expect(first.map(({ improvement }) => improvement)).toEqual(
+    suggest(candidates).map(({ improvement }) => improvement),
+  );
+  expect(candidates).toEqual(snapshot);
+});
+
+it.each([
+  {
+    name: "新しい不足",
+    baseChanges: {
+      vitaminAUg: (reference.vitaminAUg / reference.energyKcal) * 80,
+    },
+    safeChanges: {},
+    unsafeChanges: { vitaminAUg: 0 },
+    warning: "newLowKeys" as const,
+    key: "vitaminAUg",
+  },
+  {
+    name: "既存過剰の悪化",
+    baseChanges: { saltEquivalentG: 1 },
+    safeChanges: { saltEquivalentG: 1 },
+    unsafeChanges: { saltEquivalentG: 2 },
+    warning: "worsenedHighKeys" as const,
+    key: "saltEquivalentG",
+  },
+])(
+  "TC-FR-BAL-08-02 $nameがある別棚を安全な同棚より先にしない",
+  ({ baseChanges, safeChanges, unsafeChanges, warning, key }) => {
+    const candidates = [
+      shelfCandidate("fish1", "魚介類", safeChanges, 0),
+      shelfCandidate("fish2", "魚介類", safeChanges, 1),
+      shelfCandidate("vegetable", "野菜類", unsafeChanges, 2),
+    ];
+    const foods = [
+      ...baseFoods.map((base) => food(base.id, baseChanges)),
+      ...candidates.map(({ food }) => food),
+    ];
+    const suggestions = suggestSupplements(
+      state(),
+      new Map(foods.map((item) => [item.id, item])),
+      candidates,
+      data,
+    );
+    expect(suggestions.map(({ foodId }) => foodId)).toEqual([
+      "fish1",
+      "fish2",
+      "vegetable",
+    ]);
+    expect(suggestions[2][warning]).toContain(key);
+  },
+);
