@@ -28,6 +28,7 @@ import { parseManualValue } from "../format";
 import { localId } from "../ids";
 import { localDate } from "../localDate";
 import { registerMessage } from "../registerMessage";
+import type { Route } from "../route";
 
 const maxVisibleFoods = 80;
 
@@ -74,8 +75,14 @@ function draftSourceLabel(sourceFoodId: string): string {
 export function RegisterScreen({
   state,
   dispatch,
+  shoppingId,
+  navigate,
+  replaceRoute,
 }: {
   state: AppState;
+  shoppingId: string | null;
+  navigate: (route: Route, shoppingId?: string) => void;
+  replaceRoute: (route: Route, shoppingId?: string) => void;
   dispatch: (action: BasketAction) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -203,17 +210,18 @@ export function RegisterScreen({
   function register(
     action: Extract<BasketAction, { type: "register" | "addManualFood" }>,
   ) {
-    const shopping = latestShopping(state.shoppings);
-    const initialShopping = shopping
-      ? undefined
-      : { id: localId("shopping"), date: localDate() };
+    const initialShopping =
+      shoppingId === null && state.shoppings.length === 0
+        ? { id: localId("shopping"), date: localDate() }
+        : undefined;
     const targeted = {
       ...action,
-      shoppingId: shopping?.id ?? initialShopping?.id ?? "",
+      shoppingId: shoppingId ?? initialShopping?.id ?? "",
       initialShopping,
     };
     const text = registerMessage(state, targeted);
     dispatch(targeted);
+    if (initialShopping) replaceRoute("register", initialShopping.id);
     setMessage((current) => ({ text, seq: current.seq + 1 }));
   }
 
@@ -305,6 +313,32 @@ export function RegisterScreen({
         </div>
         <span className="category-pill">押すと 1 つ登録</span>
       </header>
+
+      <p>
+        登録先：
+        {state.shoppings.find((shopping) => shopping.id === shoppingId)?.date ??
+          "最初の登録で今日の買い物を作成"}
+      </p>
+      {shoppingId && (
+        <button
+          className="link-button"
+          type="button"
+          onClick={() =>
+            navigate(
+              shoppingId === latestShopping(state.shoppings)?.id
+                ? "home"
+                : "historyDetail",
+              shoppingId === latestShopping(state.shoppings)?.id
+                ? undefined
+                : shoppingId,
+            )
+          }
+        >
+          {shoppingId === latestShopping(state.shoppings)?.id
+            ? "ホームへ戻る"
+            : "買い物へ戻る"}
+        </button>
+      )}
 
       <section className="register-mode-panel" aria-label="入力モード">
         <div>

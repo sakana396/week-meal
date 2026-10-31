@@ -163,6 +163,14 @@ h3 {
   outline: none;
 }
 
+.shopping-date-field {
+  max-width: 220px;
+}
+
+.shopping-date-field input {
+  min-width: 44px;
+}
+
 .search-field input:focus,
 .form-field input:focus,
 .form-field select:focus {

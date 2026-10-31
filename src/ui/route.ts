@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 
-/** 画面（DES-UI-20〜24） */
-export type Route = "home" | "register" | "balance" | "settings" | "foods";
+/** 画面（DES-UI-10、46）。 */
+export type Route =
+  | "home"
+  | "register"
+  | "balance"
+  | "settings"
+  | "foods"
+  | "history"
+  | "historyDetail";
+/** ハッシュ中の対象 ID（DES-UI-10、21）。 */
+export type RouteLocation = {
+  route: Route;
+  shoppingId: string | null;
+  invalidShopping: boolean;
+};
 
 export const routeHashes: Record<Route, string> = {
   home: "#/",
@@ -9,36 +22,81 @@ export const routeHashes: Record<Route, string> = {
   balance: "#/balance",
   settings: "#/settings",
   foods: "#/foods",
+  history: "#/history",
+  historyDetail: "#/history/",
 };
 
-/** URL のハッシュから画面を決める。知らないハッシュはホーム（P-01） */
-export function routeFromHash(hash: string): Route {
+/** 経路と買い物 ID を解析する（DES-UI-10、21、46）。 */
+export function routeFromHash(hash: string): RouteLocation {
+  const [path, query = ""] = hash.split("?", 2);
+  if (path.startsWith("#/history/")) {
+    let id: string | null = null;
+    try {
+      id = decodeURIComponent(path.slice("#/history/".length));
+    } catch {
+      // 不正な符号化は未知の買い物として扱う。
+    }
+    const valid = !!id && !id.includes("/") && !query;
+    return {
+      route: "historyDetail",
+      shoppingId: valid ? id : null,
+      invalidShopping: !valid,
+    };
+  }
+  if (path === "#/register" || path === "#/balance") {
+    const params = new URLSearchParams(query);
+    const ids = params.getAll("shopping");
+    const valid = ids.length === 0 || (ids.length === 1 && !!ids[0]);
+    return {
+      route: path === "#/register" ? "register" : "balance",
+      shoppingId: valid ? (ids[0] ?? null) : null,
+      invalidShopping: !valid,
+    };
+  }
   const found = (Object.keys(routeHashes) as Route[]).find(
-    (route) => routeHashes[route] === hash,
+    (route) => route !== "historyDetail" && routeHashes[route] === hash,
   );
-  return found ?? "home";
+  return { route: found ?? "home", shoppingId: null, invalidShopping: false };
 }
 
-/**
- * ハッシュで画面を切り替える（P-01、DES-UI-10）。
- * ハッシュを書き換える（push）ので、ブラウザの「戻る」で前の画面に戻れる。
- */
-export function useHashRoute(): [Route, (route: Route) => void] {
-  const [route, setRoute] = useState<Route>(() =>
+/** ハッシュで画面を切り替える（DES-UI-10）。 */
+export function useHashRoute(): [
+  RouteLocation,
+  (route: Route, shoppingId?: string) => void,
+  (route: Route, shoppingId?: string) => void,
+] {
+  const [location, setLocation] = useState<RouteLocation>(() =>
     routeFromHash(window.location.hash),
   );
-
   useEffect(() => {
-    const onHashChange = () => setRoute(routeFromHash(window.location.hash));
+    const onHashChange = () => setLocation(routeFromHash(window.location.hash));
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
-
-  const navigate = useCallback((next: Route) => {
-    if (window.location.hash !== routeHashes[next]) {
-      window.location.hash = routeHashes[next];
-    }
+  const hashFor = useCallback((next: Route, shoppingId?: string) => {
+    const hash =
+      next === "historyDetail"
+        ? `${routeHashes.historyDetail}${encodeURIComponent(shoppingId ?? "")}`
+        : shoppingId
+          ? `${routeHashes[next]}?shopping=${encodeURIComponent(shoppingId)}`
+          : routeHashes[next];
+    return hash;
   }, []);
-
-  return [route, navigate];
+  const navigate = useCallback(
+    (next: Route, shoppingId?: string) => {
+      const hash = hashFor(next, shoppingId);
+      if (window.location.hash !== hash) window.location.hash = hash;
+    },
+    [hashFor],
+  );
+  /** 自動転送時はブラウザ履歴を増やさない（DES-UI-10、46）。 */
+  const replaceRoute = useCallback(
+    (next: Route, shoppingId?: string) => {
+      const hash = hashFor(next, shoppingId);
+      if (window.location.hash !== hash)
+        window.location.replace(new URL(hash, window.location.href).href);
+    },
+    [hashFor],
+  );
+  return [location, navigate, replaceRoute];
 }
