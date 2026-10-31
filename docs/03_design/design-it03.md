@@ -6,6 +6,8 @@
 - 対象: [IT03-PLAN](../iterations/it03/plan.md) 3 章
 - 根拠: [SRS-001 v0.4](../02_requirements/srs.md)、[DES-IT01](design-it01.md)、[DES-IT02](design-it02.md)、[ADR-0002](../adr/0002-food-data.md)、[ADR-0003](../adr/0003-balance-calculation.md)、[ADR-0004](../adr/0004-storage.md)、[ADR-0005](../adr/0005-supplement-suggestions.md)、[ELI-001 E-46〜E-56](../01_concept/elicitation-notes.md)
 
+> IT04 注記（2026-10-31）: 本文の DES-SUG-02 の使い切った行再利用と DES-UI-42 の候補登録先、DES-BSK-09 / DES-UI-45 の `usedUp` 復元、DES-PER-01 の使い切った計測と DES-PER-02 の計測対象は、[DES-IT04](design-it04.md) の DES-SUG-04、DES-SHP-02, 03、DES-PER-03, 04 で置き換える。DES-COL-01, 02 の不足色は維持し、過剰の単色部分は DES-COL-03, 04 で置き換える。本文は IT03 時点の記録として残す。
+
 ## 1. 範囲と既存設計との関係
 
 本人が決めた P-01〜05（候補をホームで押して登録、不足だけの赤→黄の色、公開しない、手入力の 4 改善）は変更しない。判定する 14 種、70%・130% の境界、PFC の範囲判定、主食の計算は ADR-0003 のままとする。適正の栄養素の色分け、覚えた食材の編集・削除画面、棚の再分類、棚単位の感度分析は作らない。
