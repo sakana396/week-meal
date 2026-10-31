@@ -41,7 +41,7 @@ it.each([
 });
 
 it.each([
-  [result({ status: "high", sufficiency: null }), "#d8b4fe"],
+  [result({ status: "high", key: "saltEquivalentG", sufficiency: null }), null],
   [result({ status: "ok", sufficiency: 0 }), null],
   [result({ status: "unknown", sufficiency: 0 }), null],
   [result({ key: "saltEquivalentG" }), null],
@@ -70,13 +70,59 @@ function luminance([r, g, b]: number[]): number {
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
 
-it("TC-NFR-07-01 使用する赤〜黄256色と紫は黒文字と4.5:1以上", () => {
+it.each([
+  ["塩分", { key: "saltEquivalentG", pfcRange: null }, "sufficiency", 1.3],
+  [
+    "PFC",
+    {
+      key: "proteinG",
+      sufficiency: null,
+      pfcRange: [15, 20] as [number, number],
+    },
+    "pfcPct",
+    20,
+  ],
+] as const)(
+  "TC-FR-UI-06-04 %s の上限超過比を色へ変換する",
+  (_name, changes, field, upper) => {
+    for (const [ratio, expected] of [
+      [0, "rgb(216, 180, 254)"],
+      [0.25, "rgb(192, 133, 251)"],
+      [0.5, "rgb(168, 85, 247)"],
+      [0.75, "rgb(168, 85, 247)"],
+    ] as const) {
+      const input = result({
+        status: "high",
+        ...changes,
+        [field]: upper * (1 + ratio),
+      });
+      const before = structuredClone(input);
+      expect(balanceTone(input)).toBe(expected);
+      expect(input).toEqual(before);
+    }
+  },
+);
+
+it.each([
+  result({ status: "high", key: "saltEquivalentG", sufficiency: null }),
+  result({ status: "high", key: "saltEquivalentG", sufficiency: Infinity }),
+  result({ status: "high", key: "proteinG", pfcPct: 30, pfcRange: [15, 0] }),
+  result({ status: "high", key: "proteinG", pfcPct: NaN, pfcRange: [15, 20] }),
+])("TC-FR-UI-06-04 判定不能な過剰値には警告色を付けない %j", (input) => {
+  expect(balanceTone(input)).toBeNull();
+});
+
+it("TC-NFR-07-01 使用する赤〜黄256色と既存の紫は黒文字と4.5:1以上", () => {
   const colors = Array.from({ length: 256 }, (_, green) => {
     const tone = balanceTone(result({ sufficiency: green / 255 }));
     expect(tone).toBe(`rgb(255, ${green}, 0)`);
     return [255, green, 0];
   });
-  expect(balanceTone(result({ status: "high" }))).toBe("#d8b4fe");
+  expect(
+    balanceTone(
+      result({ status: "high", key: "saltEquivalentG", sufficiency: 1.3 }),
+    ),
+  ).toBe("rgb(216, 180, 254)");
   colors.push([216, 180, 254]);
   const contrasts = colors.map((color) => (luminance(color) + 0.05) / 0.05);
   for (const contrast of contrasts)
@@ -84,6 +130,28 @@ it("TC-NFR-07-01 使用する赤〜黄256色と紫は黒文字と4.5:1以上", (
   expect(Math.min(...contrasts)).toBeCloseTo(5.252, 3);
   expect(contrasts[255]).toBeCloseTo(19.556, 3);
   expect(contrasts[256]).toBeCloseTo(11.879, 3);
+});
+
+it("TC-NFR-07-02 紫の全256段階と不足の全256段階は黒文字と4.5:1以上", () => {
+  for (let step = 0; step < 256; step += 1) {
+    for (const tone of [
+      balanceTone(result({ sufficiency: step / 255 })),
+      balanceTone(
+        result({
+          status: "high",
+          key: "saltEquivalentG",
+          sufficiency: 1.3 * (1 + step / 510),
+        }),
+      ),
+    ]) {
+      expect(tone).not.toBeNull();
+      const channels = tone?.match(/\d+/g)?.map(Number);
+      expect(channels).toHaveLength(3);
+      expect((luminance(channels ?? []) + 0.05) / 0.05).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  }
 });
 
 it("TC-FR-UI-06-02 比のない不足でも両画面に文字と栄養素名を残す", () => {

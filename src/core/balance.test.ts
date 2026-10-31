@@ -9,12 +9,37 @@ import type { DailyReference } from "../data/dietaryReference";
 import {
   balanceTargets,
   detailSufficiencies,
+  excessRatio,
   extraReferenceFor,
   judgeBalance,
   referenceFor,
 } from "./balance";
 import type { NutrientRatios, Pfc } from "./nutrition";
 import { defaultProfile } from "./profile";
+
+it.each([
+  ["塩分の境界", "saltEquivalentG", 1.3, null, null, 0],
+  ["塩分の25%超過", "saltEquivalentG", 1.625, null, null, 0.25],
+  ["PFCの50%超過", "proteinG", null, 30, [15, 20], 0.5],
+  ["塩分の欠損", "saltEquivalentG", null, null, null, null],
+  ["PFCの分母0", "proteinG", null, 30, [15, 0], null],
+  ["PFCの非有限値", "proteinG", null, Infinity, [15, 20], null],
+] as const)(
+  "TC-FR-UI-06-04 %s の上限超過比",
+  (_name, key, sufficiency, pfcPct, pfcRange, expected) => {
+    const result = {
+      key,
+      status: "high" as const,
+      sufficiency,
+      pfcPct,
+      pfcRange: pfcRange ? ([...pfcRange] as [number, number]) : null,
+      coverage: 1,
+    };
+    const before = structuredClone(result);
+    expect(excessRatio(result)).toBe(expected);
+    expect(result).toEqual(before);
+  },
+);
 
 describe("referenceFor（DES-BAL-02）", () => {
   it.each([
