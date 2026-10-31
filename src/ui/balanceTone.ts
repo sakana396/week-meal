@@ -4,7 +4,7 @@ import {
   type BalanceResult,
 } from "../core/balance";
 
-/** 判定バッジの背景色（DES-COL-01、DES-COL-03）。 */
+/** 判定バッジの背景色。適正・不明・比の欠損には警告色を付けない（DES-COL-01、DES-COL-03）。 */
 export function balanceTone(result: BalanceResult): string | null {
   if (result.status === "high") {
     const ratio = excessRatio(result);

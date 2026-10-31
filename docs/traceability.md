@@ -145,5 +145,5 @@
 | NFR-13 | #84 | DES-STO-10 | TC-NFR-13-01〜15（単体） | src/core/storage.ts, src/core/storageRegression.test.ts | 版 1・2 から版 3 への移行を検証済み |
 | NFR-08 | #84 | DES-SHP-01〜03, DES-STO-10〜12 | lint、TC-FR-NUT-07-01, 02 | src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |
 | FR-UI-06 | #87 | DES-COL-03 | TC-FR-UI-06-04 | src/core/balance.ts, src/core/suggestions.ts, src/ui/balanceTone.ts, src/ui/balanceTone.test.ts, src/core/balance.test.ts | 実装済み |
-| NFR-07 | #87 | DES-COL-04 | TC-NFR-07-02 | src/ui/balanceTone.test.ts, e2e/balance-color.spec.ts, src/ui/App.css | 実装済み（全段階は単体検証） |
+| NFR-07 | #87 | DES-COL-04 | TC-NFR-07-02 | src/ui/balanceTone.test.ts, e2e/balance-color.spec.ts, src/ui/App.css | 実装済み（全段階は単体検証）。src/ui/App.css は既存の CSS を検査対象に含めたもので、この PR では変更していない |
 | NFR-08 | #87 | DES-COL-03 | TC-FR-UI-06-04、lint | src/core/balance.ts, src/core/suggestions.ts | 実装済み（純粋関数・入力不変） |

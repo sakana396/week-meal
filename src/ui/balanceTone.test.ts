@@ -112,7 +112,7 @@ it.each([
   expect(balanceTone(input)).toBeNull();
 });
 
-it("TC-NFR-07-01 使用する赤〜黄256色と既存の紫は黒文字と4.5:1以上", () => {
+it("TC-NFR-07-01 使用する赤〜黄256色と上限ちょうどの紫は黒文字と4.5:1以上", () => {
   const colors = Array.from({ length: 256 }, (_, green) => {
     const tone = balanceTone(result({ sufficiency: green / 255 }));
     expect(tone).toBe(`rgb(255, ${green}, 0)`);
