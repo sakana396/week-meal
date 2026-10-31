@@ -27,6 +27,7 @@ test("TC-FR-ING-17-03 新しい買い物は空で、未来日付の買い物を�
   await page.getByRole("button", { name: "日付を保存" }).click();
   await page.getByRole("button", { name: "ホームへ戻る" }).click();
   await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page).toHaveURL(/#\/history\/shopping-/);
   await expect(
     page
       .getByRole("status")
@@ -39,6 +40,7 @@ test("TC-FR-ING-17-03 新しい買い物は空で、未来日付の買い物を�
 test("TC-FR-ING-18-02 日付変更でホームの対象が入れ替わる", async ({ page }) => {
   await page.goto("#/");
   await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page).toHaveURL(/#\/history\/shopping-/);
   await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
   await registerFood(page, "にんじん");
   await page
@@ -46,6 +48,7 @@ test("TC-FR-ING-18-02 日付変更でホームの対象が入れ替わる", asyn
     .getByRole("button", { name: "ホーム" })
     .click();
   await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page).toHaveURL(/#\/history\/shopping-/);
   await page.getByLabel("買い物の日付").fill("2000-01-01");
   await page.getByRole("button", { name: "日付を保存" }).click();
   await page.getByRole("button", { name: "ホームへ戻る" }).click();
@@ -65,6 +68,7 @@ test("TC-FR-NUT-07-01 ホームと買い物詳細はそれぞれの食材だけ�
     .getByRole("button", { name: "ホーム" })
     .click();
   await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page).toHaveURL(/#\/history\/shopping-/);
   await expect(itemRow(page, "にんじん")).toHaveCount(0);
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
   await expect(page.getByText("判定にはあと少し食材が必要です")).toBeVisible();
@@ -132,6 +136,7 @@ test("TC-FR-ING-17-05 新しい買い物の通知は詳細を離れると消え�
 }) => {
   await page.goto("#/");
   await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page).toHaveURL(/#\/history\/shopping-/);
   await expect(
     page.getByText("ホームの対象が新しい買い物に変わりました"),
   ).toBeVisible();
