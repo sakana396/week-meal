@@ -1,10 +1,14 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type {
   BasketSessionAction,
   PendingRemoval,
 } from "../../core/basketSession";
 import type { AnalysisResult } from "../../core/analyze";
-import { latestShopping, type AppState } from "../../core/basket";
+import {
+  latestShopping,
+  validShoppingDate,
+  type AppState,
+} from "../../core/basket";
 import { foodPresentation } from "../../core/catalog";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
@@ -24,15 +28,21 @@ export function HomeScreen({
   findFood,
   notice,
   pendingRemoval,
+  onCreateShopping,
+  onDateChange,
+  routeNotice,
 }: {
   state: AppState;
   analysis: AnalysisResult;
   revision: number;
   dispatch: (action: BasketSessionAction) => void;
-  navigate: (route: Route) => void;
+  navigate: (route: Route, shoppingId?: string) => void;
   findFood: (foodId: string) => FoodItem | undefined;
   notice: React.ReactNode;
   pendingRemoval: PendingRemoval | null;
+  onCreateShopping: () => void;
+  onDateChange: (shoppingId: string, date: string) => void;
+  routeNotice: string;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
@@ -56,6 +66,14 @@ export function HomeScreen({
   }, [pendingRemoval]);
 
   const shopping = latestShopping(state.shoppings);
+  const [dateDraft, setDateDraft] = useState<{
+    id: string;
+    date: string;
+  } | null>(null);
+  const date =
+    dateDraft && dateDraft.id === shopping?.id
+      ? dateDraft.date
+      : (shopping?.date ?? "");
   const items = shopping?.items ?? [];
   const nameCounts = new Map<string, number>();
   for (const item of items) {
@@ -82,13 +100,51 @@ export function HomeScreen({
         </div>
         <button
           className="primary-button"
-          onClick={() => navigate("register")}
+          onClick={() => navigate("register", shopping?.id)}
           type="button"
         >
           食材を登録
         </button>
       </header>
       {notice}
+      {routeNotice && <p role="status">{routeNotice}</p>}
+      <button
+        className="primary-button"
+        type="button"
+        onClick={onCreateShopping}
+      >
+        新しい買い物
+      </button>
+      <button
+        className="link-button"
+        type="button"
+        onClick={() => navigate("history")}
+      >
+        履歴
+      </button>
+      {shopping && (
+        <div className="section-stack" key={shopping.id}>
+          <label className="form-field shopping-date-field">
+            買い物の日付{" "}
+            <input
+              aria-label="買い物の日付"
+              type="date"
+              value={date}
+              onChange={(event) =>
+                setDateDraft({ id: shopping.id, date: event.target.value })
+              }
+            />
+          </label>
+          <button
+            className="primary-button"
+            type="button"
+            disabled={!validShoppingDate(date)}
+            onClick={() => onDateChange(shopping.id, date)}
+          >
+            日付を保存
+          </button>
+        </div>
+      )}
       <BalancePanel analysis={analysis} profile={state.profile} />
       <SupplementSuggestions
         state={state}

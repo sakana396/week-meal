@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  latestShopping,
-  type AppState,
-  type BasketAction,
-} from "../../core/basket";
+import { type AppState, type BasketAction } from "../../core/basket";
 import {
   foodPresentation,
   groupFoods,
@@ -28,6 +24,7 @@ import { parseManualValue } from "../format";
 import { localId } from "../ids";
 import { localDate } from "../localDate";
 import { registerMessage } from "../registerMessage";
+import type { Route } from "../route";
 
 const maxVisibleFoods = 80;
 
@@ -74,8 +71,12 @@ function draftSourceLabel(sourceFoodId: string): string {
 export function RegisterScreen({
   state,
   dispatch,
+  shoppingId,
+  navigate,
 }: {
   state: AppState;
+  shoppingId: string | null;
+  navigate: (route: Route, shoppingId?: string) => void;
   dispatch: (action: BasketAction) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -203,17 +204,18 @@ export function RegisterScreen({
   function register(
     action: Extract<BasketAction, { type: "register" | "addManualFood" }>,
   ) {
-    const shopping = latestShopping(state.shoppings);
-    const initialShopping = shopping
-      ? undefined
-      : { id: localId("shopping"), date: localDate() };
+    const initialShopping =
+      shoppingId === null && state.shoppings.length === 0
+        ? { id: localId("shopping"), date: localDate() }
+        : undefined;
     const targeted = {
       ...action,
-      shoppingId: shopping?.id ?? initialShopping?.id ?? "",
+      shoppingId: shoppingId ?? initialShopping?.id ?? "",
       initialShopping,
     };
     const text = registerMessage(state, targeted);
     dispatch(targeted);
+    if (initialShopping) navigate("register", initialShopping.id);
     setMessage((current) => ({ text, seq: current.seq + 1 }));
   }
 
@@ -305,6 +307,16 @@ export function RegisterScreen({
         </div>
         <span className="category-pill">押すと 1 つ登録</span>
       </header>
+
+      {shoppingId && (
+        <button
+          className="link-button"
+          type="button"
+          onClick={() => navigate("historyDetail", shoppingId)}
+        >
+          買い物へ戻る
+        </button>
+      )}
 
       <section className="register-mode-panel" aria-label="入力モード">
         <div>

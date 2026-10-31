@@ -6,7 +6,7 @@ test("TC-FR-ING-01-06 食材名を押すと登録され、登録画面に留ま�
 }) => {
   await page.goto("/#/register");
   await registerFood(page, "にんじん");
-  await expect(page).toHaveURL(/#\/register$/);
+  await expect(page).toHaveURL(/#\/register\?shopping=shopping-/);
   await registerFood(page, "にんじん");
   await expect(
     page
@@ -102,7 +102,7 @@ test("TC-NFR-02-01 ホームから食材 1 件の登録が 3 タップ以内で�
   });
   await openTab(page, "登録");
   await registerFood(page, "キャベツ");
-  await expect(page).toHaveURL(/#\/register$/);
+  await expect(page).toHaveURL(/#\/register\?shopping=shopping-/);
   expect(
     await page.evaluate(() =>
       Number(sessionStorage.getItem("registrationClicks")),

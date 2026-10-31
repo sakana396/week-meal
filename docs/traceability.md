@@ -75,7 +75,7 @@
 | FR-STP-01 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01〜03 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-STP-02 | #24, #29 | DES-BSK-05, DES-UI-23 | TC-FR-STP-01-01〜03 | src/core/basket.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
 | FR-STP-05 | #29 | DES-UI-23 | TC-FR-STP-05-01（IT01 の TC-FR-STP-04-05 も） | src/core/profile.ts, src/ui/screens/SettingsScreen.tsx | 実装済み |
-| FR-UI-02 | #26 | DES-UI-10〜14, 20〜24 | TC-FR-UI-02-01〜03 | src/ui/App.tsx, src/ui/route.ts, src/ui/components/Navigation.tsx | 実装済み |
+| FR-UI-02 | #26, #85 | DES-UI-10〜14, 20〜24、DES-UI-46 | TC-FR-UI-02-01〜03、TC-FR-ING-17-03 | src/ui/App.tsx, src/ui/route.ts, src/ui/components/Navigation.tsx, src/ui/screens/HistoryDetailScreen.tsx | #85 の最小詳細まで実装済み |
 | FR-UI-03 | #27 | DES-UI-20 | （E2E） | src/ui/screens/HomeScreen.tsx, src/ui/components/Navigation.tsx | 実装済み |
 | FR-UI-04 | #34 | DES-UI-21, 31 | （E2E） | src/ui/screens/RegisterScreen.tsx | 実装済み |
 | FR-UI-05 | #28 | DES-UI-22, DES-BAL-06 | TC-FR-UI-05-01〜08 | src/core/balance.ts, src/core/analyze.ts, src/data/dietaryReference.ts, src/ui/screens/BalanceDetailScreen.tsx | 実装済み |
@@ -136,9 +136,9 @@
 
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
-| FR-ING-17 | #84 | DES-SHP-01, 02 | TC-FR-ING-17-01, 02（単体） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx | core・既存画面の最小追従を実装済み |
-| FR-ING-18 | #84 | DES-SHP-01, 02 | TC-FR-ING-18-01（単体） | src/core/basket.ts | core 実装済み。日付編集画面は #85 |
-| FR-NUT-07 | #84 | DES-SHP-03 | TC-FR-NUT-07-01, 02（単体） | src/core/basket.ts, src/core/shoppingAnalysis.ts, src/core/suggestions.ts, src/ui/App.tsx, src/ui/screens/HomeScreen.tsx | 最新の買い物の分析・候補を実装済み。履歴画面は #86 |
+| FR-ING-17 | #84, #85 | DES-SHP-01, 02、DES-UI-46 | TC-FR-ING-17-01, 02（単体）、TC-FR-ING-17-02, 03（E2E） | src/core/basket.ts, src/ui/screens/RegisterScreen.tsx, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx, src/ui/route.ts | 実装済み |
+| FR-ING-18 | #84, #85 | DES-SHP-01, 02、DES-UI-46 | TC-FR-ING-18-01（単体）、TC-FR-ING-18-02（E2E） | src/core/basket.ts, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx | 実装済み |
+| FR-NUT-07 | #84, #85 | DES-SHP-03、DES-UI-46 | TC-FR-NUT-07-01, 02（単体）、TC-FR-NUT-07-01（E2E） | src/core/basket.ts, src/core/shoppingAnalysis.ts, src/core/suggestions.ts, src/ui/App.tsx, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx | 最新と選択した買い物の分析を実装済み |
 | FR-ING-19、FR-ING-20 | #84 | DES-SHP-02 | TC-FR-ING-19-02、TC-FR-ING-20-01、TC-FR-ING-20-02（単体） | src/core/basket.ts, src/core/basketSession.ts | 買い物 ID 付き操作と削除の core を実装済み。画面は #86 |
 | FR-SYS-01 | #84 | DES-STO-10, 12 | TC-FR-SYS-01-01〜04, 11, 12（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 保存版 3 と旧ケースの往復を検証済み |
 | NFR-12 | #84 | DES-STO-11 | TC-NFR-12-01〜28, 37, 38（単体） | src/core/storage.ts, src/core/storageRegression.test.ts, src/ui/storage.ts | 版 3 の破損・個別除外・台帳・退避を検証済み |

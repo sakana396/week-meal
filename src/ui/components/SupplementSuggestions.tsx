@@ -55,7 +55,7 @@ export function SupplementSuggestions({
   const interactionLocked = useRef(false);
   const pending = useRef<CandidateView | null>(null);
   const committedRevision = useRef(revision);
-  const registrationRevision = useRef<number | null>(null);
+  const registrationPoint = useRef<{ x: number; y: number } | null>(null);
   const hasLow =
     analysis.kind === "judged" &&
     analysis.results.some((result) => result.status === "low");
@@ -72,15 +72,43 @@ export function SupplementSuggestions({
     heading.current?.focus({ preventScroll: true });
   }, [locked]);
 
-  useLayoutEffect(() => {
+  // 再配置で pointerleave が発生しても固定を解かない。実際の欄外移動で解く。
+  useEffect(() => {
     if (!locked) return;
-    // 登録で状態が変わらない場合も、次の計算結果を待たず固定を解く。
-    if (registrationRevision.current === revision) {
-      interactionLocked.current = false;
-      setLocked(false);
-      setHeight(undefined);
-    }
-  }, [locked, revision]);
+    const onPointerMove = (event: PointerEvent) => {
+      const point = registrationPoint.current;
+      if (point && event.clientX === point.x && event.clientY === point.y)
+        return;
+      if (!section.current?.contains(event.target as Node)) {
+        pointerInside.current = false;
+        registrationPoint.current = null;
+        publish(pending.current);
+      }
+    };
+    const atRegistrationPoint = (event: MouseEvent) => {
+      const point = registrationPoint.current;
+      return Boolean(
+        point &&
+        Math.abs(event.clientX - point.x) < 2 &&
+        Math.abs(event.clientY - point.y) < 2,
+      );
+    };
+    const guardRepeat = (event: MouseEvent) => {
+      if (!atRegistrationPoint(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerdown", guardRepeat, true);
+    document.addEventListener("mousedown", guardRepeat, true);
+    document.addEventListener("click", guardRepeat, true);
+    return () => {
+      document.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("pointerdown", guardRepeat, true);
+      document.removeEventListener("mousedown", guardRepeat, true);
+      document.removeEventListener("click", guardRepeat, true);
+    };
+  }, [locked]);
 
   function publish(next: CandidateView | null) {
     if (!next || next.revision !== committedRevision.current) return;
@@ -121,7 +149,6 @@ export function SupplementSuggestions({
   function register(suggestion: SupplementSuggestion) {
     if (interactionLocked.current || calculating) return;
     // React の再描画を待たず、同じ位置への連続イベントも止める。
-    registrationRevision.current = revision;
     interactionLocked.current = true;
     pending.current = null;
     setLocked(true);
@@ -140,6 +167,7 @@ export function SupplementSuggestions({
       seq: current.seq + 1,
     }));
     dispatch(action);
+    heading.current?.focus({ preventScroll: true });
   }
 
   if (!hasLow && !locked)
@@ -156,6 +184,12 @@ export function SupplementSuggestions({
       aria-busy={ready?.revision !== revision}
       ref={section}
       onPointerDownCapture={(event) => {
+        if (
+          !interactionLocked.current &&
+          event.target instanceof Element &&
+          event.target.closest("button[data-food-id]")
+        )
+          registrationPoint.current = { x: event.clientX, y: event.clientY };
         // 登録通知の挿入で同じ座標がリスト外になっても、見出しから離さない。
         if (interactionLocked.current) event.preventDefault();
       }}
@@ -165,10 +199,6 @@ export function SupplementSuggestions({
       }}
       onPointerEnter={(event) => {
         if (event.pointerType !== "touch") pointerInside.current = true;
-      }}
-      onPointerLeave={() => {
-        pointerInside.current = false;
-        publish(pending.current);
       }}
       onBlur={(event) => {
         if (
