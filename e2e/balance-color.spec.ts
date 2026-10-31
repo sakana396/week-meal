@@ -8,7 +8,11 @@ import type { FoodItem, NutrientsPer100g } from "../src/types";
 import { openTab } from "./helpers";
 
 // 架空の成分値は色と判定境界の検査専用。実際の食品データには使わない。
-function fixture(vitaminRatio: number, proteinRatio: number): AppState {
+function fixture(
+  vitaminRatio: number,
+  proteinRatio: number,
+  saltRatio = 1.31,
+): AppState {
   const profile = { ...defaultProfile, staple: "none" as const };
   const reference = referenceFor(profile);
   const nutrients = Object.fromEntries(
@@ -34,7 +38,8 @@ function fixture(vitaminRatio: number, proteinRatio: number): AppState {
         (100 - reference.proteinPctRange[0] * proteinRatio - 25) / 4,
       vitaminCMg:
         (reference.vitaminCMg / reference.energyKcal) * 100 * vitaminRatio,
-      saltEquivalentG: (reference.saltGMax / reference.energyKcal) * 131,
+      saltEquivalentG:
+        (reference.saltGMax / reference.energyKcal) * 100 * saltRatio,
       fiberG: 0,
       vitaminDUg: null,
     },
@@ -62,14 +67,15 @@ async function loadFixture(
   page: Page,
   vitaminRatio = 0.699999,
   proteinRatio = 0.99999,
+  saltRatio = 1.31,
 ) {
   await page.addInitScript(
     (saved) => {
       localStorage.setItem("weekmeal:state", saved);
     },
-    serializeState(fixture(vitaminRatio, proteinRatio)),
+    serializeState(fixture(vitaminRatio, proteinRatio, saltRatio)),
   );
-  await page.goto("/#/");
+  await page.goto("#/");
 }
 
 function row(page: Page, name: string) {
@@ -113,7 +119,7 @@ for (const [ratio, proteinRatio, low] of [
     await expectBadge(
       home.locator(".balance-list li").filter({ hasText: "食塩相当量" }),
       "過剰",
-      "rgb(216, 180, 254)",
+      "rgb(215, 179, 254)",
     );
     await openTab(page, "詳細");
     await expectBadge(
@@ -126,7 +132,7 @@ for (const [ratio, proteinRatio, low] of [
       low ? "不足" : "適正",
       low ? "rgb(255, 255, 0)" : "rgb(243, 244, 246)",
     );
-    await expectBadge(row(page, "食塩相当量"), "過剰", "rgb(216, 180, 254)");
+    await expectBadge(row(page, "食塩相当量"), "過剰", "rgb(215, 179, 254)");
     await expectBadge(row(page, "ビタミンD"), "不明", "rgb(243, 244, 246)");
     await expectBadge(row(page, "脂質"), "適正", "rgb(243, 244, 246)");
     for (const selector of [
@@ -146,6 +152,45 @@ for (const [ratio, proteinRatio, low] of [
         );
       }
     }
+  });
+}
+
+// 画面で解決された CSS の色から WCAG 2.2 の黒文字との比を求める。
+function blackContrast(rgb: string): number {
+  const channels = rgb.match(/\d+/g)?.map(Number) ?? [];
+  const [red, green, blue] = channels.map((value) => {
+    const c = value / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return (0.2126 * red + 0.7152 * green + 0.0722 * blue + 0.05) / 0.05;
+}
+
+async function expectBlackContrast(badge: Locator) {
+  const actual = await badge
+    .locator(".balance-status")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(blackContrast(actual)).toBeGreaterThanOrEqual(4.5);
+}
+
+for (const [ratio, color] of [
+  [1.300001, "rgb(216, 180, 254)"],
+  [1.625, "rgb(192, 133, 251)"],
+  [1.95, "rgb(168, 85, 247)"],
+] as const) {
+  test(`TC-NFR-07-02 上限比${ratio}のホーム・詳細の過剰色と文字のコントラスト`, async ({
+    page,
+  }) => {
+    await loadFixture(page, 0.699999, 0.99999, ratio);
+    const homeBadge = page
+      .getByRole("region", { name: "栄養バランスの判定" })
+      .locator(".balance-list li")
+      .filter({ hasText: "食塩相当量" });
+    await expectBadge(homeBadge, "過剰", color);
+    await expectBlackContrast(homeBadge);
+    await openTab(page, "詳細");
+    const detailBadge = row(page, "食塩相当量");
+    await expectBadge(detailBadge, "過剰", color);
+    await expectBlackContrast(detailBadge);
   });
 }
 

@@ -277,3 +277,23 @@ export function lowerTargetRatio(result: BalanceResult): number | null {
   const ratio = value / lower;
   return Number.isFinite(ratio) ? ratio : null;
 }
+
+/** 上限を超えた割合。候補評価と過剰色で共用する（DES-SUG-03、DES-COL-03）。 */
+export function excessRatio(result: BalanceResult): number | null {
+  if (result.status !== "high") return null;
+  const rule = balanceTargets.find(({ key }) => key === result.key)?.rule;
+  if (!rule || rule.kind === "lower") return null;
+  const value = rule.kind === "pfcRange" ? result.pfcPct : result.sufficiency;
+  const upper =
+    rule.kind === "pfcRange" ? result.pfcRange?.[1] : highSufficiency;
+  if (
+    value === null ||
+    !Number.isFinite(value) ||
+    upper === undefined ||
+    !Number.isFinite(upper) ||
+    upper <= 0
+  )
+    return null;
+  const ratio = value / upper - 1;
+  return Number.isFinite(ratio) ? Math.max(0, ratio) : null;
+}

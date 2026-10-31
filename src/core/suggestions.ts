@@ -6,7 +6,7 @@ import {
 } from "./analyze";
 import {
   balanceTargets,
-  highSufficiency,
+  excessRatio,
   judgeBalance,
   lowerTargetRatio,
   lowSufficiency,
@@ -101,14 +101,7 @@ function deficit(result: BalanceResult): number | null {
 
 /** 既存過剰の上限超過比を判定と同じ桁で比較する（DES-SUG-03）。 */
 function excess(result: BalanceResult): number {
-  return round(
-    Math.max(
-      0,
-      result.pfcRange
-        ? (result.pfcPct ?? 0) / result.pfcRange[1] - 1
-        : (result.sufficiency ?? 0) / highSufficiency - 1,
-    ),
-  );
+  return round(excessRatio(result) ?? 0);
 }
 
 /** 元の合計を一度求め、各候補の増分と主食だけを足して評価する（DES-SUG-01〜03）。 */
