@@ -13,7 +13,9 @@ test("TC-FR-ING-17-02 初回登録は今日の買い物を作る", async ({ page
   const today = await page.evaluate(() =>
     new Date().toLocaleDateString("sv-SE"),
   );
-  await expect(page.getByLabel("買い物の日付")).toHaveValue(today);
+  await expect(
+    page.getByLabel("ホーム画面").getByLabel("買い物の日付"),
+  ).toHaveValue(today);
 });
 
 test("TC-FR-ING-17-03 新しい買い物は空で、未来日付の買い物を最新のままにする", async ({
@@ -22,9 +24,11 @@ test("TC-FR-ING-17-03 新しい買い物は空で、未来日付の買い物を�
   await page.goto("#/");
   await page.getByRole("button", { name: "新しい買い物" }).click();
   await expect(page).toHaveURL(/#\/history\/shopping-/);
+  const detail = page.getByLabel("買い物詳細画面");
+  await expect(detail).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
-  await page.getByLabel("買い物の日付").fill("2099-01-01");
-  await page.getByRole("button", { name: "日付を保存" }).click();
+  await detail.getByLabel("買い物の日付").fill("2099-01-01");
+  await detail.getByRole("button", { name: "日付を保存" }).click();
   await page.getByRole("button", { name: "ホームへ戻る" }).click();
   await page.getByRole("button", { name: "新しい買い物" }).click();
   await expect(page).toHaveURL(/#\/history\/shopping-/);
@@ -34,13 +38,17 @@ test("TC-FR-ING-17-03 新しい買い物は空で、未来日付の買い物を�
       .filter({ hasText: "この買い物は最新ではありません" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "ホームへ戻る" }).click();
-  await expect(page.getByLabel("買い物の日付")).toHaveValue("2099-01-01");
+  await expect(
+    page.getByLabel("ホーム画面").getByLabel("買い物の日付"),
+  ).toHaveValue("2099-01-01");
 });
 
 test("TC-FR-ING-18-02 日付変更でホームの対象が入れ替わる", async ({ page }) => {
   await page.goto("#/");
   await page.getByRole("button", { name: "新しい買い物" }).click();
   await expect(page).toHaveURL(/#\/history\/shopping-/);
+  const detail = page.getByLabel("買い物詳細画面");
+  await expect(detail).toBeVisible();
   await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
   await registerFood(page, "にんじん");
   await page
@@ -49,8 +57,9 @@ test("TC-FR-ING-18-02 日付変更でホームの対象が入れ替わる", asyn
     .click();
   await page.getByRole("button", { name: "新しい買い物" }).click();
   await expect(page).toHaveURL(/#\/history\/shopping-/);
-  await page.getByLabel("買い物の日付").fill("2000-01-01");
-  await page.getByRole("button", { name: "日付を保存" }).click();
+  await expect(detail).toBeVisible();
+  await detail.getByLabel("買い物の日付").fill("2000-01-01");
+  await detail.getByRole("button", { name: "日付を保存" }).click();
   await page.getByRole("button", { name: "ホームへ戻る" }).click();
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
 });

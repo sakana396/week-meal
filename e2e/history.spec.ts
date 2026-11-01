@@ -133,9 +133,10 @@ test("TC-FR-ING-14-06 行削除は操作した詳細で取り消し、画面を�
     .getByRole("button", { name: "にんじんを削除" })
     .click();
   await page.goto("#/history/new");
-  await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
-  await page.getByLabel("買い物の日付").fill("2026-10-03");
-  await page.getByRole("button", { name: "日付を保存" }).click();
+  const detail = page.getByLabel("買い物詳細画面");
+  await expect(detail).toBeVisible();
+  await detail.getByLabel("買い物の日付").fill("2026-10-03");
+  await detail.getByRole("button", { name: "日付を保存" }).click();
   await expect(page.getByRole("button", { name: "元に戻す" })).toHaveCount(0);
   await page.goto("#/history/old");
   await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
@@ -246,7 +247,9 @@ test("TC-FR-ING-20-01・02 買い物削除の確認と最新・最後の買い�
   await expect(page).toHaveURL(/#\/history$/);
   await page.goto("#/");
   await expect(page.getByLabel("ホーム画面")).toBeVisible();
-  await expect(page.getByLabel("買い物の日付")).toHaveValue("2026-10-01");
+  await expect(
+    page.getByLabel("ホーム画面").getByLabel("買い物の日付"),
+  ).toHaveValue("2026-10-01");
   await page.goto("#/history/same");
   await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
   await page.getByRole("button", { name: "この買い物を削除" }).click();
