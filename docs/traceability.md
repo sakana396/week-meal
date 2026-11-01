@@ -151,4 +151,4 @@
 | NFR-08 | #87 | DES-COL-03 | TC-FR-UI-06-04、lint | src/core/balance.ts, src/core/suggestions.ts | 実装済み（純粋関数・入力不変） |
 | FR-BAL-08 | #88 | DES-SUG-04 | TC-FR-BAL-08-01, 02 | src/core/suggestions.ts, src/core/suggestions.test.ts, e2e/supplement-suggestions.spec.ts | 実装済み（単体試験で検証。ホーム候補の E2E 試験ケースを追加） |
 | FR-SYS-03 | #89 | DES-DEP-01, 02 | TC-FR-SYS-03-01（E2E） | vite.config.ts, playwright.config.ts, .github/workflows/ci.yml, e2e/pages.spec.ts, README.md | 実装済み。公開 URL の手動確認は G の範囲 |
-| NFR-14 | #26, #89 | DES-UI-13、DES-DEP-01, 02 | TC-FR-SYS-03-01（E2E）、査閲 | src/ui/storage.ts, e2e/pages.spec.ts | 実装済み（登録・設定操作の fetch / XHR 監査を E2E に追加） |
+| NFR-14 | #26, #89 | DES-UI-13、DES-DEP-01, 02 | TC-FR-SYS-03-01（E2E）、査閲 | src/ui/storage.ts, e2e/pages.spec.ts | 実装済み（操作中の fetch / XHR と、ページからの別オリジンへの要求を E2E で監査） |

@@ -7,8 +7,6 @@ on:
 permissions:
   contents: read
 
-concurrency: pages
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -57,6 +55,9 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [check, e2e]
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       contents: read
       pages: write

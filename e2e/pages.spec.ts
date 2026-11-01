@@ -3,9 +3,15 @@ import { itemRow, openTab, registerFood } from "./helpers";
 
 test("TC-FR-SYS-03-01 配信パスで読み込み、登録と設定を保存し、データを送信しない", async ({
   page,
+  baseURL,
 }) => {
+  const appOrigin = new URL(baseURL ?? "").origin;
   const dataRequests: string[] = [];
+  const externalRequests: string[] = [];
   page.on("request", (request) => {
+    if (new URL(request.url()).origin !== appOrigin) {
+      externalRequests.push(request.url());
+    }
     if (["fetch", "xhr"].includes(request.resourceType())) {
       dataRequests.push(request.url());
     }
@@ -26,7 +32,13 @@ test("TC-FR-SYS-03-01 配信パスで読み込み、登録と設定を保存し�
           ).pathname,
       ),
     );
-  expect(assetPaths).toHaveLength(2);
+  expect(assetPaths.length).toBeGreaterThanOrEqual(1);
+  expect(
+    assetPaths.filter((path) => path.endsWith(".js")).length,
+  ).toBeGreaterThanOrEqual(1);
+  expect(
+    assetPaths.filter((path) => path.endsWith(".css")).length,
+  ).toBeGreaterThanOrEqual(1);
   expect(
     assetPaths.every((path) => path.startsWith("/week-meal/assets/")),
   ).toBe(true);
@@ -66,4 +78,5 @@ test("TC-FR-SYS-03-01 配信パスで読み込み、登録と設定を保存し�
       .getByRole("button", { name: "パン" }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(dataRequests).toEqual([]);
+  expect(externalRequests).toEqual([]);
 });
