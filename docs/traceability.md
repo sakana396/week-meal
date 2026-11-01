@@ -150,5 +150,8 @@
 | NFR-07 | #87 | DES-COL-04 | TC-NFR-07-02 | src/ui/balanceTone.test.ts, e2e/balance-color.spec.ts, src/ui/App.css | 実装済み（全段階は単体検証）。src/ui/App.css は既存の CSS を検査対象に含めたもので、この PR では変更していない |
 | NFR-08 | #87 | DES-COL-03 | TC-FR-UI-06-04、lint | src/core/balance.ts, src/core/suggestions.ts | 実装済み（純粋関数・入力不変） |
 | FR-BAL-08 | #88 | DES-SUG-04 | TC-FR-BAL-08-01, 02 | src/core/suggestions.ts, src/core/suggestions.test.ts, e2e/supplement-suggestions.spec.ts | 実装済み（単体試験で検証。ホーム候補の E2E 試験ケースを追加） |
-| FR-SYS-03 | #89 | DES-DEP-01, 02 | TC-FR-SYS-03-01（E2E） | vite.config.ts, playwright.config.ts, .github/workflows/ci.yml, e2e/pages.spec.ts, README.md | 実装済み。公開 URL の手動確認は G の範囲 |
+| FR-SYS-03 | #89, #90 | DES-DEP-01, 02、DES-PER-04 | TC-FR-SYS-03-01（E2E・公開 URL 手動確認） | vite.config.ts, playwright.config.ts, .github/workflows/ci.yml, e2e/pages.spec.ts, README.md, docs/04_test/performance-measurement-it04.md | 実装済み。公開 URL の確認を 2026-11-02 に Playwright で行い、performance-measurement-it04.md に記録した |
 | NFR-14 | #26, #89 | DES-UI-13、DES-DEP-01, 02 | TC-FR-SYS-03-01（E2E）、査閲 | src/ui/storage.ts, e2e/pages.spec.ts | 実装済み（操作中の fetch / XHR と、ページからの別オリジンへの要求を E2E で監査） |
+| NFR-03 | #90 | DES-PER-03 | TC-NFR-03-04 | e2e/performance.spec.ts, docs/04_test/performance-measurement-it04.md | 計測コードを実装済み。2026-11-02 の開発者の PC での実測値を performance-measurement-it04.md に記録した。中位スマートフォン相当の条件が未定なので、達成は未確認 |
+| NFR-04、QA-04 | #90 | DES-PER-04 | TC-NFR-04-02 | docs/04_test/performance-measurement-it04.md | 公開 URL で Lighthouse を 3 回測り（97・98・98）、performance-measurement-it04.md に記録した |
+| QA-03 | #90 | DES-E2E-10、DES-PER-03 | TC-NFR-03-04、TC-FR-SYS-03-01（公開 URL 手動確認） | e2e/performance.spec.ts, docs/04_test/performance-measurement-it04.md | 買い物単位の性能 E2E と公開 URL の手動確認手順を実装済み |
