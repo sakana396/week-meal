@@ -28,7 +28,7 @@ const initial: AppState = {
     },
   ],
 };
-// 各食材10単位では、先頭10173の追加後も不足が残り、残る2候補の順位も変わる。
+// 各食材10単位では、先頭10173の追加後も不足が残り、候補は08001・10173・08013に変わる。
 const rotating: AppState = {
   ...initial,
   shoppings: [
@@ -38,7 +38,7 @@ const rotating: AppState = {
     },
   ],
 };
-// 棚分散後も先頭は10173。登録後は先頭だけが候補から消え、残る2件は維持される。
+// 棚分散後も先頭は10173。登録後は先頭が消え、残る08028と13003の順位が入れ替わる。
 const disappearingFirst: AppState = {
   ...rotating,
   shoppings: [
@@ -46,7 +46,7 @@ const disappearingFirst: AppState = {
       ...rotating.shoppings[0],
       items: rotating.shoppings[0].items.map((item, index) => ({
         ...item,
-        count: [8, 10, 10, 7][index],
+        count: [8, 10, 10, 8][index],
       })),
     },
   ],
@@ -265,7 +265,7 @@ test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と
   // DES-UI-42: PC のマウスを欄外へ移し、固定した並びを解放する。
   await page.mouse.move(0, 0);
   await ready(page);
-  expect(await ids()).toEqual(["08028", "13003", "08013"]);
+  expect(await ids()).toEqual(["08013", "13003", "08028"]);
   await expect(buttons.first()).toBeEnabled();
 });
 

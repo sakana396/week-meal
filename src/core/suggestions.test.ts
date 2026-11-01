@@ -692,6 +692,12 @@ it.each([
     categories: ["魚介類", "魚介類", "魚介類"],
     expected: ["a", "b", "c"],
   },
+  {
+    name: "改善量とよくある順が同点なら食品番号順",
+    categories: ["魚介類", "野菜類", "魚介類"],
+    ids: ["b", "c", "a"],
+    expected: ["a", "c", "b"],
+  },
   { name: "候補0件", categories: [], expected: [] },
   { name: "候補1件", categories: ["魚介類"], expected: ["a"] },
   {
@@ -699,12 +705,21 @@ it.each([
     categories: ["魚介類", "野菜類"],
     expected: ["a", "b"],
   },
-])("TC-FR-BAL-08-01 棚の分散と同点順: $name", ({ categories, expected }) => {
-  const candidates = categories.map((category, index) =>
-    shelfCandidate(String.fromCharCode(97 + index), category, {}, index),
-  );
-  expect(suggest(candidates).map(({ foodId }) => foodId)).toEqual(expected);
-});
+])(
+  "TC-FR-BAL-08-01 棚の分散と同点順: $name",
+  ({ categories, expected, ...caseData }) => {
+    const ids = "ids" in caseData ? caseData.ids : undefined;
+    const candidates = categories.map((category, index) =>
+      shelfCandidate(
+        ids?.[index] ?? String.fromCharCode(97 + index),
+        category,
+        {},
+        ids ? 0 : index,
+      ),
+    );
+    expect(suggest(candidates).map(({ foodId }) => foodId)).toEqual(expected);
+  },
+);
 
 it("TC-FR-BAL-08-02 安全性の違う棚は繰り上げず、入力と評価値を変えない", () => {
   const candidates = [
@@ -722,8 +737,12 @@ it("TC-FR-BAL-08-02 安全性の違う棚は繰り上げず、入力と評価値
   ]);
   expect(first[2].newHighKeys).toContain("saltEquivalentG");
   expect(suggest([candidates[3]])).toEqual([]);
+  // 分散前の候補を1件ずつ評価し、棚の選択が改善量を変えないことを確かめる。
+  const baselineEvaluations = candidates
+    .slice(0, 3)
+    .map((candidate) => suggest([candidate])[0]);
   expect(first.map(({ improvement }) => improvement)).toEqual(
-    suggest(candidates).map(({ improvement }) => improvement),
+    baselineEvaluations.map(({ improvement }) => improvement),
   );
   expect(candidates).toEqual(snapshot);
 });
