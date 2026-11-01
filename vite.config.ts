@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  base: "/week-meal/",
   plugins: [react()],
   test: {
     include: ["src/**/*.test.ts"],

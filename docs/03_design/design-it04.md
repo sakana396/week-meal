@@ -1,7 +1,7 @@
 # 設計書（反復 4）: 買い物の単位と公開
 
 - 文書 ID: DES-IT04
-- 版: 0.2（設計案。本人の決定と明記した P-01〜06・E-70〜75 を除き、具体的な方式はエージェントの設計判断）
+- 版: 0.3（設計案。本人の決定と明記した P-01〜06・E-70〜75 を除き、具体的な方式はエージェントの設計判断）
 - 作成日: 2026-10-31
 - 対象: [IT04-PLAN v0.2](../iterations/it04/plan.md) 3 章、P-01〜12
 - 根拠: [SRS-001 v0.6](../02_requirements/srs.md)、[E-57〜75](../01_concept/elicitation-notes.md)、[DES-IT01](design-it01.md)、[DES-IT02](design-it02.md)、[DES-IT03](design-it03.md)、[ADR-0004](../adr/0004-storage.md)、[ADR-0005](../adr/0005-supplement-suggestions.md)
@@ -110,7 +110,7 @@ flowchart LR
 
 ### 7.1 GitHub Pages（DES-DEP-01, 02）
 
-Vite `base` は dev・build・preview の全 command で常に `/week-meal/` とする。`command === "build"` だけで切り替えない。`npm run dev` のポート 5173 は維持し、URL は `http://localhost:5173/week-meal/` に変わる。Vite の dev サーバーは `/` を base へ転送するので古い URL でも開ける。localStorage はオリジン単位なので、パスが変わっても dev のデータは残る。ルートの `README.md` の `http://localhost:5173/` と `dev:docker`（LAN から開く場合）の案内は F で直す。公開 URL は `https://sakana396.github.io/week-meal/`。Pages の `build_type=workflow` は 2026-10-27 に有効化済み（IT04-PLAN P-10）。`main` への push で GitHub Actions が `npm ci`、型・lint・書式・単体テスト・ビルド・E2E の成功を確認した後、配信 job で `actions/upload-pages-artifact` により `dist` から Pages artifact を作り、`deploy-pages` で配信する。配信 job は `if: github.ref == 'refs/heads/main' && github.event_name == 'push'` とし、ワークフローの `concurrency: pages` で重複配信を制御する。PR では配信せず検証だけ行う。`pages: write` と `id-token: write` は配信 job にだけ付け、`environment: github-pages` に URL を記録する。現行 CI は check / e2e の 2 job であり、配信 job は新設する。ローカルの `vite preview` に対し Playwright の `webServer.url` と `baseURL` をともに `http://localhost:4173/week-meal/`（末尾 `/` あり）とする。既存 E2E の約 30 か所の `page.goto("/#/...")` とヘルパーの同形式を `page.goto("#/...")` の相対指定に改め、base の外へ移動しないようにする。E2E のポート衝突は `--strictPort` の失敗として分かるようにし、並列起動しない。公開 URL では手動の登録→判定→再読み込みを確認し、localhost の localStorage は移さない（E-73）。通信監査で登録・設定を送る fetch / XHR がないことを確認する。既存の ADR-0001 の静的サイト方針に沿うため、新たな技術選定 ADR は不要と判断する。
+Vite `base` は dev・build・preview の全 command で常に `/week-meal/` とする。`command === "build"` だけで切り替えない。`npm run dev` のポート 5173 は維持し、URL は `http://localhost:5173/week-meal/` に変わる。Vite の dev サーバーは `/` を base へ転送するので古い URL でも開ける。localStorage はオリジン単位なので、パスが変わっても dev のデータは残る。ルートの `README.md` の `http://localhost:5173/` と `dev:docker`（LAN から開く場合）の案内は F で直す。公開 URL は `https://sakana396.github.io/week-meal/`。Pages の `build_type=workflow` は 2026-10-27 に有効化済み（IT04-PLAN P-10）。`main` への push で GitHub Actions が `npm ci`、型・lint・書式・単体テスト・ビルド・E2E の成功を確認した後、配信 job で `actions/upload-pages-artifact` により `dist` から Pages artifact を作り、`deploy-pages` で配信する。配信 job は `if: github.ref == 'refs/heads/main' && github.event_name == 'push'` とし、配信の job に concurrency（`group: pages`、`cancel-in-progress: false`）を付け、配信どうしだけを直列にする。PR では配信せず検証だけ行う。`pages: write` と `id-token: write` は配信 job にだけ付け、`environment: github-pages` に URL を記録する。現行 CI は check / e2e の 2 job であり、配信 job は新設する。ローカルの `vite preview` に対し Playwright の `webServer.url` と `baseURL` をともに `http://localhost:4173/week-meal/`（末尾 `/` あり）とする。既存 E2E の約 30 か所の `page.goto("/#/...")` とヘルパーの同形式を `page.goto("#/...")` の相対指定に改め、base の外へ移動しないようにする。E2E のポート衝突は `--strictPort` の失敗として分かるようにし、並列起動しない。公開 URL では手動の登録→判定→再読み込みを確認し、localhost の localStorage は移さない（E-73）。通信監査で登録・設定を送る fetch / XHR がないことを確認する。既存の ADR-0001 の静的サイト方針に沿うため、新たな技術選定 ADR は不要と判断する。
 
 ### 7.2 計測と E2E（DES-PER-03, 04、DES-E2E-10）
 
@@ -163,3 +163,4 @@ FR-ING-11・12 は SRS v0.5 で削除済み。対応する新規実装はない�
 | --- | --- | --- |
 | 0.1 | 2026-10-31 | IT04 の状態・履歴・移行・色・候補・公開・性能の設計案と Issue 分割案 |
 | 0.2 | 2026-10-31 | レビュー（REV-042）の指摘への対応、E-75。再レビューの指摘（P-11 からの変更、E2E の書き方、dev の URL）への対応 |
+| 0.3 | 2026-11-01 | PR #96 のレビュー（REV-048）による配信 job の concurrency の修正 |

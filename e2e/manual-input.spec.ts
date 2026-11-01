@@ -129,7 +129,7 @@ for (const mode of ["簡易", "詳細"]) {
   test(`TC-FR-ING-08-12 ${mode}で検索語は明示操作時だけ名前に引き継ぎ棚と成分を保つ`, async ({
     page,
   }) => {
-    await page.goto("/#/register");
+    await page.goto("#/register");
     await page
       .getByRole("group", { name: "入力モード選択" })
       .getByRole("button", { name: mode, exact: true })
@@ -186,7 +186,7 @@ for (const mode of ["簡易", "詳細"]) {
 test("TC-FR-ING-08-13 成分は初期に閉じ開閉で保持しクリアと登録成功で初期化する", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = formOf(page);
   const details = form.locator("details");
   await expect(details).not.toHaveAttribute("open");
@@ -222,7 +222,7 @@ test("TC-FR-ING-08-13 成分は初期に閉じ開閉で保持しクリアと登�
 test("TC-FR-ING-16-01 主食も下書きに選べ全成分を直して保存し原典を変えない", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = formOf(page);
   await nameOf(form).fill("自分の料理");
   await form.getByLabel("棚", { exact: true }).selectOption("その他");
@@ -283,7 +283,7 @@ test("TC-FR-ING-16-01 主食も下書きに選べ全成分を直して保存し�
 test("TC-FR-ING-16-02 下書きを再選択すると全成分と来歴を置換し閉じても保持しクリアで消す", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = formOf(page);
   await nameOf(form).fill("置換する料理");
   await form.getByText(summary, { exact: true }).click();
@@ -354,7 +354,7 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
       },
       { food, item, profile: initialAppState.profile },
     );
-    await page.goto("/#/register");
+    await page.goto("#/register");
     const remembered = page.getByRole("region", { name: "覚えた食材" });
     if (sourceFoodId === "99999")
       await expect(remembered).toContainText(
@@ -387,7 +387,7 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
 test("TC-FR-ING-16-04 下書き候補は80件まで表示し名前と食品番号を個別に照合する", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = formOf(page);
   await form.getByText(summary, { exact: true }).click();
   const query = form.getByRole("searchbox", { name: "似た食品を探す" });

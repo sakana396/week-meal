@@ -57,7 +57,7 @@ npm run dev
 起動後、ブラウザで以下を開きます。
 
 ```text
-http://localhost:5173/
+http://localhost:5173/week-meal/
 ```
 
 Node.js 18 のまま実行すると Vite が起動できません。
@@ -66,6 +66,8 @@ Node.js 18 のまま実行すると Vite が起動できません。
 ```bash
 npm run dev:docker
 ```
+
+同じ PC では `http://localhost:5173/week-meal/` を開きます。LAN 内の別端末からは、PC の IP アドレスを使って `http://<PC の IP アドレス>:5173/week-meal/` を開きます。
 
 ## 検証コマンド
 

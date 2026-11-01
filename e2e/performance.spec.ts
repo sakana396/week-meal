@@ -150,7 +150,7 @@ for (const size of [3, 30, 100]) {
       test.setTimeout(240_000);
       const cdp = await page.context().newCDPSession(page);
       await cdp.send("Emulation.setCPUThrottlingRate", { rate });
-      await page.goto("/#/");
+      await page.goto("#/");
       const samples: object[] = [];
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -198,7 +198,7 @@ for (const size of [3, 30, 100]) {
                 ),
               fixture(size),
             );
-            await page.goto("/#/");
+            await page.goto("#/");
             await page.reload();
             await page.mouse.move(0, 0);
             const panel = page.locator("[data-candidates-revision]");
@@ -381,7 +381,7 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
     ...item,
     foodId: "06061",
   }));
-  await page.goto("/#/");
+  await page.goto("#/");
   await page.evaluate(
     (state) =>
       localStorage.setItem(

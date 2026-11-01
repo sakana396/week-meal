@@ -127,7 +127,7 @@ test("TC-NFR-06-01 全画面と候補・削除通知・下書き・食品詳細�
   await openTab(page, "設定");
   await inspect(page, info, "settings");
   await geometry(page);
-  await page.goto("/#/foods");
+  await page.goto("#/foods");
   await inspect(page, info, "foods");
   await page
     .getByLabel("食品一覧", { exact: true })
@@ -143,7 +143,7 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
   page,
 }) => {
   // TC-FR-BAL-06-08 と同じ各10単位。候補登録後も不足と候補欄を残し、フォーカスを検査する。
-  await page.goto("/#/");
+  await page.goto("#/");
   await page.evaluate(
     (state) => {
       localStorage.setItem(

@@ -46,7 +46,7 @@ async function seed(page: Page, foods: FoodItem[], version = 2) {
 test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食品を再登録できる", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = page.locator("form");
   await form
     .getByRole("textbox", { name: "食材名", exact: true })
@@ -89,7 +89,7 @@ test("TC-FR-ING-15-03 同名食品を棚・番号で区別し両モードの通�
     manual("manual-meat", "にんじん", "手入力 / 肉"),
     manual("manual-old", "にんじん"),
   ]);
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const remembered = page.getByRole("region", {
     name: "覚えた食材",
     exact: true,
@@ -174,7 +174,7 @@ test("TC-FR-ING-15-04 覚えた食品はホームから 2 タップで登録で�
     page,
     Array.from({ length: 81 }, (_, i) => manual(`manual-${i}`, `保存食品${i}`)),
   );
-  await page.goto("/#/");
+  await page.goto("#/");
   await openTab(page, "登録"); // 1 タップ目
   const remembered = page.getByRole("region", {
     name: "覚えた食材",
@@ -196,7 +196,7 @@ test("TC-FR-ING-15-06 旧分類はその他に表示し成分と来歴を保持�
       sourceFoodId: "99999",
     } as FoodItem,
   ]);
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await page
     .getByRole("group", { name: "スーパーの棚を選択" })
     .getByRole("button", { name: "その他", exact: true })
@@ -259,7 +259,7 @@ test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保�
     },
     { profile, foods, items },
   );
-  await page.goto("/#/");
+  await page.goto("#/");
   await page.reload();
   await expect(itemRow(page, "登録食品")).toHaveCount(0);
   await expect(itemRow(page, "にんじん")).toBeVisible();
@@ -290,7 +290,7 @@ test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号�
   page,
 }) => {
   await seed(page, [manual("manual-new"), manual("manual-old")]);
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const remembered = page.getByRole("region", {
     name: "覚えた食材",
     exact: true,
@@ -338,7 +338,7 @@ for (const name of ["", "   "]) {
   }) => {
     const food = manual("manual-unnamed", name);
     await seed(page, [food], 1);
-    await page.goto("/#/register");
+    await page.goto("#/register");
     for (const mode of ["簡易", "詳細"]) {
       await page
         .getByRole("group", { name: "入力モード選択", exact: true })
@@ -363,7 +363,7 @@ for (const name of ["", "   "]) {
 test("TC-FR-ING-15-09 覚えた食品がないと区画を隠し登録後に表示し検索や棚が一致しなければ隠す", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const remembered = page.getByRole("region", {
     name: "覚えた食材",
     exact: true,

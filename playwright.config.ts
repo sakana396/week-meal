@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * E2E テストの設定（DES-E2E-01, 02, 06、DES-PER-01）。
+ * E2E テストの設定（DES-E2E-01, 02, 06、DES-PER-01、DES-DEP-02）。
  * ビルドしたものを vite preview で配信し、スマートフォン幅と PC 幅の 2 つで試す。
  */
 export default defineConfig({
@@ -11,7 +11,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: "http://localhost:4173/week-meal/",
     trace: "retain-on-failure",
   },
   projects: [
@@ -47,7 +47,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run build && npx vite preview --port 4173 --strictPort",
-    url: "http://localhost:4173",
+    url: "http://localhost:4173/week-meal/",
     reuseExistingServer: false,
     timeout: 120_000,
   },

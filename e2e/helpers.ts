@@ -25,7 +25,7 @@ export async function registerFood(page: Page, name: string) {
 
 /** 登録画面を開いて、食材をまとめて登録する */
 export async function registerFoods(page: Page, names: string[]) {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   for (const name of names) {
     await registerFood(page, name);
   }

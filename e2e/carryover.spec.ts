@@ -12,7 +12,7 @@ for (const mode of ["簡易", "詳細"]) {
   test(`TC-FR-ING-02-01 ${mode}で棚と検索を組み合わせ空の結果から戻せる`, async ({
     page,
   }) => {
-    await page.goto("/#/register");
+    await page.goto("#/register");
     await page
       .getByRole("group", { name: "入力モード選択" })
       .getByRole("button", { name: mode, exact: true })
@@ -54,7 +54,7 @@ for (const mode of ["簡易", "詳細"]) {
 test("TC-FR-ING-04-06 未検索ではよくある食材が先でそれ以外も後半と検索に出る", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await page
     .getByRole("group", { name: "スーパーの棚を選択" })
     .getByRole("button", { name: "野菜", exact: true })
@@ -103,7 +103,7 @@ for (const [query, entries] of [
   test(`TC-FR-ING-06-21 ${query}と加工品を別名で表示し別行で登録する`, async ({
     page,
   }) => {
-    await page.goto("/#/register");
+    await page.goto("#/register");
     await page
       .getByRole("searchbox", { name: "食材名", exact: true })
       .fill(query);
@@ -180,7 +180,7 @@ test("TC-FR-FDB-03-01 除外されたサゴでん粉を手入力で補える", a
   page,
 }) => {
   // 除外食品 02032 は #59 の査閲資料に記載。成分値は入力せず作り出さない。
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await page
     .getByRole("searchbox", { name: "食材名", exact: true })
     .fill("サゴでん粉");
@@ -214,7 +214,7 @@ test("TC-FR-NUT-05-04 一部欠損と全欠損と明示のゼロをホームと�
   page,
 }) => {
   // 集計確認用の人工試料。実在食品の成分値ではない。
-  await page.goto("/#/settings");
+  await page.goto("#/settings");
   await page
     .getByRole("group", { name: "主食", exact: true })
     .getByRole("button", { name: "なし", exact: true })
@@ -334,7 +334,7 @@ test("TC-FR-STP-01-02 性別と年齢の変更をホームの不足の増減で�
 });
 
 test("TC-FR-ING-08-15 空白だけの名前では手入力登録しない", async ({ page }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const form = manualForm(page);
   await form.getByRole("textbox", { name: "食材名", exact: true }).fill("   ");
   await form.getByRole("button", { name: "登録する", exact: true }).click();

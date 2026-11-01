@@ -34,7 +34,7 @@ async function seed(
     },
     { entries, manualFoods, profile: initialAppState.profile },
   );
-  await page.goto("/#/");
+  await page.goto("#/");
 }
 const undo = (page: Page) =>
   page.getByRole("button", { name: "元に戻す", exact: true });
