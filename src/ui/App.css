@@ -1117,3 +1117,69 @@ h3 {
   max-height: 320px;
   overflow-y: auto;
 }
+
+/* 履歴と確認ダイアログ（DES-UI-47、48、IF-05）。 */
+.history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 14px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  color: #17201b;
+  background: #fff;
+  text-align: left;
+}
+
+.history-button:hover,
+.history-button:focus-visible {
+  border-color: #2b7a57;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(23, 32, 27, 0.65);
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 18px;
+  width: min(420px, 100%);
+  padding: 24px;
+  border-radius: 10px;
+  background: #fffdfa;
+  box-shadow: 0 12px 40px rgba(23, 32, 27, 0.3);
+}
+
+.confirm-dialog .form-actions button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.confirm-dialog .form-actions .danger-button {
+  border-color: #a63a24;
+  color: #fff;
+  background: #a63a24;
+}
+
+.link-button.danger-button {
+  color: #a63a24;
+}
