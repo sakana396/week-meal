@@ -7,10 +7,12 @@ export function HistoryScreen({
   shoppings,
   navigate,
   notice,
+  focusHeading,
 }: {
   shoppings: readonly Shopping[];
   navigate: (route: Route, shoppingId?: string) => void;
   notice: string;
+  focusHeading: boolean;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const latest = latestShopping(shoppings);
@@ -22,8 +24,8 @@ export function HistoryScreen({
         right.index - left.index,
     );
   useEffect(() => {
-    if (notice.includes("削除しました")) headingRef.current?.focus();
-  }, [notice]);
+    if (focusHeading) headingRef.current?.focus();
+  }, [focusHeading]);
   return (
     <div className="screen-stack" aria-label="買い物の履歴画面">
       <h2 ref={headingRef} tabIndex={-1}>

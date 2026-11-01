@@ -84,6 +84,9 @@ export function HistoryDetailScreen({
     } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
       first.focus();
+    } else if (!dialogRef.current?.contains(document.activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
     }
   };
   const nameCounts = new Map<string, number>();
@@ -197,17 +200,27 @@ export function HistoryDetailScreen({
         ホームへ戻る
       </button>
       {confirming && (
-        <div className="dialog-backdrop">
+        <div
+          className="dialog-backdrop"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) event.preventDefault();
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget)
+              cancelRef.current?.focus();
+          }}
+        >
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="shopping-delete-title"
+            aria-describedby="shopping-delete-description"
             className="confirm-dialog"
             onKeyDown={trapFocus}
           >
             <h3 id="shopping-delete-title">買い物を削除しますか？</h3>
-            <p>
+            <p id="shopping-delete-description">
               {shopping.date} の買い物（{shopping.items.length}{" "}
               件）を削除します。
             </p>

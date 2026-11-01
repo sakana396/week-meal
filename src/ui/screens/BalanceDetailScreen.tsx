@@ -144,10 +144,12 @@ export function BalanceDetailScreen({
   analysis,
   profile,
   navigate,
+  shoppingId,
 }: {
   analysis: AnalysisResult;
   profile: Profile;
-  navigate: (route: Route) => void;
+  navigate: (route: Route, shoppingId?: string) => void;
+  shoppingId: string | null;
 }) {
   return (
     <div className="screen-stack" aria-label="栄養詳細画面">
@@ -169,7 +171,7 @@ export function BalanceDetailScreen({
           <NoDataNote names={analysis.noDataItems} />
           <button
             className="primary-button"
-            onClick={() => navigate("register")}
+            onClick={() => navigate("register", shoppingId ?? undefined)}
             type="button"
           >
             食材を登録

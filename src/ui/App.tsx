@@ -57,6 +57,7 @@ export default function App() {
     text: string;
     route: typeof route;
     shoppingId?: string;
+    focusHistoryHeading?: boolean;
   } | null>(null);
   const visibleRouteNotice =
     routeNotice?.route === route &&
@@ -188,6 +189,7 @@ export default function App() {
     setRouteNotice({
       text: `${shopping.date} の買い物を削除しました`,
       route: "history",
+      focusHistoryHeading: true,
     });
     navigate("history");
   }
@@ -250,6 +252,11 @@ export default function App() {
             shoppings={state.shoppings}
             navigate={navigate}
             notice={visibleRouteNotice}
+            focusHeading={
+              routeNotice?.route === "history" &&
+              routeNotice.focusHistoryHeading === true &&
+              visibleRouteNotice !== ""
+            }
           />
         )}
         {route === "historyDetail" && selectedShopping && (
@@ -272,6 +279,7 @@ export default function App() {
             analysis={selectedAnalysis}
             navigate={navigate}
             profile={state.profile}
+            shoppingId={shoppingId}
           />
         )}
         {route === "settings" && (

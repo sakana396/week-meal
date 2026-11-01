@@ -170,6 +170,27 @@ test("TC-FR-ING-19-03・04 登録先と栄養詳細の ID を保ち、未知 ID 
   ).toBeVisible();
 });
 
+test("TC-FR-ING-19-05 前の買い物の未判定から同じ買い物へ登録する", async ({
+  page,
+}) => {
+  await seed(page);
+  await openOld(page);
+  await itemRow(page, "豚肉")
+    .getByRole("button", { name: "豚肉を削除" })
+    .click();
+  await page.getByRole("button", { name: "栄養素ごとの充足率を見る" }).click();
+  await expect(page).toHaveURL(/#\/balance\?shopping=old$/);
+  await expect(page.getByText("まだ判定できません")).toBeVisible();
+  await page.getByRole("button", { name: "食材を登録" }).click();
+  await expect(page).toHaveURL(/#\/register\?shopping=old$/);
+  await registerFood(page, "鶏卵");
+  await page.goto("#/history/old");
+  await expect(itemRow(page, "鶏卵")).toHaveCount(1);
+  await page.goto("#/history/new");
+  await expect(itemRow(page, "鶏卵")).toHaveCount(1);
+  await expect(itemRow(page, "にんじん")).toHaveCount(0);
+});
+
 test("TC-FR-ING-20-01・02 買い物削除の確認と最新・最後の買い物の切り替え", async ({
   page,
 }) => {
@@ -178,6 +199,19 @@ test("TC-FR-ING-20-01・02 買い物削除の確認と最新・最後の買い�
   await page.getByRole("button", { name: "この買い物を削除" }).click();
   const dialog = page.getByRole("dialog", { name: "買い物を削除しますか？" });
   await expect(dialog).toContainText("2026-10-01 の買い物（3 件）");
+  await expect(dialog).toHaveAccessibleDescription(
+    "2026-10-01 の買い物（3 件）を削除します。",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "キャンセル" }),
+  ).toBeFocused();
+  await page.locator(".dialog-backdrop").click({ position: { x: 1, y: 1 } });
+  await expect(
+    dialog.getByRole("button", { name: "キャンセル" }),
+  ).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialog.getByRole("button", { name: "削除する" })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(
     dialog.getByRole("button", { name: "キャンセル" }),
   ).toBeFocused();
@@ -209,6 +243,7 @@ test("TC-FR-ING-20-01・02 買い物削除の確認と最新・最後の買い�
   await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
   await page.getByRole("button", { name: "この買い物を削除" }).click();
   await dialog.getByRole("button", { name: "削除する" }).click();
+  await expect(page).toHaveURL(/#\/history$/);
   await page.goto("#/");
   await expect(page.getByLabel("ホーム画面")).toBeVisible();
   await expect(page.getByLabel("買い物の日付")).toHaveValue("2026-10-01");
@@ -216,6 +251,8 @@ test("TC-FR-ING-20-01・02 買い物削除の確認と最新・最後の買い�
   await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
   await page.getByRole("button", { name: "この買い物を削除" }).click();
   await dialog.getByRole("button", { name: "削除する" }).click();
+  await expect(page).toHaveURL(/#\/history$/);
+  await expect(page.getByText("買い物がありません")).toBeVisible();
   await page.goto("#/");
   await expect(page.getByLabel("ホーム画面")).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
