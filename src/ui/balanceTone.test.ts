@@ -166,7 +166,11 @@ it("TC-FR-UI-06-02 比のない不足でも両画面に文字と栄養素名を�
   const props = { analysis, profile: defaultProfile };
   for (const element of [
     createElement(BalancePanel, props),
-    createElement(BalanceDetailScreen, { ...props, navigate: () => {} }),
+    createElement(BalanceDetailScreen, {
+      ...props,
+      navigate: () => {},
+      shoppingId: null,
+    }),
   ]) {
     const markup = renderToStaticMarkup(element);
     expect(markup).toContain('class="balance-status">不足</span>');

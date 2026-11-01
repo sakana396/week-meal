@@ -9,10 +9,11 @@ import {
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
-import { useHashRoute } from "./route";
+import { routeFromHash, useHashRoute } from "./route";
 import { localId } from "./ids";
 import { localDate } from "./localDate";
 import { HistoryDetailScreen } from "./screens/HistoryDetailScreen";
+import { HistoryScreen } from "./screens/HistoryScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { BalanceDetailScreen } from "./screens/BalanceDetailScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
@@ -56,6 +57,7 @@ export default function App() {
     text: string;
     route: typeof route;
     shoppingId?: string;
+    focusHistoryHeading?: boolean;
   } | null>(null);
   const visibleRouteNotice =
     routeNotice?.route === route &&
@@ -100,13 +102,21 @@ export default function App() {
     )
       return;
     queueMicrotask(() => {
+      // 削除後の経路変更中は、旧い詳細画面の ID を未知の買い物として扱わない。
+      const current = routeFromHash(window.location.hash);
+      if (
+        current.route !== route ||
+        current.shoppingId !== shoppingId ||
+        current.invalidShopping !== invalidShopping
+      )
+        return;
       setRouteNotice({
         text: "指定した買い物が見つかりません",
         route: "history",
       });
       replaceRoute("history");
     });
-  }, [invalidShopping, shoppingId, state.shoppings, replaceRoute]);
+  }, [invalidShopping, route, shoppingId, state.shoppings, replaceRoute]);
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
 
   useEffect(() => {
@@ -171,6 +181,19 @@ export default function App() {
     });
   }
 
+  /** 確認後に対象の買い物を削除して履歴へ戻る（DES-UI-48）。 */
+  function removeShopping(id: string) {
+    const shopping = state.shoppings.find((entry) => entry.id === id);
+    if (!shopping) return;
+    dispatch({ type: "removeShopping", shoppingId: id });
+    setRouteNotice({
+      text: `${shopping.date} の買い物を削除しました`,
+      route: "history",
+      focusHistoryHeading: true,
+    });
+    navigate("history");
+  }
+
   const selectedShopping = state.shoppings.find(
     (shopping) => shopping.id === shoppingId,
   );
@@ -225,17 +248,16 @@ export default function App() {
           />
         )}
         {route === "history" && (
-          <div className="screen-stack">
-            <h2>買い物の履歴</h2>
-            {visibleRouteNotice && <p role="status">{visibleRouteNotice}</p>}
-            <button
-              className="link-button"
-              type="button"
-              onClick={() => navigate("home")}
-            >
-              ホームへ戻る
-            </button>
-          </div>
+          <HistoryScreen
+            shoppings={state.shoppings}
+            navigate={navigate}
+            notice={visibleRouteNotice}
+            focusHeading={
+              routeNotice?.route === "history" &&
+              routeNotice.focusHistoryHeading === true &&
+              visibleRouteNotice !== ""
+            }
+          />
         )}
         {route === "historyDetail" && selectedShopping && (
           <HistoryDetailScreen
@@ -246,6 +268,10 @@ export default function App() {
             navigate={navigate}
             notice={visibleRouteNotice}
             onDateChange={changeShoppingDate}
+            dispatch={dispatch}
+            findFood={findFood}
+            pendingRemoval={session.pendingRemoval}
+            onRemoveShopping={removeShopping}
           />
         )}
         {route === "balance" && (
@@ -253,6 +279,7 @@ export default function App() {
             analysis={selectedAnalysis}
             navigate={navigate}
             profile={state.profile}
+            shoppingId={shoppingId}
           />
         )}
         {route === "settings" && (

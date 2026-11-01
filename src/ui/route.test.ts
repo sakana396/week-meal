@@ -25,6 +25,7 @@ describe("routeFromHash（DES-UI-10）", () => {
 
   it.each([
     ["#/register?shopping=shopping-1", "register", "shopping-1"],
+    ["#/balance?shopping=shopping-1", "balance", "shopping-1"],
     ["#/history/shopping-1", "historyDetail", "shopping-1"],
     ["#/register?shopping=shopping%20one", "register", "shopping one"],
     ["#/history/shopping%20one", "historyDetail", "shopping one"],
@@ -39,6 +40,8 @@ describe("routeFromHash（DES-UI-10）", () => {
   it.each([
     "#/register?shopping=",
     "#/register?shopping=a&shopping=b",
+    "#/balance?shopping=",
+    "#/balance?shopping=a&shopping=b",
     "#/history/",
     "#/history/%ZZ",
     "#/history/a%2Fb",

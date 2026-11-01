@@ -269,3 +269,48 @@ test("TC-NFR-06-02 候補の固定中に個数を変更しても見出しへフ�
   await page.clock.runFor(100);
   await expect(increment).toBeFocused();
 });
+
+test("TC-NFR-06-03 履歴・詳細・削除確認のaxeとキーボード操作", async ({
+  page,
+}, info) => {
+  await page.goto("#/");
+  await page.getByRole("button", { name: "新しい買い物" }).click();
+  await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
+  await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
+  await expect(page.getByLabel("食材名一覧")).toBeVisible();
+  await page
+    .getByLabel("食材名一覧")
+    .getByRole("button", { name: /^にんじん/ })
+    .first()
+    .click();
+  await page.goto("#/history");
+  await expect(
+    page.getByRole("heading", { name: "買い物の履歴" }),
+  ).toBeVisible();
+  await geometry(page);
+  await inspect(page, info, "history");
+  await keyboardActivate(page, page.locator(".history-button").first());
+  await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
+  await geometry(page);
+  await inspect(page, info, "history-detail");
+  await keyboardActivate(
+    page,
+    page.getByRole("button", { name: "この買い物を削除" }),
+  );
+  const dialog = page.getByRole("dialog", { name: "買い物を削除しますか？" });
+  await expect(
+    dialog.getByRole("button", { name: "キャンセル" }),
+  ).toBeFocused();
+  await geometry(page);
+  await inspect(page, info, "history-delete-confirmation");
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialog.getByRole("button", { name: "削除する" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    dialog.getByRole("button", { name: "キャンセル" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "この買い物を削除" }),
+  ).toBeFocused();
+});
