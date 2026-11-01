@@ -411,9 +411,10 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
 
 /** 対象の買い物の行数と、対象外の履歴件数を独立させた試料（DES-PER-03）。 */
 function shoppingFixture(size: number, historyCount: number): AppState {
-  const targetItems = fixture(size).shoppings[0].items;
+  const base = fixture(size);
+  const targetItems = base.shoppings[0].items;
   return {
-    ...initialAppState,
+    ...base,
     shoppings: [
       {
         id: "previous",
@@ -435,9 +436,12 @@ function shoppingFixture(size: number, historyCount: number): AppState {
       },
       ...Array.from({ length: historyCount }, (_, i) => ({
         id: `history-${i}`,
-        date: "2026-01-01",
+        date: new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10),
         origin: "normal" as const,
-        items: [],
+        items: targetItems.slice(0, 3).map((item) => ({
+          ...item,
+          id: `history-${i}-${item.id}`,
+        })),
       })),
     ],
   };
@@ -492,7 +496,7 @@ for (const size of [3, 30, 100]) {
             ci: !!process.env.CI,
           },
           interpretation:
-            "対象の買い物は最新・前の買い物とも指定行数。別履歴は空の買い物。クリック受信から判定 commit 後の2回目の描画まで。時間超過は記録のみ。候補はホームだけ別時計。",
+            "対象の買い物は最新・前の買い物とも指定行数。未登録の覚えた食品は指定行数と同数。別履歴は各3行、日付は2026-01-01から1日ずつずらす。クリック受信から判定 commit 後の2回目の描画まで。時間超過は記録のみ。候補はホームだけ別時計。",
           samples,
         };
         try {
