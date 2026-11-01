@@ -4,7 +4,7 @@ import { itemRow, openTab, registerFood, registerFoods } from "./helpers";
 test("TC-FR-ING-01-06 食材名を押すと登録され、登録画面に留まってお知らせが出る", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await registerFood(page, "にんじん");
   await expect(page).toHaveURL(/#\/register\?shopping=shopping-/);
   await registerFood(page, "にんじん");
@@ -18,7 +18,7 @@ test("TC-FR-ING-01-06 食材名を押すと登録され、登録画面に留ま�
 test("TC-FR-ING-07-01 詳細モードで食品を選ぶと、食材名で登録される", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await page
     .getByRole("group", { name: "入力モード選択" })
     .getByRole("button", { name: "詳細", exact: true })
@@ -39,7 +39,7 @@ test("TC-FR-ING-07-01 詳細モードで食品を選ぶと、食材名で登録�
 test("TC-FR-ING-09-06 登録画面に米・パン・麺と調味料の棚と食品が出ない", async ({
   page,
 }) => {
-  await page.goto("/#/register");
+  await page.goto("#/register");
   const shelves = page.getByRole("group", { name: "スーパーの棚を選択" });
   await expect(
     shelves.getByRole("button", { name: "野菜", exact: true }),
@@ -88,7 +88,7 @@ test("TC-FR-UI-01-01 3 品目以上で判定し、買った食材の傾向であ
 test("TC-NFR-02-01 ホームから食材 1 件の登録が 3 タップ以内で終わる（H-05）", async ({
   page,
 }) => {
-  await page.goto("/#/");
+  await page.goto("#/");
   await page.evaluate(() => {
     sessionStorage.setItem("registrationClicks", "0");
     document.addEventListener(
@@ -158,7 +158,7 @@ test("TC-FR-ING-10-08 999 個では増やせない", async ({ page }) => {
       }),
     );
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(
     itemRow(page, "にんじん").getByRole("button", {
       name: "にんじんを 0.5 増やす",
@@ -194,7 +194,7 @@ test("TC-NFR-12-32 読めない保存データは退避し、初期状態で始�
       sessionStorage.setItem("seeded", "1");
     }
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(
     page.getByText("保存データを読めなかったので、初期状態で始めました"),
   ).toBeVisible();
@@ -215,7 +215,7 @@ test("TC-NFR-12-33 退避できない保存データは上書きせず知らせ�
       return original.call(this, key, value);
     };
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(page.getByText(/退避もできませんでした/)).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
   await openTab(page, "登録");
@@ -253,7 +253,7 @@ test("TC-NFR-12-34 不正な行を捨てた件数を知らせる", async ({ page
       }),
     );
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(
     page.getByText("保存データのうち、読み込めなかった食材が 1 件ありました。"),
   ).toBeVisible();
@@ -269,7 +269,7 @@ test("TC-NFR-12-35 設定がないと初期値に戻した旨を知らせる", a
       JSON.stringify({ version: 1, items: [], manualFoods: [] }),
     );
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(
     page.getByText("設定を読み込めなかったので、初期値に戻しました。"),
   ).toBeVisible();
@@ -284,7 +284,7 @@ test("TC-NFR-12-36 保存できないブラウザではその旨を知らせる"
       throw new Error("保存不可");
     };
   });
-  await page.goto("/#/");
+  await page.goto("#/");
   await expect(page.getByText(/このブラウザでは保存できません/)).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
 });

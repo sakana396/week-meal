@@ -36,7 +36,7 @@ test("TC-FR-UI-05-07 栄養詳細に、判定する 14 種とそのほか 16 種
 test("TC-FR-STP-05-01 初めて開いたときの設定は、ご飯・中盛り・未選択・30〜49 歳", async ({
   page,
 }) => {
-  await page.goto("/#/settings");
+  await page.goto("#/settings");
   for (const [group, value] of [
     ["主食", "ご飯"],
     ["盛り", "中盛り"],
@@ -171,7 +171,7 @@ test("TC-FR-STP-01-03 主食なしでは盛りを選べず、主食を戻すと�
 test("TC-FR-UI-08-01 食品一覧で食品を選ぶと、100g あたりの成分の欄に移る", async ({
   page,
 }) => {
-  await page.goto("/#/settings");
+  await page.goto("#/settings");
   await page.getByRole("button", { name: "食品一覧を見る" }).click();
   await page.getByLabel("食品検索").fill("鶏卵 全卵 生");
   await page
@@ -240,12 +240,12 @@ test("TC-IF-03-01 どの画面も横にはみ出さず、ボタンは 44px 以�
     "#/settings",
     "#/foods",
   ]) {
-    await page.goto(`/${hash}`);
+    await page.goto(hash);
     await expectNoHorizontalScroll(page);
     await expectTapTargets(page);
     await expectNoClippedButtons(page);
   }
-  await page.goto("/#/register");
+  await page.goto("#/register");
   await page
     .getByRole("group", { name: "入力モード選択" })
     .getByRole("button", { name: "詳細", exact: true })
@@ -257,7 +257,7 @@ test("TC-IF-03-01 どの画面も横にはみ出さず、ボタンは 44px 以�
   await expect(page.getByRole("button", { name: "登録する" })).toBeVisible();
   await expectNoHorizontalScroll(page);
   await expectTapTargets(page);
-  await page.goto("/#/foods");
+  await page.goto("#/foods");
   await page
     .getByLabel("食品一覧", { exact: true })
     .getByRole("button")
@@ -274,7 +274,7 @@ test("TC-IF-02-01 モバイルのタップで登録から設定まで操作で�
   isMobile,
 }) => {
   test.skip(!isMobile);
-  await page.goto("/#/");
+  await page.goto("#/");
   await page
     .getByRole("navigation", { name: "主要画面" })
     .getByRole("button", { name: "登録" })
@@ -310,7 +310,7 @@ test("TC-IF-02-01 モバイルのタップで登録から設定まで操作で�
 });
 
 test("TC-IF-02-02 Tab と Enter だけで食材を登録できる", async ({ page }) => {
-  await page.goto("/#/");
+  await page.goto("#/");
   await page.keyboard.press("Tab");
   await expect(
     page
