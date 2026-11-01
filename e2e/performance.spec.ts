@@ -408,3 +408,309 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
     contentType: "application/json",
   });
 });
+
+/** 対象の買い物の行数と、対象外の履歴件数を独立させた試料（DES-PER-03）。 */
+function shoppingFixture(size: number, historyCount: number): AppState {
+  const targetItems = fixture(size).shoppings[0].items;
+  return {
+    ...initialAppState,
+    shoppings: [
+      {
+        id: "previous",
+        date: "2026-10-30",
+        origin: "normal",
+        items: targetItems.map((item) => ({
+          ...item,
+          id: `previous-${item.id}`,
+        })),
+      },
+      {
+        id: "latest",
+        date: "2026-10-31",
+        origin: "normal",
+        items: targetItems.map((item) => ({
+          ...item,
+          id: `latest-${item.id}`,
+        })),
+      },
+      ...Array.from({ length: historyCount }, (_, i) => ({
+        id: `history-${i}`,
+        date: "2026-01-01",
+        origin: "normal" as const,
+        items: [],
+      })),
+    ],
+  };
+}
+
+const shoppingOperations = [
+  "registerLatest",
+  "incrementLatest",
+  "decrementLatest",
+  "removeLatest",
+  "registerPrevious",
+  "incrementPrevious",
+  "decrementPrevious",
+  "removePrevious",
+  "changeLatestDate",
+] as const;
+
+/** 買い物単位の判定反映と保存結果を測る（DES-PER-03）。 */
+for (const size of [3, 30, 100]) {
+  for (const historyCount of [0, 100]) {
+    for (const rate of [1, 4]) {
+      test(`TC-NFR-03-04 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
+        page,
+        browser,
+      }, testInfo) => {
+        test.setTimeout(600_000);
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send("Emulation.setCPUThrottlingRate", { rate });
+        const samples: object[] = [];
+        const errors: string[] = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        const report = {
+          commit: execFileSync("git", ["rev-parse", "HEAD"], {
+            encoding: "utf8",
+          }).trim(),
+          workingTreeDirty:
+            execFileSync("git", ["status", "--porcelain"], {
+              encoding: "utf8",
+            }).trim().length > 0,
+          githubSha: process.env.GITHUB_SHA ?? null,
+          githubHeadRef: process.env.GITHUB_HEAD_REF ?? null,
+          environment: {
+            os: `${os.platform()} ${os.release()}`,
+            cpu: os.cpus()[0]?.model,
+            cores: os.cpus().length,
+            browser: browser.version(),
+            viewport: { width: 360, height: 740 },
+            rate,
+            size,
+            historyCount,
+            repetitions: 5,
+            ci: !!process.env.CI,
+          },
+          interpretation:
+            "対象の買い物は最新・前の買い物とも指定行数。別履歴は空の買い物。クリック受信から判定 commit 後の2回目の描画まで。時間超過は記録のみ。候補はホームだけ別時計。",
+          samples,
+        };
+        try {
+          for (const operation of shoppingOperations) {
+            const values: number[] = [];
+            const calculationValues: number[] = [];
+            const reflectionValues: number[] = [];
+            for (let repeat = 0; repeat < 5; repeat++) {
+              await page.goto("#/");
+              await page.evaluate(
+                (state) =>
+                  localStorage.setItem(
+                    "weekmeal:state",
+                    JSON.stringify({ version: 3, ...state }),
+                  ),
+                shoppingFixture(size, historyCount),
+              );
+              await page.reload();
+              await page.mouse.move(0, 0);
+              const previous = operation.endsWith("Previous");
+              const register = operation.startsWith("register");
+              const changeDate = operation === "changeLatestDate";
+              const targetId = previous ? "previous" : "latest";
+              if (previous) {
+                await page.goto("#/history/previous");
+                await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
+              }
+              const panel = page.locator("[data-candidates-revision]");
+              if (!previous) {
+                await expect(panel).toHaveAttribute(
+                  "data-candidates-revision",
+                  "0",
+                );
+              }
+              const initialization = previous
+                ? []
+                : await page.evaluate(() =>
+                    performance
+                      .getEntriesByName("weekmeal:candidate-initialization")
+                      .map((entry) => entry.toJSON()),
+                  );
+              if (register) {
+                if (previous) {
+                  await page
+                    .getByRole("button", { name: "この買い物に食材を登録" })
+                    .click();
+                } else {
+                  await page
+                    .getByRole("navigation")
+                    .getByRole("button", { name: "登録", exact: true })
+                    .click();
+                }
+                await expect(page.getByLabel("食材名一覧")).toBeVisible();
+              }
+              if (changeDate) {
+                await page.getByLabel("買い物の日付").fill("2026-10-29");
+              }
+              const button = register
+                ? page
+                    .getByLabel("食材名一覧")
+                    .getByRole("button", { name: /^鶏卵/ })
+                    .first()
+                : changeDate
+                  ? page.getByRole("button", { name: "日付を保存" })
+                  : itemRow(page, "キャベツ").getByRole("button", {
+                      name: operation.startsWith("increment")
+                        ? "キャベツを 0.5 増やす"
+                        : operation.startsWith("decrement")
+                          ? "キャベツを 0.5 減らす"
+                          : "キャベツを削除",
+                    });
+              await button.scrollIntoViewIfNeeded();
+              const trackCandidates =
+                !previous &&
+                !register &&
+                !changeDate &&
+                !(size === 3 && operation === "removeLatest");
+              await arm(page, trackCandidates);
+              await button.click();
+              await page.mouse.move(0, 0);
+              const measurement = await page.evaluate(
+                () => window.weekmealMeasurement,
+              );
+              expect(measurement.revision).toBe(1);
+              expect(Number.isFinite(measurement.elapsedMs)).toBe(true);
+              expect(measurement.elapsedMs).toBeGreaterThan(0);
+              let candidate = null;
+              if (trackCandidates) {
+                await expect(panel).toHaveAttribute(
+                  "data-candidates-revision",
+                  "1",
+                );
+                candidate = await page.evaluate(
+                  () => window.weekmealCandidateMeasurement,
+                );
+                expect(candidate.detail.revision).toBe(1);
+                expect(candidate.detail.count).toBeGreaterThan(0);
+                expect(candidate.start).toBeGreaterThanOrEqual(
+                  measurement.paintedAt,
+                );
+                calculationValues.push(candidate.duration);
+                reflectionValues.push(
+                  candidate.reflectedAt - measurement.paintedAt,
+                );
+              }
+              const stored = (await page.evaluate(() =>
+                JSON.parse(localStorage.getItem("weekmeal:state") ?? "null"),
+              )) as AppState;
+              const target = stored.shoppings.find(
+                (shopping) => shopping.id === targetId,
+              );
+              expect(target).toBeDefined();
+              expect(target?.items.length).toBe(
+                size + (register ? 1 : operation.startsWith("remove") ? -1 : 0),
+              );
+              if (register) {
+                expect(
+                  target?.items.some((item) => item.foodId === "12004"),
+                ).toBe(true);
+              } else if (operation.startsWith("increment")) {
+                expect(target?.items[0].count).toBe(10.5);
+              } else if (operation.startsWith("decrement")) {
+                expect(target?.items[0].count).toBe(9.5);
+              } else if (operation.startsWith("remove")) {
+                expect(
+                  target?.items.some(
+                    (item) => item.id === `${targetId}-perf-0`,
+                  ),
+                ).toBe(false);
+              }
+              if (changeDate) {
+                expect(target?.date).toBe("2026-10-29");
+                await page.goto("#/");
+                await expect(page.getByLabel("買い物の日付")).toHaveValue(
+                  "2026-10-30",
+                );
+                await expect(panel).toHaveAttribute(
+                  "data-candidates-revision",
+                  "1",
+                );
+              } else if (previous) {
+                expect(
+                  stored.shoppings.find((shopping) => shopping.id === "latest")
+                    ?.items,
+                ).toHaveLength(size);
+                await page.goto("#/");
+                await expect(page.getByLabel("買い物の日付")).toHaveValue(
+                  "2026-10-31",
+                );
+                await expect(panel).toHaveAttribute(
+                  "data-candidates-revision",
+                  "1",
+                );
+              }
+              expect(errors).toEqual([]);
+              values.push(measurement.elapsedMs);
+              const sample = {
+                operation,
+                repeat: repeat + 1,
+                ...measurement,
+                initialization,
+                candidate,
+                candidateCalculationMs: candidate?.duration ?? null,
+                candidateReflectionMs: candidate
+                  ? candidate.reflectedAt - measurement.paintedAt
+                  : null,
+                candidateNotApplicable: !trackCandidates
+                  ? previous
+                    ? "前の買い物の詳細では候補を表示しない"
+                    : register
+                      ? "登録画面では候補を計算しない"
+                      : changeDate
+                        ? "日付変更では最新が切り替わり候補を作り直す"
+                        : "2行となり候補を表示しない"
+                  : null,
+                judgmentBudgetMs: 100,
+                overJudgmentBudgetMs: Math.max(0, measurement.elapsedMs - 100),
+                candidateCalculationOverBudgetMs: candidate
+                  ? Math.max(0, candidate.duration - 50)
+                  : null,
+                candidateReflectionOverBudgetMs: candidate
+                  ? Math.max(
+                      0,
+                      candidate.reflectedAt - measurement.paintedAt - 100,
+                    )
+                  : null,
+              };
+              samples.push(sample);
+              console.log(
+                `[performance:sample] ${JSON.stringify({ rows: size, historyCount, cpuRate: rate, ...sample })}`,
+              );
+            }
+            const summary = {
+              operation,
+              maximumMs: Math.max(...values),
+              maximumCandidateCalculationMs: calculationValues.length
+                ? Math.max(...calculationValues)
+                : null,
+              maximumCandidateReflectionMs: reflectionValues.length
+                ? Math.max(...reflectionValues)
+                : null,
+              values,
+            };
+            samples.push(summary);
+            console.log(
+              `[performance:summary] ${JSON.stringify({ rows: size, historyCount, cpuRate: rate, ...summary })}`,
+            );
+          }
+        } finally {
+          const path = testInfo.outputPath("performance-it04.json");
+          writeFileSync(path, JSON.stringify(report, null, 2), "utf8");
+          await testInfo.attach("performance-it04.json", {
+            path,
+            contentType: "application/json",
+          });
+          await cdp.detach();
+        }
+      });
+    }
+  }
+}
