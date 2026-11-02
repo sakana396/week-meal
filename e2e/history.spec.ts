@@ -100,13 +100,15 @@ test("TC-FR-ING-19-02 前の買い物の登録・増減・削除はほかの買�
   await itemRow(page, "にんじん")
     .getByRole("button", { name: "にんじんを 0.5 増やす" })
     .click();
-  await expect(itemRow(page, "にんじん").getByRole("group")).toContainText(
-    "1.5",
-  );
+  await expect(
+    itemRow(page, "にんじん").getByRole("group", { name: "にんじんの個数" }),
+  ).toContainText("1.5");
   await itemRow(page, "にんじん")
     .getByRole("button", { name: "にんじんを 0.5 減らす" })
     .click();
-  await expect(itemRow(page, "にんじん").getByRole("group")).toContainText("1");
+  await expect(
+    itemRow(page, "にんじん").getByRole("group", { name: "にんじんの個数" }),
+  ).toContainText("1");
   await itemRow(page, "キャベツ")
     .getByRole("button", { name: "キャベツを削除" })
     .click();
@@ -118,7 +120,9 @@ test("TC-FR-ING-19-02 前の買い物の登録・増減・削除はほかの買�
   await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
   await expect(itemRow(page, "鶏卵")).toHaveCount(1);
   await page.reload();
-  await expect(itemRow(page, "にんじん").getByRole("group")).toContainText("1");
+  await expect(
+    itemRow(page, "にんじん").getByRole("group", { name: "にんじんの個数" }),
+  ).toContainText("1");
   await expect(itemRow(page, "キャベツ")).toHaveCount(0);
   await page.goto("#/");
   await expect(page.getByLabel("ホーム画面")).toBeVisible();

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AnalysisResult } from "../../core/analyze";
+import { unitWeightFor } from "../../core/quantity";
 import {
   latestShopping,
   type AppState,
@@ -10,7 +11,6 @@ import {
   suggestSupplements,
   type SupplementSuggestion,
 } from "../../core/suggestions";
-import { unitWeights } from "../../data/unitWeights";
 import { baseFoods, foodsById } from "../foodData";
 import { localId } from "../ids";
 import { nutrientLabel } from "../labels";
@@ -276,9 +276,7 @@ export function SuggestionButton({
   disabled: boolean;
   onRegister: () => void;
 }) {
-  const weight = Object.hasOwn(unitWeights, suggestion.displayName)
-    ? unitWeights[suggestion.displayName]
-    : undefined;
+  const weight = unitWeightFor(suggestion.foodId, suggestion.displayName);
   const names = (keys: SupplementSuggestion["improvedKeys"]) =>
     keys.map(nutrientLabel).join("・");
   return (

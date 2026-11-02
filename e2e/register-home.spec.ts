@@ -119,7 +119,7 @@ test("TC-FR-ING-10-07 個数を 0.5 ずつ増減でき、0.5 では減らせず�
   await registerFoods(page, ["にんじん", "キャベツ"]);
   await openTab(page, "ホーム");
   const row = itemRow(page, "にんじん");
-  await expect(row.getByText("1 本")).toBeVisible();
+  await expect(row.getByText("1 本", { exact: true })).toBeVisible();
   await row.getByRole("button", { name: "にんじんを 0.5 増やす" }).click();
   await expect(row.getByText("1.5 本")).toBeVisible();
   await row.getByRole("button", { name: "にんじんを 0.5 減らす" }).click();

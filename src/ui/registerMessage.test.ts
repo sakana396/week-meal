@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { basketReducer, initialAppState } from "../core/basket";
 import { registerMessage } from "./registerMessage";
+import type { FoodItem } from "../types";
 
 const action = {
   type: "register" as const,
@@ -77,6 +78,47 @@ describe("登録通知（DES-UI-21、DES-SHP-02）", () => {
       }),
     ).toBe("スープを登録しました（1 つ（概算））");
   });
+  it.each([
+    ["manual-1", "ひよこまめ", "1 つ（概算）"],
+    ["manual-2", "にんじん", "1 つ（概算）"],
+  ])(
+    "TC-FR-QTY-07-05 同名の手入力 %s の通知は行と同じ概算単位",
+    (id, name, expected) => {
+      const food = {
+        id,
+        name,
+        category: "手入力 / 野菜",
+        refusePct: null,
+        nutrientsPer100g: {},
+      } as FoodItem;
+      expect(
+        registerMessage(state, {
+          type: "addManualFood",
+          shoppingId: "s",
+          id,
+          food,
+          displayName: name,
+        }),
+      ).toBe(`${name}を登録しました（${expected}）`);
+    },
+  );
+  it.each([
+    ["g" as const, 1850, "2000 g"],
+    ["kg" as const, 2100, "2.25 kg"],
+  ])(
+    "TC-FR-QTY-07-04 重さ %s の通知は入力欄と同じ数値",
+    (unit, grams, expected) => {
+      const weighted = basketReducer(state, {
+        type: "setQuantity",
+        shoppingId: "s",
+        id: "r1",
+        quantity: { kind: "weight", unit, grams },
+      });
+      expect(registerMessage(weighted, { ...action, id: "r2" })).toBe(
+        `にんじんを登録しました（${expected}）`,
+      );
+    },
+  );
   it.each([
     [initialAppState, action, "にんじんを登録しました（1 本）"],
     [state, { ...action, id: "r2" }, "にんじんを登録しました（2 本）"],
