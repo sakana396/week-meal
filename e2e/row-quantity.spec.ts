@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { initialAppState } from "../src/core/basket";
 import { itemRow, registerFood, registerFoods } from "./helpers";
 
 test("TC-FR-QTY-07-04 行で重さを編集し、単位変更と再読み込み後も値を保つ", async ({
@@ -60,4 +61,60 @@ test("TC-FR-QTY-08-01 個数行の目安重量と重さ行での非表示", asyn
     .getByRole("button", { name: "ひよこまめを g に切り替える" })
     .click();
   await expect(row).not.toContainText("1 パック ≒ 120 g");
+});
+
+test("TC-NFR-03-05 画面外の行へ焦点を移して操作できる", async ({ page }) => {
+  const state = {
+    ...initialAppState,
+    shoppings: [
+      {
+        id: "many-rows",
+        date: "2026-11-03",
+        origin: "normal" as const,
+        items: Array.from({ length: 100 }, (_, index) => ({
+          id: `row-${index}`,
+          foodId: "06061",
+          displayName: `試料${index}`,
+          quantity: { kind: "count" as const, count: 1 },
+        })),
+      },
+    ],
+  };
+  await page.goto("#/");
+  await page.evaluate(
+    (saved) =>
+      localStorage.setItem(
+        "weekmeal:state",
+        JSON.stringify({ version: 4, ...saved }),
+      ),
+    state,
+  );
+  await page.reload();
+  const lastRow = itemRow(page, "試料99");
+  const unitButton = lastRow.getByRole("button", {
+    name: "試料99を g に切り替える",
+  });
+  await expect(lastRow).toContainText("1 単位 ≒ 100 g（概算）");
+  await unitButton.focus();
+  await expect(unitButton).toBeFocused();
+  await expect(unitButton).toBeInViewport();
+  await page.keyboard.press("Tab");
+  await expect(
+    lastRow.getByRole("button", { name: "試料99を kg に切り替える" }),
+  ).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(unitButton).toBeFocused();
+  const buttonSize = await unitButton.boundingBox();
+  expect(buttonSize?.width).toBeGreaterThanOrEqual(44);
+  expect(buttonSize?.height).toBeGreaterThanOrEqual(44);
+  await page.keyboard.press("Enter");
+  const input = lastRow.getByRole("textbox", { name: "試料99の重さ" });
+  await expect(input).toBeFocused();
+  await expect(input).toBeVisible();
+  await expect(input).toBeInViewport();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

@@ -289,6 +289,14 @@ test("TC-FR-SYS-01-13・TC-NFR-13-16 版 3 の行を保って版別に原文を�
   );
   await page.goto("#/");
   await expect(itemRow(page, "にんじん")).toContainText("2 本");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")?.version,
+      ),
+    )
+    .toBe(4);
   const saved = await page.evaluate(() => ({
     current: localStorage.getItem("weekmeal:state"),
     backup: localStorage.getItem("weekmeal:state:backup-v3"),

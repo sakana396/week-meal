@@ -52,6 +52,15 @@ test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食�
     .getByRole("textbox", { name: "食材名", exact: true })
     .fill("自家製スープ");
   await form.getByRole("button", { name: "登録する", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.manualFoods?.length,
+      ),
+    )
+    .toBe(1);
   const original = await page.evaluate(
     () =>
       JSON.parse(localStorage.getItem("weekmeal:state")!).manualFoods[0]
@@ -61,6 +70,15 @@ test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食�
   await itemRow(page, "自家製スープ")
     .getByRole("button", { name: "自家製スープを削除", exact: true })
     .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.shoppings?.[0]?.items?.length,
+      ),
+    )
+    .toBe(0);
   await page.reload();
   await expect(itemRow(page, "自家製スープ")).toHaveCount(0);
   await openTab(page, "登録");
@@ -74,6 +92,15 @@ test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食�
   await expect(page).toHaveURL(/register/);
   await openTab(page, "ホーム");
   await expect(itemRow(page, "自家製スープ")).toContainText("1");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.shoppings?.[0]?.items?.[0]?.foodId,
+      ),
+    )
+    .toBe(original);
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("weekmeal:state")!),
   );
@@ -158,13 +185,15 @@ test("TC-FR-ING-15-03 同名食品を棚・番号で区別し両モードの通�
   }
   await openTab(page, "ホーム");
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
-  expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("weekmeal:state")!).shoppings[0]
-          .items[0].foodId,
-    ),
-  ).toBe("manual-meat");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state")!).shoppings[0]
+            .items[0].foodId,
+      ),
+    )
+    .toBe("manual-meat");
 });
 
 test("TC-FR-ING-15-04 覚えた食品はホームから 2 タップで登録でき 80 件の制限に含めない", async ({
@@ -208,6 +237,15 @@ test("TC-FR-ING-15-06 旧分類はその他に表示し成分と来歴を保持�
     "旧食品手入力 / その他下書き元: 食品番号 99999（現在の食品データにはありません）。登録値は手入力",
   );
   await button.click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.shoppings?.length,
+      ),
+    )
+    .toBe(1);
   const food = await page.evaluate(
     () => JSON.parse(localStorage.getItem("weekmeal:state")!).manualFoods[0],
   );
@@ -260,6 +298,14 @@ test("TC-NFR-13-12 版 1 を版 4 に移行し買い物・台帳・設定を保�
     { profile, foods, items },
   );
   await page.goto("#/");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")?.version,
+      ),
+    )
+    .toBe(4);
   await page.reload();
   await expect(itemRow(page, "登録食品")).toHaveCount(0);
   await expect(itemRow(page, "にんじん")).toBeVisible();
@@ -304,6 +350,15 @@ test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号�
     .fill("自家製スープ");
   await form.getByRole("button", { name: "登録する", exact: true }).click();
   await expect(remembered.getByRole("button")).toHaveText(labels([3, 2, 1]));
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.manualFoods?.length,
+      ),
+    )
+    .toBe(3);
   await page.reload();
   for (const mode of ["簡易", "詳細"]) {
     await page
@@ -318,6 +373,18 @@ test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号�
     await expect(remembered.getByRole("button")).toHaveText(labels([3, 2, 1]));
     await remembered.getByRole("button").nth(2).click();
   }
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(
+            localStorage.getItem("weekmeal:state") ?? "null",
+          )?.shoppings?.[0]?.items?.find(
+            (item: { foodId: string }) => item.foodId === "manual-old",
+          )?.quantity?.count,
+      ),
+    )
+    .toBe(2);
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("weekmeal:state")!),
   );

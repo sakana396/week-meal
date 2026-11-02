@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { weightHint } from "./weightHint";
+import { unitWeightFor } from "../core/quantity";
+import { weightHintText } from "./weightHint";
 
 describe("DES-QTY-07 個数行の目安重量", () => {
   it.each([
@@ -9,7 +10,7 @@ describe("DES-QTY-07 個数行の目安重量", () => {
   ])(
     "TC-FR-QTY-08-01 %s / %s の目安を示す",
     (foodId, displayName, expected) => {
-      expect(weightHint(foodId, displayName)).toBe(expected);
+      expect(weightHintText(unitWeightFor(foodId, displayName))).toBe(expected);
     },
   );
 });

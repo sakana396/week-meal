@@ -11,6 +11,10 @@ import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
 import { ItemRow } from "../components/ItemRow";
 import type { Route } from "../route";
+import {
+  performanceDetailEnd,
+  performanceDetailStart,
+} from "../performanceDetail";
 
 /** 前の買い物の編集と削除確認（DES-UI-47、48）。 */
 export function HistoryDetailScreen({
@@ -36,6 +40,10 @@ export function HistoryDetailScreen({
   pendingRemoval: PendingRemoval | null;
   onRemoveShopping: (shoppingId: string) => void;
 }) {
+  const renderStart = performanceDetailStart();
+  useLayoutEffect(() => {
+    performanceDetailEnd("history-detail-render-to-commit", renderStart);
+  });
   const [date, setDate] = useState(shopping.date);
   const [confirming, setConfirming] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
