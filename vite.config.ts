@@ -6,7 +6,7 @@ export default defineConfig({
   base: "/week-meal/",
   plugins: [react()],
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
     passWithNoTests: true,
     coverage: {
       provider: "v8",

@@ -11,7 +11,6 @@ import {
   type Quantity,
 } from "../../core/quantity";
 import { formatCount } from "../format";
-import { weightHint } from "../weightHint";
 
 /** 重さの欄へ表示する数値（DES-UI-49）。 */
 function weightText(quantity: Quantity): string {
@@ -63,14 +62,18 @@ export const ItemRow = memo(function ItemRow({
 }) {
   const weight = unitWeightFor(item.foodId, item.displayName);
   const unit = weight ? weight.unit : "つ（概算）";
+  const hint = weight
+    ? `1 ${weight.unit} ≒ ${weight.purchaseG} g`
+    : "1 単位 ≒ 100 g（概算）";
   const selected =
     item.quantity.kind === "count" ? "count" : item.quantity.unit;
+  const currentQuantityKey = quantityKey(item.quantity);
   const [draftState, setDraftState] = useState(() => ({
-    key: quantityKey(item.quantity),
+    key: currentQuantityKey,
     value: weightText(item.quantity),
   }));
   const draft =
-    draftState.key === quantityKey(item.quantity)
+    draftState.key === currentQuantityKey
       ? draftState.value
       : weightText(item.quantity);
   const [error, setError] = useState("");
@@ -183,9 +186,7 @@ export const ItemRow = memo(function ItemRow({
                 ＋
               </button>
             </div>
-            <small className="item-weight-hint">
-              {weightHint(item.foodId, item.displayName)}
-            </small>
+            <small className="item-weight-hint">{hint}</small>
           </>
         ) : (
           <div className="item-weight-field">
@@ -200,7 +201,7 @@ export const ItemRow = memo(function ItemRow({
                 aria-describedby={error ? errorId : undefined}
                 onChange={(event) => {
                   setDraftState({
-                    key: quantityKey(item.quantity),
+                    key: currentQuantityKey,
                     value: event.target.value,
                   });
                   setError("");
