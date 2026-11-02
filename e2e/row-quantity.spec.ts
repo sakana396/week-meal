@@ -28,14 +28,21 @@ test("TC-FR-QTY-07-04 行で重さを編集し、単位変更と再読み込み�
   await input.fill("0.0001");
   await input.press("Enter");
   await expect(row.getByRole("alert")).toContainText("小数第 3 位");
-  const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("weekmeal:state") ?? "{}"),
-  );
-  expect(
-    saved.shoppings[0].items.find(
-      (item: { displayName: string }) => item.displayName === "にんじん",
-    ).quantity,
-  ).toEqual({ kind: "weight", grams: 2000, unit: "kg" });
+  await expect(input).toHaveAttribute("aria-describedby", /weight-error-/);
+  const errorId = await input.getAttribute("aria-describedby");
+  await expect(row.getByRole("alert")).toHaveAttribute("id", errorId ?? "");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const saved = JSON.parse(
+          localStorage.getItem("weekmeal:state") ?? "{}",
+        );
+        return saved.shoppings?.[0]?.items?.find(
+          (item: { displayName: string }) => item.displayName === "にんじん",
+        )?.quantity;
+      }),
+    )
+    .toEqual({ kind: "weight", grams: 2000, unit: "kg" });
   await page.reload();
   await expect(
     itemRow(page, "にんじん").getByRole("textbox", { name: "にんじんの重さ" }),

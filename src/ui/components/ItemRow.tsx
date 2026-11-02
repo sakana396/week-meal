@@ -74,8 +74,10 @@ export function ItemRow({
       ? draftState.value
       : weightText(item.quantity);
   const [error, setError] = useState("");
+  const errorId = `weight-error-${item.id}`;
   const inputRef = useRef<HTMLInputElement>(null);
   const countFocusRef = useRef<HTMLButtonElement>(null);
+  const decrementFocusRef = useRef<HTMLButtonElement>(null);
   const changeUnit = (to: "count" | "g" | "kg") => {
     if (to === selected) return;
     let source = item.quantity;
@@ -92,9 +94,14 @@ export function ItemRow({
     dispatch({ type: "setQuantity", shoppingId, id: item.id, quantity });
     setDraftState({ key: quantityKey(quantity), value: weightText(quantity) });
     setError("");
-    requestAnimationFrame(() =>
-      (to === "count" ? countFocusRef.current : inputRef.current)?.focus(),
-    );
+    requestAnimationFrame(() => {
+      if (to === "count") {
+        (quantity.kind === "count" && quantity.count >= maximumCount
+          ? decrementFocusRef.current
+          : countFocusRef.current
+        )?.focus();
+      } else inputRef.current?.focus();
+    });
   };
   const commitWeight = () => {
     if (item.quantity.kind !== "weight") return;
@@ -108,6 +115,7 @@ export function ItemRow({
       key: quantityKey({ ...item.quantity, grams: result.grams }),
       value: String(result.grams / (item.quantity.unit === "kg" ? 1000 : 1)),
     });
+    if (result.grams === item.quantity.grams) return;
     dispatch({
       type: "setQuantity",
       shoppingId,
@@ -152,6 +160,7 @@ export function ItemRow({
               role="group"
             >
               <button
+                ref={decrementFocusRef}
                 aria-label={`${item.displayName}を 0.5 減らす`}
                 disabled={item.quantity.count <= minimumCount}
                 onClick={() =>
@@ -188,6 +197,7 @@ export function ItemRow({
                 inputMode="decimal"
                 value={draft}
                 aria-invalid={error ? "true" : undefined}
+                aria-describedby={error ? errorId : undefined}
                 onChange={(event) => {
                   setDraftState({
                     key: quantityKey(item.quantity),
@@ -202,7 +212,11 @@ export function ItemRow({
               />
             </label>
             <span>{item.quantity.unit}</span>
-            {error && <small role="alert">{error}</small>}
+            {error && (
+              <small id={errorId} role="alert">
+                {error}
+              </small>
+            )}
           </div>
         )}
       </div>

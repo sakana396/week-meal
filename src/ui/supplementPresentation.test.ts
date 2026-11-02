@@ -48,3 +48,29 @@ it("TC-FR-BAL-07-02 候補の注意を栄養素名とともに表示し待機中
   expect(html).toContain("新しい不足：炭水化物");
   expect(html).toContain("過剰がさらに増える：脂質");
 });
+
+it.each([
+  ["manual-1", "ひよこまめ", "1 つ"],
+  ["04065", "ひよこまめ", "1 パック"],
+])(
+  "TC-FR-QTY-07-05 候補 %s の単位を食品 ID に合わせる",
+  (foodId, displayName, unit) => {
+    const html = renderToStaticMarkup(
+      createElement(SuggestionButton, {
+        suggestion: {
+          foodId,
+          displayName,
+          improvedKeys: ["vitaminCMg"],
+          improvement: 1,
+          newHighKeys: [],
+          newLowKeys: [],
+          worsenedHighKeys: [],
+          approximate: foodId.startsWith("manual-"),
+        },
+        disabled: false,
+        onRegister: () => {},
+      }),
+    );
+    expect(html).toContain(`<span>${unit}</span>`);
+  },
+);

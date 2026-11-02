@@ -334,8 +334,16 @@ test("TC-NFR-06-04 行の量の切り替えを両画面でaxeとキーボード�
   await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
   await registerFood(page, "ひよこまめ");
   await page.goto("#/history");
-  await page.locator(".history-button").last().click();
+  const newShopping = page
+    .locator(".history-button")
+    .filter({ hasText: "最新" });
+  await expect(newShopping).toHaveCount(1);
+  await newShopping.click();
   const detailRow = itemRow(page, "ひよこまめ");
+  const countToggle = detailRow.getByRole("button", {
+    name: "ひよこまめを 個 に切り替える",
+  });
+  await expect(countToggle).toHaveAttribute("aria-pressed", "true");
   await keyboardActivate(
     page,
     detailRow.getByRole("button", { name: "ひよこまめを kg に切り替える" }),
@@ -343,6 +351,7 @@ test("TC-NFR-06-04 行の量の切り替えを両画面でaxeとキーボード�
   await expect(
     detailRow.getByRole("textbox", { name: "ひよこまめの重さ" }),
   ).toBeFocused();
+  await expect(countToggle).toHaveAttribute("aria-pressed", "false");
   await geometry(page);
   await inspect(page, info, "history-weight-row");
 });
