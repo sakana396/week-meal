@@ -167,6 +167,6 @@
 | NFR-08 | #110 | DES-QTY-03〜06、DES-STO-13, 14 | lint、TC-FR-QTY-07-01〜03、TC-FR-SYS-01-13 | src/core/quantity.ts, src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |
 | FR-QTY-07、FR-QTY-08 | #112 | DES-QTY-07、DES-UI-49 | TC-FR-QTY-07-04、05、TC-FR-QTY-08-01 | src/ui/components/ItemRow.tsx, src/ui/components/SupplementSuggestions.tsx, src/ui/registerMessage.ts, src/ui/registerMessage.test.ts, src/ui/supplementPresentation.test.ts, src/ui/weightHint.ts, src/ui/weightHint.test.ts, e2e/row-quantity.spec.ts | ホーム・履歴詳細の切り替え、重さの入力、個数行の目安、通知と候補の単位の統一を実装済み |
 | NFR-06、IF-05 | #112 | DES-UI-49 | TC-NFR-06-04（行の部分） | src/ui/App.css, e2e/accessibility.spec.ts | 行の操作と axe 検査を実装済み |
-| FR-RCP-01 | #113 | DES-RCP-03、DES-RCP-05 | TC-FR-RCP-01-01、TC-FR-RCP-01-02 | src/core/receipt.ts, src/core/basket.ts, src/core/receipt.test.ts | 読み取りと一括登録の core を実装済み。長い行の扱いと余分なキーの除外を確認済み。画面は #114 |
+| FR-RCP-01 | #113 | DES-RCP-03、DES-RCP-05 | TC-FR-RCP-01-01、TC-FR-RCP-01-02 | src/core/receipt.ts, src/core/basket.ts, src/core/receipt.test.ts | 読み取りと一括登録の core を実装済み。長い行の扱いと余分なキーの除外を確認済み。画面は #115 |
 | FR-RCP-02 | #113 | DES-RCP-02 | TC-FR-RCP-02-01 | src/core/receipt.ts, src/core/receipt.test.ts | 指示文の生成を実装済み。コピー画面は #115 |
 | FR-RCP-03 | #113 | DES-RCP-03 | TC-FR-RCP-01-01 | src/core/receipt.ts, src/core/receipt.test.ts | 一覧にない行を分ける core を実装済み。表示は #115 |
