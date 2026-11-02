@@ -14,12 +14,7 @@ import {
   referenceFor,
   type BalanceResult,
 } from "./balance";
-import {
-  latestShopping,
-  maximumCount,
-  toRegisteredItems,
-  type AppState,
-} from "./basket";
+import { latestShopping, toRegisteredItems, type AppState } from "./basket";
 import {
   groupFoods,
   isRegistrable,
@@ -34,7 +29,7 @@ import {
   sumNutrients,
   type NutrientTotals,
 } from "./nutrition";
-import { edibleGrams } from "./quantity";
+import { addQuantity, edibleGrams, unitWeightFor } from "./quantity";
 
 /** 登録できるよくある食材の代表食品（DES-SUG-01）。 */
 export type SupplementCandidate = {
@@ -120,18 +115,20 @@ export function suggestSupplements(
   );
   const active = items.filter(
     (item) =>
-      Number.isFinite(item.count) &&
-      item.count > 0 &&
+      (item.quantity.kind === "count"
+        ? item.quantity.count
+        : item.quantity.grams) > 0 &&
       item.food.nutrientsPer100g.energyKcal !== null,
   );
   if (active.length < minimumItemCount) return [];
-  const weightFor = (name: string) =>
-    Object.hasOwn(data.unitWeights, name) ? data.unitWeights[name] : undefined;
   const base = sumNutrients(
     active.map((item) => ({
       food: item.food,
-      grams: edibleGrams(item.food, weightFor(item.displayName), item.count)
-        .grams,
+      grams: edibleGrams(
+        item.food,
+        unitWeightFor(item.food.id, item.displayName, data.unitWeights),
+        item.quantity,
+      ).grams,
     })),
   );
   if (!((base.energyKcal?.amount ?? 0) > 0)) return [];
@@ -173,13 +170,20 @@ export function suggestSupplements(
     const { food, displayName, priority } = candidate;
     if (!((food.nutrientsPer100g.energyKcal ?? 0) > 0)) continue;
     const item = existing.get(food.id)?.get(displayName);
-    const count = item
-      ? Math.min(item.count + 1, maximumCount) - item.count
-      : 1;
-    if (!(count > 0)) continue;
-    const amount = edibleGrams(food, weightFor(displayName), count);
+    const weight = unitWeightFor(food.id, displayName, data.unitWeights);
+    const beforeQuantity = item?.quantity;
+    const afterQuantity = beforeQuantity
+      ? addQuantity(beforeQuantity, { kind: "count", count: 1 }, weight)
+          .quantity
+      : { kind: "count" as const, count: 1 };
+    const amount = edibleGrams(food, weight, afterQuantity);
+    const beforeAmount = beforeQuantity
+      ? edibleGrams(food, weight, beforeQuantity)
+      : { grams: 0, approximate: amount.approximate };
+    const deltaGrams = amount.grams - beforeAmount.grams;
+    if (!(deltaGrams > 0)) continue;
     const after = judge(
-      addTotals(base, sumNutrients([{ food, grams: amount.grams }])),
+      addTotals(base, sumNutrients([{ food, grams: deltaGrams }])),
     );
     if (!after) continue;
     if (

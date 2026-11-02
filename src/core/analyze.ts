@@ -23,14 +23,14 @@ import {
   type Pfc,
 } from "./nutrition";
 import type { Profile } from "./profile";
-import { edibleGrams } from "./quantity";
+import { edibleGrams, unitWeightFor, type Quantity } from "./quantity";
 
 /** 登録した食材 1 件（DES-ANL-01） */
 export type RegisteredItem = {
   food: FoodItem;
   /** 登録一覧の食材名（目安重量を引くキー） */
   displayName: string;
-  count: number;
+  quantity: Quantity;
 };
 
 /** 判定に必要な、主食を除いた食材の最低品目数（TBD-12 の仮置き、DES-BAL-05） */
@@ -86,7 +86,10 @@ export function analyzeBasket(
   data: AnalysisData = defaultAnalysisData,
 ): AnalysisResult {
   const counted = items.filter(
-    (item) => Number.isFinite(item.count) && item.count > 0,
+    (item) =>
+      (item.quantity.kind === "count"
+        ? item.quantity.count
+        : item.quantity.grams) > 0,
   );
   // エネルギーのデータがない食材は割合を求められないので、3 品目の数に入れない（DES-ANL-03）
   const active = counted.filter(
@@ -112,11 +115,8 @@ export function analyzeBasket(
   const basket: BasketItem[] = active.map((item) => {
     const amount = edibleGrams(
       item.food,
-      // 保存データから来る自由な食材名で Object.prototype の値を拾わないよう、自分のキーだけを引く
-      Object.hasOwn(data.unitWeights, item.displayName)
-        ? data.unitWeights[item.displayName]
-        : undefined,
-      item.count,
+      unitWeightFor(item.food.id, item.displayName, data.unitWeights),
+      item.quantity,
     );
     if (amount.approximate && !approximateItems.includes(item.displayName)) {
       approximateItems.push(item.displayName);
@@ -185,7 +185,13 @@ export function sensitivity(
   if (base.kind !== "judged") return [];
 
   const names = [...new Set(items.map((item) => item.displayName))].filter(
-    (name) => Object.hasOwn(data.unitWeights, name),
+    (name) =>
+      items.some(
+        (item) =>
+          item.displayName === name &&
+          item.quantity.kind === "count" &&
+          unitWeightFor(item.food.id, name, data.unitWeights),
+      ),
   );
   return names.flatMap((name) => {
     const weight = data.unitWeights[name];

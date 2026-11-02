@@ -101,7 +101,9 @@ describe("買い物の状態（DES-SHP-01〜03）", () => {
       shoppingId: "a",
       id: "r1",
     });
-    expect(incremented.shoppings[0].items[0].count).toBe(1.5);
+    expect(
+      (incremented.shoppings[0].items[0].quantity as { count: number }).count,
+    ).toBe(1.5);
     expect(incremented.shoppings[1]).toBe(second.shoppings[1]);
     expect(
       basketReducer(incremented, { type: "remove", shoppingId: "b", id: "r1" }),
@@ -157,16 +159,38 @@ describe("買い物の状態（DES-SHP-01〜03）", () => {
         date: "2026-10-30",
         origin: "normal" as const,
         items: [
-          { id: "r1", foodId: "06061", displayName: "キャベツ", count: 1 },
-          { id: "r2", foodId: "06212", displayName: "にんじん", count: 1 },
-          { id: "r3", foodId: "11115", displayName: "豚肉", count: 1 },
+          {
+            id: "r1",
+            foodId: "06061",
+            displayName: "キャベツ",
+            quantity: { kind: "count" as const, count: 1 },
+          },
+          {
+            id: "r2",
+            foodId: "06212",
+            displayName: "にんじん",
+            quantity: { kind: "count" as const, count: 1 },
+          },
+          {
+            id: "r3",
+            foodId: "11115",
+            displayName: "豚肉",
+            quantity: { kind: "count" as const, count: 1 },
+          },
         ],
       },
       {
         id: "newer",
         date: "2026-10-31",
         origin: "normal" as const,
-        items: [{ id: "r4", foodId: "12004", displayName: "鶏卵", count: 1 }],
+        items: [
+          {
+            id: "r4",
+            foodId: "12004",
+            displayName: "鶏卵",
+            quantity: { kind: "count" as const, count: 1 },
+          },
+        ],
       },
     ];
     const state = { ...initialAppState, shoppings };
@@ -210,7 +234,7 @@ describe("買い物の状態（DES-SHP-01〜03）", () => {
         id: `r${index}`,
         foodId,
         displayName: foodId,
-        count: 1,
+        quantity: { kind: "count" as const, count: 1 },
       })),
     };
     const state = { ...base, shoppings: [shopping] };
@@ -242,9 +266,24 @@ describe("買い物の状態（DES-SHP-01〜03）", () => {
       const older = {
         ...base.shoppings[0],
         items: [
-          { id: "r1", foodId: "06061", displayName: "キャベツ", count: 1 },
-          { id: "r2", foodId: "06212", displayName: "にんじん", count: 1 },
-          { id: "r3", foodId: "11115", displayName: "豚肉", count: 1 },
+          {
+            id: "r1",
+            foodId: "06061",
+            displayName: "キャベツ",
+            quantity: { kind: "count" as const, count: 1 },
+          },
+          {
+            id: "r2",
+            foodId: "06212",
+            displayName: "にんじん",
+            quantity: { kind: "count" as const, count: 1 },
+          },
+          {
+            id: "r3",
+            foodId: "11115",
+            displayName: "豚肉",
+            quantity: { kind: "count" as const, count: 1 },
+          },
         ],
       };
       const newer = { ...older, id: "b", date: "2026-11-01", items: [] };

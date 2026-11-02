@@ -17,7 +17,11 @@ const groups = groupFoods(foodsJson as FoodItem[]);
 function item(displayName: string, count = 1): RegisteredItem {
   const group = groups.find((candidate) => candidate.name === displayName);
   if (!group) throw new Error(`食材名がない: ${displayName}`);
-  return { food: representativeFood(group), displayName, count };
+  return {
+    food: representativeFood(group),
+    displayName,
+    quantity: { kind: "count", count },
+  };
 }
 
 // キャベツ 1 玉、にんじん 3 本、豚肉 1 パック、鶏卵 6 個
@@ -29,6 +33,48 @@ const basket = [
 ];
 
 describe("analyzeBasket（DES-ANL-01）", () => {
+  it("TC-FR-QTY-07-05 手入力は一覧と同名でも目安重量を使わない", () => {
+    const manual = {
+      ...basket[1],
+      food: { ...basket[1].food, id: "manual-carrot", refusePct: 0 },
+      quantity: { kind: "count" as const, count: 1 },
+    };
+    const result = analyzeBasket(
+      [basket[0], manual, basket[2]],
+      defaultProfile,
+    );
+    expect(result.kind).toBe("judged");
+    if (result.kind === "judged")
+      expect(result.approximateItems).toContain("にんじん");
+  });
+  it("TC-FR-QTY-07-05 重さの行は感度分析の対象にせず、正の量なら品目に数える", () => {
+    const weighted = [
+      {
+        ...basket[0],
+        quantity: { kind: "weight" as const, grams: 100, unit: "g" as const },
+      },
+      basket[1],
+      basket[2],
+    ];
+    expect(analyzeBasket(weighted, defaultProfile).kind).toBe("judged");
+    expect(
+      sensitivity(weighted, defaultProfile, 2).some(
+        (change) => change.displayName === basket[0].displayName,
+      ),
+    ).toBe(false);
+    expect(
+      analyzeBasket(
+        [
+          {
+            ...weighted[0],
+            quantity: { kind: "weight" as const, grams: 0, unit: "g" as const },
+          },
+          ...weighted.slice(1),
+        ],
+        defaultProfile,
+      ),
+    ).toMatchObject({ kind: "insufficient", itemCount: 2 });
+  });
   it("TC-FR-BAL-05-01 主食を除いて 3 品目未満なら判定しない", () => {
     expect(analyzeBasket(basket.slice(0, 2), defaultProfile)).toEqual({
       kind: "insufficient",
@@ -48,8 +94,8 @@ describe("analyzeBasket（DES-ANL-01）", () => {
     const items = [
       basket[0],
       basket[1],
-      { ...basket[2], count: 0 },
-      { ...basket[3], count: 0 },
+      { ...basket[2], quantity: { kind: "count" as const, count: 0 } },
+      { ...basket[3], quantity: { kind: "count" as const, count: 0 } },
     ];
     expect(analyzeBasket(items, defaultProfile)).toEqual({
       kind: "insufficient",
@@ -73,7 +119,13 @@ describe("analyzeBasket（DES-ANL-01）", () => {
   it("TC-FR-NUT-03-02 食材の個数を一律に 2 倍しても、判定は変わらない", () => {
     const base = analyzeBasket(basket, defaultProfile);
     const doubled = analyzeBasket(
-      basket.map((entry) => ({ ...entry, count: entry.count * 2 })),
+      basket.map((entry) => ({
+        ...entry,
+        quantity: {
+          kind: "count" as const,
+          count: entry.quantity.kind === "count" ? entry.quantity.count * 2 : 0,
+        },
+      })),
       defaultProfile,
     );
     if (base.kind !== "judged" || doubled.kind !== "judged")

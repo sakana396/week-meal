@@ -47,7 +47,7 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
     expect(
       items(apply(empty, carrot, onion)).map((item) => [
         item.displayName,
-        item.count,
+        (item.quantity as { count: number }).count,
       ]),
     ).toEqual([
       ["玉ねぎ", 1],
@@ -56,7 +56,12 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
   });
   it("TC-FR-ING-01-02 同じ食材をもう一度登録すると、行を増やさず個数を 1 増やす", () => {
     expect(items(apply(empty, carrot, { ...carrot, id: "r9" }))).toEqual([
-      { id: "r1", foodId: "06212", displayName: "にんじん", count: 2 },
+      {
+        id: "r1",
+        foodId: "06212",
+        displayName: "にんじん",
+        quantity: { kind: "count" as const, count: 2 },
+      },
     ]);
   });
   it("TC-FR-ING-01-03 前の買い物と同じ食材を登録しても新しい買い物は個数 1（境界）", () => {
@@ -70,8 +75,12 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
       { type: "createShopping", id: "next", date: "2026-11-01" },
       { ...carrot, shoppingId: "next", id: "r9" },
     );
-    expect(two.shoppings[0].items[0].count).toBe(1.5);
-    expect(two.shoppings[1].items[0].count).toBe(1);
+    expect(
+      (two.shoppings[0].items[0].quantity as { count: number }).count,
+    ).toBe(1.5);
+    expect(
+      (two.shoppings[1].items[0].quantity as { count: number }).count,
+    ).toBe(1);
   });
   it("TC-FR-ING-01-04 同じ食材名でも食品番号が違えば別の行にする（詳細モードで別の状態を選んだとき）", () => {
     expect(
@@ -85,24 +94,42 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
       shoppings: [
         {
           ...first.shoppings[0],
-          items: [{ ...items(first)[0], count: 998.5 }],
-        },
-      ],
-    };
-    expect(items(apply(full, { ...carrot, id: "r9" }))[0].count).toBe(999);
-    expect(
-      apply(
-        {
-          ...full,
-          shoppings: [
+          items: [
             {
-              ...full.shoppings[0],
-              items: [{ ...items(first)[0], count: 999 }],
+              ...items(first)[0],
+              quantity: { kind: "count" as const, count: 998.5 },
             },
           ],
         },
-        { ...carrot, id: "r9" },
-      ).shoppings[0].items[0].count,
+      ],
+    };
+    expect(
+      (
+        items(apply(full, { ...carrot, id: "r9" }))[0].quantity as {
+          count: number;
+        }
+      ).count,
+    ).toBe(999);
+    expect(
+      (
+        apply(
+          {
+            ...full,
+            shoppings: [
+              {
+                ...full.shoppings[0],
+                items: [
+                  {
+                    ...items(first)[0],
+                    quantity: { kind: "count" as const, count: 999 },
+                  },
+                ],
+              },
+            ],
+          },
+          { ...carrot, id: "r9" },
+        ).shoppings[0].items[0].quantity as { count: number }
+      ).count,
     ).toBe(999);
   });
   it.each([
@@ -110,7 +137,10 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
     ["TC-FR-QTY-04-02 個数を 0.5 ずつ減らす", "decrement", 0.5],
   ] as const)("%s", (_name, type, expected) => {
     expect(
-      items(apply(empty, carrot, { type, shoppingId, id: "r1" }))[0].count,
+      (
+        items(apply(empty, carrot, { type, shoppingId, id: "r1" }))[0]
+          .quantity as { count: number }
+      ).count,
     ).toBe(expected);
   });
   it("TC-FR-QTY-04-03 0.5 からは減らさない（境界）", () => {
@@ -126,7 +156,15 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
     const full = {
       ...first,
       shoppings: [
-        { ...first.shoppings[0], items: [{ ...items(first)[0], count: 999 }] },
+        {
+          ...first.shoppings[0],
+          items: [
+            {
+              ...items(first)[0],
+              quantity: { kind: "count" as const, count: 999 },
+            },
+          ],
+        },
       ],
     };
     expect(apply(full, { type: "increment", shoppingId, id: "r1" })).toBe(full);
@@ -207,7 +245,7 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
       food: manual,
       displayName: "手入力",
     });
-    expect(items(state)[0].count).toBe(1);
+    expect((items(state)[0].quantity as { count: number }).count).toBe(1);
     expect(state.manualFoods).toEqual([manual]);
   });
   it("TC-FR-ING-08-02 手入力の食品の行を消しても、覚えた食品は残る", () => {
@@ -232,7 +270,7 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
     };
     const state = apply(empty, action, { ...action, id: "m2" });
     expect(state.manualFoods).toHaveLength(1);
-    expect(items(state)[0].count).toBe(2);
+    expect((items(state)[0].quantity as { count: number }).count).toBe(2);
   });
   it("TC-FR-ING-08-04 同じ手入力の食品をほかの行がまだ使っていれば、行を消しても食品は残す（境界）", () => {
     const action: BasketAction = {
@@ -324,7 +362,7 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
     expect(items(restored)[0]).toMatchObject({
       id: "m2",
       foodId: manual.id,
-      count: 1,
+      quantity: { kind: "count", count: 1 },
     });
   });
   it.each(["同じ買い物", "別の買い物"] as const)(
@@ -355,7 +393,10 @@ describe("旧登録ケースを買い物単位で検証（DES-SHP-02、03）", (
       });
       expect(result.manualFoods).toBe(before.manualFoods);
       expect(
-        result.shoppings[target === "同じ買い物" ? 0 : 1].items[0].count,
+        (
+          result.shoppings[target === "同じ買い物" ? 0 : 1].items[0]
+            .quantity as { count: number }
+        ).count,
       ).toBe(target === "同じ買い物" ? 2 : 1);
     },
   );

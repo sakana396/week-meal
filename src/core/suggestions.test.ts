@@ -70,7 +70,7 @@ function state(): AppState {
           id: f.id,
           foodId: f.id,
           displayName: f.id,
-          count: 1,
+          quantity: { kind: "count" as const, count: 1 },
         })),
       },
     ],
@@ -130,6 +130,51 @@ function result(changes: Partial<BalanceResult> = {}): BalanceResult {
 }
 
 describe("補う候補（DES-SUG-01〜03）", () => {
+  it("TC-FR-QTY-07-05 手入力の同名食材の候補評価は目安重量を使わない", () => {
+    const manual = { ...candidate("manual-carrot"), displayName: "にんじん" };
+    const weightData = {
+      ...data,
+      unitWeights: {
+        にんじん: { unit: "本", purchaseG: 150, source: "テスト用" },
+      },
+    };
+    const suggestions = suggest([manual], state(), weightData);
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0].approximate).toBe(true);
+  });
+  it("TC-FR-BAL-06-09 重さの行への追加を候補の評価に使う", () => {
+    const c = { ...candidate("06212"), displayName: "にんじん" };
+    const current = state();
+    current.shoppings[0].items.push({
+      id: "carrot",
+      foodId: "06212",
+      displayName: "にんじん",
+      quantity: { kind: "weight", grams: 100, unit: "g" },
+    });
+    const snapshot = structuredClone(current);
+    const weightData = {
+      ...data,
+      unitWeights: {
+        にんじん: { unit: "本", purchaseG: 150, source: "テスト用" },
+      },
+    };
+    const before = suggest([c], current, weightData);
+    const after = basketReducer(current, {
+      type: "register",
+      shoppingId: "s",
+      id: "unused",
+      foodId: "06212",
+      displayName: "にんじん",
+    });
+    expect(before).toHaveLength(1);
+    expect(after.shoppings[0].items.at(-1)?.quantity).toEqual({
+      kind: "weight",
+      grams: 250,
+      unit: "g",
+    });
+    expect(suggest([c], after, weightData)).toEqual([]);
+    expect(current).toEqual(snapshot);
+  });
   it("TC-FR-BAL-06-01 登録可能なよくある食材の代表食品を重複なく選び80件に制限しない", () => {
     const foods = foodsJson as FoodItem[];
     const expected = groupFoods(foods.filter(isRegistrable))
@@ -208,7 +253,7 @@ describe("補う候補（DES-SUG-01〜03）", () => {
         id: "c",
         foodId: c.food.id,
         displayName: c.displayName,
-        count,
+        quantity: { kind: "count" as const, count },
       });
       const snapshot = structuredClone(current);
       const suggestions = suggest([c], current, {
@@ -231,7 +276,7 @@ describe("補う候補（DES-SUG-01〜03）", () => {
           id: "previous-c",
           foodId: "c",
           displayName: "c",
-          count: maximumCount,
+          quantity: { kind: "count" as const, count: maximumCount },
         },
       ],
     });
@@ -426,7 +471,12 @@ it.each(
         date: "2026-10-30",
         origin: "normal",
         items: [
-          { id: "previous-c", foodId: "c", displayName: "c", count: 999 },
+          {
+            id: "previous-c",
+            foodId: "c",
+            displayName: "c",
+            quantity: { kind: "count" as const, count: 999 },
+          },
         ],
       });
     }
@@ -437,14 +487,17 @@ it.each(
       id: "missing",
       foodId: noEnergy.id,
       displayName: "missing",
-      count: 1,
+      quantity: { kind: "count" as const, count: 1 },
     });
     if (["既存", "998.5", "999"].includes(mode)) {
       current.shoppings[0].items.push({
         id: "c",
         foodId: "c",
         displayName: "c",
-        count: mode === "998.5" ? 998.5 : mode === "999" ? 999 : 1,
+        quantity: {
+          kind: "count" as const,
+          count: mode === "998.5" ? 998.5 : mode === "999" ? 999 : 1,
+        },
       });
     }
     const testData: AnalysisData = {
@@ -640,20 +693,20 @@ it("TC-FR-BAL-06-04 食品番号と表示名が両方一致する最初の行だ
     id: "different",
     foodId: "c",
     displayName: "別名",
-    count: 1,
+    quantity: { kind: "count" as const, count: 1 },
   });
   expect(suggest([c], current)).toHaveLength(1);
   current.shoppings[0].items.push({
     id: "first",
     foodId: "c",
     displayName: "c",
-    count: 999,
+    quantity: { kind: "count" as const, count: 999 },
   });
   current.shoppings[0].items.push({
     id: "second",
     foodId: "c",
     displayName: "c",
-    count: 1,
+    quantity: { kind: "count" as const, count: 1 },
   });
   expect(suggest([c], current)).toEqual([]);
 });

@@ -15,7 +15,12 @@ const context: MigrationContext = {
   date: "2026-10-31",
   shoppingIds: { usedUp: "old", normal: "current" },
 };
-const entry = { id: "r1", foodId: "06212", displayName: "にんじん", count: 1 };
+const entry = {
+  id: "r1",
+  foodId: "06212",
+  displayName: "にんじん",
+  quantity: { kind: "count" as const, count: 1 },
+};
 const state: AppState = {
   ...initialAppState,
   shoppings: [
@@ -25,7 +30,10 @@ const state: AppState = {
 const version2 = (items: object[]) =>
   JSON.stringify({
     version: 2,
-    items,
+    items: items.map((item) => {
+      const { quantity, ...rest } = item as typeof entry & { usedUp?: unknown };
+      return { ...rest, count: quantity?.count ?? 1 };
+    }),
     manualFoods: [],
     profile: state.profile,
   });
@@ -104,14 +112,18 @@ describe("保存版 3（DES-STO-10〜12）", () => {
       ],
     });
     expect(parseStoredState(text, known)).toMatchObject({
-      issue: { droppedItems: 1, profileReset: false },
+      issue: { droppedItems: 1, droppedShoppings: 0, profileReset: false },
       state,
     });
   });
   it("TC-NFR-12-37 版 2 の除外済み食品も移行後に捨てる", () => {
     const old = version2([{ ...entry, foodId: "02032", usedUp: false }]);
     const result = parseStoredState(old, known, undefined, undefined, context);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 1,
+      droppedShoppings: 0,
+      profileReset: false,
+    });
     expect(result.state.shoppings[0].items).toEqual([]);
   });
   it.each(["{", JSON.stringify({ version: 99, shoppings: [] })])(
@@ -130,7 +142,11 @@ describe("保存版 3（DES-STO-10〜12）", () => {
     });
     const result = parseStoredState(text, known);
     expect(result.state.shoppings).toEqual(state.shoppings);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 0,
+      droppedShoppings: 1,
+      profileReset: false,
+    });
   });
   it.each([
     { id: "", date: context.date, origin: "normal", items: [entry] },
@@ -144,7 +160,7 @@ describe("保存版 3（DES-STO-10〜12）", () => {
     });
     expect(parseStoredState(text, known)).toMatchObject({
       state,
-      issue: { droppedItems: 1, profileReset: false },
+      issue: { droppedItems: 0, droppedShoppings: 1, profileReset: false },
     });
   });
   it("TC-NFR-12-38 不正個数と重複行 ID を個別に捨てる", () => {
@@ -153,12 +169,17 @@ describe("保存版 3（DES-STO-10〜12）", () => {
       shoppings: [
         {
           ...state.shoppings[0],
-          items: [entry, entry, { ...entry, id: "r3", count: 0.3 }],
+          items: [
+            entry,
+            entry,
+            { ...entry, id: "r3", quantity: { kind: "count", count: 0.3 } },
+          ],
         },
       ],
     });
     expect(parseStoredState(text, known).issue).toEqual({
       droppedItems: 2,
+      droppedShoppings: 0,
       profileReset: false,
     });
   });

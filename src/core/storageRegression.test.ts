@@ -17,7 +17,18 @@ const context: MigrationContext = {
   date: "2026-10-31",
   shoppingIds: { usedUp: "old", normal: "current" },
 };
-const row = { id: "r1", foodId: "06212", displayName: "にんじん", count: 1 };
+const row = {
+  id: "r1",
+  foodId: "06212",
+  displayName: "にんじん",
+  quantity: { kind: "count" as const, count: 1 },
+};
+const legacyRow = {
+  id: row.id,
+  foodId: row.foodId,
+  displayName: row.displayName,
+  count: 1,
+};
 const manual: ManualFood = {
   id: "manual-1",
   name: "自家製ぬか漬け",
@@ -93,14 +104,18 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
     const rows = [
       row,
       { ...row, id: "r2", foodId: "99999" },
-      { ...row, id: "r3", count: "多い" },
-      { ...row, id: "r4", count: 0.2 },
+      { ...row, id: "r3", quantity: { kind: "count", count: "多い" } },
+      { ...row, id: "r4", quantity: { kind: "count", count: 0.2 } },
       { ...row, foodId: "06153" },
       "壊れた行",
     ];
     const result = parse(version3({ shoppings: shoppingRows(rows) }));
     expect(result.state.shoppings[0].items).toEqual([row]);
-    expect(result.issue).toEqual({ droppedItems: 5, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 5,
+      droppedShoppings: 0,
+      profileReset: false,
+    });
   });
   it.each([
     [
@@ -114,13 +129,21 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
   ])("%s", (_name, profile) => {
     const result = parse(version3({ profile }));
     expect(result.state.profile).toEqual(defaultProfile);
-    expect(result.issue).toEqual({ droppedItems: 0, profileReset: true });
+    expect(result.issue).toEqual({
+      droppedItems: 0,
+      droppedShoppings: 0,
+      profileReset: true,
+    });
   });
   it("TC-NFR-12-11 手入力の食品の形が違えば捨て、それを参照する行も捨てる", () => {
     const result = parse(version3({ manualFoods: [{ ...manual, name: 3 }] }));
     expect(result.state.manualFoods).toEqual([]);
     expect(result.state.shoppings[0].items).toEqual([row]);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 1,
+      droppedShoppings: 0,
+      profileReset: false,
+    });
   });
   it("TC-NFR-12-12 手入力の食品の成分値が数でなければ捨てる（異常）", () => {
     const result = parse(
@@ -133,14 +156,27 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
   it("TC-NFR-12-13 手入力の食品がなくても読み込む（境界）", () => {
     const result = parse(version3({ manualFoods: undefined }));
     expect(result.state.shoppings[0].items).toEqual([row]);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 1,
+      droppedShoppings: 0,
+      profileReset: false,
+    });
   });
   it.each([
-    ["TC-NFR-12-14 個数が 0.5 刻みでない", { ...row, count: 0.7 }],
-    ["TC-NFR-12-15 個数が上限を超える", { ...row, count: maximumCount + 0.5 }],
+    [
+      "TC-NFR-12-14 個数が 0.5 刻みでない",
+      { ...row, quantity: { kind: "count" as const, count: 0.7 } },
+    ],
+    [
+      "TC-NFR-12-15 個数が上限を超える",
+      {
+        ...row,
+        quantity: { kind: "count" as const, count: maximumCount + 0.5 },
+      },
+    ],
     [
       "TC-NFR-12-16 個数が JSON の 1e999（Infinity）",
-      { ...row, count: Infinity },
+      { ...row, quantity: { kind: "count" as const, count: Infinity } },
     ],
     ["TC-NFR-12-17 食材名が空", { ...row, displayName: "" }],
     ["TC-NFR-12-18 ID が空", { ...row, id: "" }],
@@ -150,15 +186,26 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
       '"count":1e999',
     );
     expect(parse(text).state.shoppings[0].items).toEqual([]);
-    expect(parse(text).issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(parse(text).issue).toEqual({
+      droppedItems: 1,
+      droppedShoppings: 0,
+      profileReset: false,
+    });
   });
   it("TC-NFR-12-19 個数がちょうど上限なら読み込む（境界）", () => {
     expect(
-      parse(
-        version3({
-          shoppings: shoppingRows([{ ...row, count: maximumCount }]),
-        }),
-      ).state.shoppings[0].items[0].count,
+      (
+        parse(
+          version3({
+            shoppings: shoppingRows([
+              {
+                ...row,
+                quantity: { kind: "count" as const, count: maximumCount },
+              },
+            ]),
+          }),
+        ).state.shoppings[0].items[0].quantity as { count: number }
+      ).count,
     ).toBe(maximumCount);
   });
   it.each([
@@ -177,7 +224,9 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
     );
     expect(result.state.manualFoods).toEqual([]);
     expect(result.issue).toEqual(
-      dropped ? { droppedItems: dropped, profileReset: false } : null,
+      dropped
+        ? { droppedItems: dropped, droppedShoppings: 0, profileReset: false }
+        : null,
     );
   });
   it("TC-NFR-12-25 同じ ID の手入力の食品が 2 つあれば、先のものだけ使う", () => {
@@ -200,10 +249,10 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
     }).replace('"items":[{', '"items":[{"__proto__":{"polluted":true},');
     const result = parse(text);
     expect(Object.keys(result.state.shoppings[0].items[0]).sort()).toEqual([
-      "count",
       "displayName",
       "foodId",
       "id",
+      "quantity",
     ]);
     expect(Object.keys(result.state.manualFoods[0])).not.toContain("extra");
     expect(Object.keys(result.state.profile)).not.toContain("extra");
@@ -227,7 +276,7 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
   it("TC-NFR-13-06 旧い版の保存データを、移行してから読み込む", () => {
     const old = JSON.stringify({
       version: 1,
-      items: [{ ...row, usedUp: false }],
+      items: [{ ...legacyRow, usedUp: false }],
       profile: defaultProfile,
     });
     expect(parse(old).state.shoppings[0].items).toEqual([row]);
@@ -270,9 +319,9 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
   });
   it("TC-NFR-13-12 版 1 の全台帳・登録行・設定・順序を引き継ぎ版 2 で保存する", () => {
     const items = [
-      { ...row, usedUp: false },
+      { ...legacyRow, usedUp: false },
       {
-        ...row,
+        ...legacyRow,
         id: "m1",
         foodId: manual.id,
         displayName: manual.name,
@@ -318,8 +367,8 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
     "TC-NFR-13-14 版 %s でも個別の不正と余計なキーを検査する",
     (version) => {
       const items = [
-        { ...row, usedUp: false },
-        { ...row, id: "bad", count: -1, usedUp: false },
+        { ...legacyRow, usedUp: false },
+        { ...legacyRow, id: "bad", count: -1, usedUp: false },
       ];
       const result = parse(
         JSON.stringify({
@@ -331,7 +380,11 @@ describe("保存の旧ケースを買い物単位で検証（DES-STO-10〜12）"
         }),
       );
       expect(result.state.shoppings[0].items).toEqual([row]);
-      expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+      expect(result.issue).toEqual({
+        droppedItems: 1,
+        droppedShoppings: 0,
+        profileReset: false,
+      });
       expect(parse(JSON.stringify({ version, items: "bad" })).issue).toBe(
         "corrupted",
       );

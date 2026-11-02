@@ -23,7 +23,7 @@ const initial: AppState = {
         id: `item-${index}`,
         foodId,
         displayName,
-        count: 1,
+        quantity: { kind: "count" as const, count: 1 },
       })),
     },
   ],
@@ -34,7 +34,10 @@ const rotating: AppState = {
   shoppings: [
     {
       ...initial.shoppings[0],
-      items: initial.shoppings[0].items.map((item) => ({ ...item, count: 10 })),
+      items: initial.shoppings[0].items.map((item) => ({
+        ...item,
+        quantity: { kind: "count" as const, count: 10 },
+      })),
     },
   ],
 };
@@ -46,7 +49,7 @@ const disappearingFirst: AppState = {
       ...rotating.shoppings[0],
       items: rotating.shoppings[0].items.map((item, index) => ({
         ...item,
-        count: [8, 10, 10, 8][index],
+        quantity: { kind: "count" as const, count: [8, 10, 10, 8][index] },
       })),
     },
   ],
@@ -60,7 +63,7 @@ async function seed(page: Page, state = initial) {
     if (!sessionStorage.getItem("suggestions-seeded")) {
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 3, ...state }),
+        JSON.stringify({ version: 4, ...state }),
       );
       sessionStorage.setItem("suggestions-seeded", "true");
     }
@@ -115,7 +118,7 @@ function syntheticState(kind: "balanced" | "no-candidate"): AppState {
           id: `item-${food.id}`,
           foodId: food.id,
           displayName: food.name,
-          count: 1,
+          quantity: { kind: "count" as const, count: 1 },
         })),
       },
     ],
@@ -408,7 +411,7 @@ test("TC-FR-BAL-06-07 候補なしを説明し、未判定・不足なしでは�
       (next) =>
         localStorage.setItem(
           "weekmeal:state",
-          JSON.stringify({ version: 3, ...next }),
+          JSON.stringify({ version: 4, ...next }),
         ),
       next,
     );

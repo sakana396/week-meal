@@ -43,7 +43,7 @@ function fixture(size: number): AppState {
           id: `perf-${i}`,
           foodId: foods[i % 3][0],
           displayName: i < 3 ? foods[i][1] : `負荷試料${i}`,
-          count: 10,
+          quantity: { kind: "count" as const, count: 10 },
         })),
       },
     ],
@@ -194,7 +194,7 @@ for (const size of [3, 30, 100]) {
               (state) =>
                 localStorage.setItem(
                   "weekmeal:state",
-                  JSON.stringify({ version: 3, ...state }),
+                  JSON.stringify({ version: 4, ...state }),
                 ),
               fixture(size),
             );
@@ -386,7 +386,7 @@ test("TC-NFR-03-02 判定文言が変わらない個数変更もrevisionで完�
     (state) =>
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 3, ...state }),
+        JSON.stringify({ version: 4, ...state }),
       ),
     state,
   );
@@ -510,7 +510,7 @@ for (const size of [3, 30, 100]) {
                 (state) =>
                   localStorage.setItem(
                     "weekmeal:state",
-                    JSON.stringify({ version: 3, ...state }),
+                    JSON.stringify({ version: 4, ...state }),
                   ),
                 shoppingFixture(size, historyCount),
               );
@@ -617,9 +617,13 @@ for (const size of [3, 30, 100]) {
                   target?.items.some((item) => item.foodId === "12004"),
                 ).toBe(true);
               } else if (operation.startsWith("increment")) {
-                expect(target?.items[0].count).toBe(10.5);
+                expect(
+                  (target?.items[0].quantity as { count: number }).count,
+                ).toBe(10.5);
               } else if (operation.startsWith("decrement")) {
-                expect(target?.items[0].count).toBe(9.5);
+                expect(
+                  (target?.items[0].quantity as { count: number }).count,
+                ).toBe(9.5);
               } else if (operation.startsWith("remove")) {
                 expect(
                   target?.items.some(
