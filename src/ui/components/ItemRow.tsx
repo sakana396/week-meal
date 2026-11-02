@@ -11,6 +11,7 @@ import {
   type Quantity,
 } from "../../core/quantity";
 import { formatCount } from "../format";
+import { weightHintText } from "../weightHint";
 
 /** 重さの欄へ表示する数値（DES-UI-49）。 */
 function weightText(quantity: Quantity): string {
@@ -62,9 +63,7 @@ export const ItemRow = memo(function ItemRow({
 }) {
   const weight = unitWeightFor(item.foodId, item.displayName);
   const unit = weight ? weight.unit : "つ（概算）";
-  const hint = weight
-    ? `1 ${weight.unit} ≒ ${weight.purchaseG} g`
-    : "1 単位 ≒ 100 g（概算）";
+  const hint = weightHintText(weight);
   const selected =
     item.quantity.kind === "count" ? "count" : item.quantity.unit;
   const currentQuantityKey = quantityKey(item.quantity);
