@@ -26,6 +26,7 @@ import { HomeScreen } from "./screens/HomeScreen";
 import { BalanceDetailScreen } from "./screens/BalanceDetailScreen";
 import { FoodsScreen } from "./screens/FoodsScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
+import { ReceiptScreen } from "./screens/ReceiptScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { loadAppState, openBrowserStore, saveAppState } from "./storage";
 import "./App.css";
@@ -93,14 +94,17 @@ export default function App() {
   }, [location, routeNotice, route, shoppingId]);
   useEffect(() => {
     if (
-      route !== "register" ||
+      (route !== "register" && route !== "receipt") ||
       shoppingId ||
       state.shoppings.length === 0 ||
       invalidShopping
     )
       return;
+    // 一括登録で遷移を始めた直後の古い描画から、行き先を上書きしない。
+    const current = routeFromHash(window.location.hash);
+    if (current.route !== route || current.shoppingId !== shoppingId) return;
     const latest = latestShopping(state.shoppings);
-    if (latest) replaceRoute("register", latest.id);
+    if (latest) replaceRoute(route, latest.id);
   }, [route, shoppingId, state.shoppings, invalidShopping, replaceRoute]);
   useEffect(() => {
     if (
@@ -270,6 +274,17 @@ export default function App() {
             shoppingId={shoppingId}
             navigate={navigate}
             replaceRoute={replaceRoute}
+          />
+        )}
+        {route === "receipt" && (
+          <ReceiptScreen
+            state={state}
+            shoppingId={shoppingId}
+            dispatch={dispatch}
+            navigate={navigate}
+            onRegistered={(text, destination, id) =>
+              setRouteNotice({ text, route: destination, shoppingId: id })
+            }
           />
         )}
         {route === "history" && (

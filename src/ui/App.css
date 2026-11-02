@@ -1236,3 +1236,68 @@ h3 {
 .link-button.danger-button {
   color: #a63a24;
 }
+
+/* 貼り付けと確認の一覧（DES-RCP-01、04、DES-UI-49）。 */
+.receipt-prompt {
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.receipt-review-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.receipt-review-row {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+
+.receipt-review-row > label:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.receipt-review-row input[type="checkbox"] {
+  width: 44px;
+  height: 44px;
+}
+
+.receipt-quantity {
+  display: grid;
+  gap: 8px;
+}
+
+.receipt-review-row [role="alert"] {
+  color: #a63a24;
+}
+
+.receipt-unmatched {
+  overflow-wrap: anywhere;
+}
+
+.notice-panel textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid #cfc8bb;
+  border-radius: 8px;
+  padding: 12px;
+  color: #17201b;
+  background: #fff;
+}
+
+.notice-panel summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+}

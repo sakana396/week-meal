@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 export type Route =
   | "home"
   | "register"
+  | "receipt"
   | "balance"
   | "settings"
   | "foods"
@@ -19,6 +20,7 @@ export type RouteLocation = {
 export const routeHashes: Record<Route, string> = {
   home: "#/",
   register: "#/register",
+  receipt: "#/receipt",
   balance: "#/balance",
   settings: "#/settings",
   foods: "#/foods",
@@ -43,12 +45,17 @@ export function routeFromHash(hash: string): RouteLocation {
       invalidShopping: !valid,
     };
   }
-  if (path === "#/register" || path === "#/balance") {
+  if (path === "#/register" || path === "#/receipt" || path === "#/balance") {
     const params = new URLSearchParams(query);
     const ids = params.getAll("shopping");
     const valid = ids.length === 0 || (ids.length === 1 && !!ids[0]);
     return {
-      route: path === "#/register" ? "register" : "balance",
+      route:
+        path === "#/register"
+          ? "register"
+          : path === "#/receipt"
+            ? "receipt"
+            : "balance",
       shoppingId: valid ? (ids[0] ?? null) : null,
       invalidShopping: !valid,
     };
