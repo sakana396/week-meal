@@ -142,6 +142,7 @@ export default function App() {
       );
       if (active) setSaveFailed(!saved);
     };
+    // 非表示への遷移は予約側で同期保存し、pagehide でも最後の状態を保存する。
     const cancel = scheduleAfterPaint(save);
     const flush = () => {
       cancel();

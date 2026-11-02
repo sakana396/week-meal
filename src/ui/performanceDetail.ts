@@ -1,4 +1,4 @@
-/** 日付変更の内訳をブラウザの Performance 記録に残す（DES-PER-05）。 */
+/** 詳細計測の有効期間中、全操作の内訳を記録する（DES-PER-05）。 */
 export function measurePerformanceDetail<T>(name: string, work: () => T): T {
   if (!performanceDetailEnabled()) return work();
   const start = performance.now();
@@ -12,7 +12,7 @@ export function measurePerformanceDetail<T>(name: string, work: () => T): T {
   }
 }
 
-/** 日付変更時だけ、描画開始から commit までの区間を記録する（DES-PER-05）。 */
+/** 詳細計測の有効期間中、描画開始から commit までを記録する（DES-PER-05）。 */
 export function performanceDetailStart(): number | null {
   return performanceDetailEnabled() ? performance.now() : null;
 }

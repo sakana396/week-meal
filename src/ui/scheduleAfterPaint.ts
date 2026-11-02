@@ -1,19 +1,38 @@
-/** 判定の描画機会を確保してから保存する（DES-PER-05）。 */
-export function scheduleAfterPaint(save: () => void): () => void {
+/** 判定の描画機会を確保し、非表示になる前には保存する（DES-PER-05、DES-UI-13）。 */
+export function scheduleAfterPaint(
+  save: () => void,
+  visibility: Pick<
+    Document,
+    "hidden" | "visibilityState" | "addEventListener" | "removeEventListener"
+  > = document,
+): () => void {
   let active = true;
   let timer: number | undefined;
-  let frame = requestAnimationFrame(() => {
+  let frame: number | undefined;
+  const flush = () => {
     if (!active) return;
+    active = false;
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    if (timer !== undefined) window.clearTimeout(timer);
+    visibility.removeEventListener("visibilitychange", flushWhenHidden);
+    save();
+  };
+  const flushWhenHidden = () => {
+    if (visibility.visibilityState === "hidden") flush();
+  };
+  visibility.addEventListener("visibilitychange", flushWhenHidden);
+  if (visibility.hidden) flush();
+  else
     frame = requestAnimationFrame(() => {
       if (!active) return;
       timer = window.setTimeout(() => {
-        if (active) save();
+        flush();
       }, 0);
     });
-  });
   return () => {
     active = false;
-    cancelAnimationFrame(frame);
+    visibility.removeEventListener("visibilitychange", flushWhenHidden);
+    if (frame !== undefined) cancelAnimationFrame(frame);
     if (timer !== undefined) window.clearTimeout(timer);
   };
 }
