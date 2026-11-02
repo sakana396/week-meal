@@ -260,7 +260,9 @@ test("TC-NFR-12-34 不正な行を捨てた件数を知らせる", async ({ page
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
 });
 
-test("TC-NFR-12-39 版 3 の行を保って版別に原文を退避する", async ({ page }) => {
+test("TC-FR-SYS-01-13・TC-NFR-13-16 版 3 の行を保って版別に原文を退避する", async ({
+  page,
+}) => {
   const original = JSON.stringify({
     version: 3,
     shoppings: [
@@ -297,6 +299,53 @@ test("TC-NFR-12-39 版 3 の行を保って版別に原文を退避する", asyn
     count: 2,
   });
   expect(saved.backup).toBe(original);
+});
+
+test("TC-NFR-12-39 版 4 の不正な量の行を捨てて件数を知らせる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "weekmeal:state",
+      JSON.stringify({
+        version: 4,
+        shoppings: [
+          {
+            id: "shopping-1",
+            date: "2026-11-03",
+            origin: "normal",
+            items: [
+              {
+                id: "carrot",
+                foodId: "06212",
+                displayName: "にんじん",
+                quantity: { kind: "count", count: 2 },
+              },
+              {
+                id: "invalid",
+                foodId: "06061",
+                displayName: "キャベツ",
+                quantity: { kind: "weight", grams: 0, unit: "g" },
+              },
+            ],
+          },
+        ],
+        manualFoods: [],
+        profile: {
+          staple: "rice",
+          portion: "medium",
+          sex: "unspecified",
+          ageGroup: "30-49",
+        },
+      }),
+    );
+  });
+  await page.goto("#/");
+  await expect(itemRow(page, "にんじん")).toContainText("2 本");
+  await expect(itemRow(page, "キャベツ")).toHaveCount(0);
+  await expect(
+    page.getByText("食材 1 件を読み込めませんでした。"),
+  ).toBeVisible();
 });
 
 test("TC-NFR-12-35 設定がないと初期値に戻した旨を知らせる", async ({

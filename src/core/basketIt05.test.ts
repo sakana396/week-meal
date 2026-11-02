@@ -64,6 +64,36 @@ describe("量の reducer（DES-QTY-06）", () => {
       unit: "g",
     });
   });
+  it.each([
+    [
+      { kind: "count" as const, count: 998.5 },
+      { kind: "count", count: 999 },
+    ],
+    [
+      { kind: "weight" as const, grams: 99950, unit: "g" as const },
+      { kind: "weight", grams: 100000, unit: "g" },
+    ],
+  ])(
+    "TC-FR-QTY-07-03 登録で上限の手前から上限に達する %#",
+    (quantity, expected) => {
+      const before = basketReducer(first, {
+        type: "setQuantity",
+        shoppingId: "s",
+        id: "r",
+        quantity,
+      });
+      const after = basketReducer(before, {
+        type: "register",
+        shoppingId: "s",
+        id: "unused",
+        foodId: "06212",
+        displayName: "にんじん",
+      });
+      expect(after.shoppings[0].items[0].quantity).toEqual(expected);
+      expect(after.shoppings[0].items).toHaveLength(1);
+      expect(before.shoppings[0].items[0].quantity).toEqual(quantity);
+    },
+  );
   it("TC-FR-QTY-07-03 未知の行 ID と重さの上限では変更しない", () => {
     const unknown = basketReducer(first, {
       type: "setQuantity",

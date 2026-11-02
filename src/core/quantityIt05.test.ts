@@ -71,7 +71,7 @@ describe("IT05 の量（DES-QTY-03〜06）", () => {
       { kind: "count" as const, count: 0.5 },
       "g" as const,
       1,
-      { ...weight, purchaseG: 1 },
+      { ...weight, purchaseG: 0.8 },
     ],
   ])(
     "TC-FR-QTY-07-02 個数と重さを換算する %#",
