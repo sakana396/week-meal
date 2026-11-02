@@ -95,8 +95,14 @@ export function parseReceiptText(
   const unmatched: { line: number; text: string }[] = [];
   text.split(/\r?\n/).forEach((original, index) => {
     const line = index + 1;
-    let value = original.normalize("NFKC").trim();
+    const normalized = original.normalize("NFKC");
+    let value = normalized.trim();
     if (!value || value.startsWith("```") || value.startsWith("#")) return;
+    // 長い行は正規表現の後戻りを避け、元の行を一覧にない物として返す。
+    if (normalized.length > 200) {
+      unmatched.push({ line, text: original });
+      return;
+    }
     value = value
       .replace(/^(?:[-*・]\s*|\d+\.\s*)/, "")
       .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
@@ -115,7 +121,8 @@ export function parseReceiptText(
     }
     candidates.push({
       line,
-      ...found,
+      displayName: found.displayName,
+      foodId: found.foodId,
       quantity: amount.quantity,
       needsCheck: amount.needsCheck || Boolean(fraction),
     });

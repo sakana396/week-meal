@@ -203,7 +203,18 @@ export function planRegisterMany(
       };
     } else {
       if (usedIds.has(entry.id)) continue;
-      current = { ...current, items: [entry, ...current.items] };
+      current = {
+        ...current,
+        items: [
+          {
+            id: entry.id,
+            foodId: entry.foodId,
+            displayName: entry.displayName,
+            quantity: entry.quantity,
+          },
+          ...current.items,
+        ],
+      };
       usedIds.add(entry.id);
     }
     registeredCount += 1;

@@ -14,6 +14,7 @@ import {
   receiptPrompt,
   type ReceiptCatalog,
 } from "./receipt";
+import { serializeState } from "./storage";
 
 const catalog: ReceiptCatalog = {
   foods: [
@@ -34,6 +35,7 @@ describe("レシート指示文（DES-RCP-02）", () => {
     expect(prompt).toContain("食材名,量");
     expect(prompt).toContain("商品名のまま");
     expect(prompt).toContain("桁区切りのコンマと分数を使わず");
+    expect(prompt.split("\n")).toContain("手作り豆腐");
     expect(prompt.match(/\nにんじん\n/g)).toHaveLength(1);
     expect(prompt.indexOf("\nにんじん\n")).toBeLessThan(
       prompt.indexOf("\nはるさめ（乾燥）\n"),
@@ -65,6 +67,8 @@ describe("レシート読み取り（DES-RCP-03）", () => {
     ["にんじん,1/0", { kind: "count", count: 1 }, true],
     ["にんじん,1000個", { kind: "count", count: 999 }, true],
     ["にんじん,1,000g", { kind: "weight", grams: 1000, unit: "g" }, false],
+    ["にんじん,2本", { kind: "count", count: 2 }, false],
+    ["にんじん,2KG", { kind: "weight", grams: 2000, unit: "kg" }, false],
     ["にんじん,200kg", { kind: "weight", grams: 100000, unit: "kg" }, true],
     ["にんじん", { kind: "count", count: 1 }, true],
   ])("TC-FR-RCP-01-01 量を読む %#", (line, quantity, needsCheck) => {
@@ -88,6 +92,55 @@ describe("レシート読み取り（DES-RCP-03）", () => {
       "manual-recent",
     ]);
     expect(result.unmatched).toEqual([{ line: 8, text: "洗剤,1" }]);
+  });
+  it("TC-FR-RCP-01-01 空文字列と崩れた行を例外なく扱う", () => {
+    expect(parseReceiptText("", catalog)).toEqual({
+      candidates: [],
+      unmatched: [],
+    });
+    expect(parseReceiptText("にんじん,???", catalog)).toEqual({
+      candidates: [],
+      unmatched: [{ line: 1, text: "にんじん,???" }],
+    });
+  });
+  it("TC-FR-RCP-01-01 長い行は量を読まず一覧にない物にする", () => {
+    const longLine = `${"1".repeat(50000)}x`;
+    const result = parseReceiptText(longLine, catalog);
+    expect(result).toEqual({
+      candidates: [],
+      unmatched: [{ line: 1, text: longLine }],
+    });
+  }, 1000);
+  it("TC-FR-RCP-01-01 NFKC 後の行長 200 字までは読み、201 字から除外する", () => {
+    const accepted = `にんじん,${"1".repeat(195)}`;
+    const rejected = `にんじん,${"１".repeat(196)}`;
+    expect(accepted.length).toBe(200);
+    expect(parseReceiptText(accepted, catalog).candidates).toHaveLength(1);
+    expect(parseReceiptText(rejected, catalog).unmatched).toEqual([
+      { line: 1, text: rejected },
+    ]);
+  });
+  it("TC-FR-RCP-01-01 一覧の余分なキーを候補に渡さない", () => {
+    const extraCatalog = {
+      foods: [
+        {
+          displayName: "にんじん",
+          foodId: "06212",
+          line: 99,
+          needsCheck: true,
+        },
+      ],
+      manualFoods: [],
+    };
+    expect(parseReceiptText("にんじん,2", extraCatalog).candidates).toEqual([
+      {
+        line: 1,
+        displayName: "にんじん",
+        foodId: "06212",
+        quantity: { kind: "count", count: 2 },
+        needsCheck: false,
+      },
+    ]);
   });
 });
 
@@ -145,6 +198,7 @@ describe("レシート一括登録（DES-RCP-05）", () => {
         expected,
       );
       expect(planned.registeredCount).toBe(1);
+      expect(planned.clampedCount).toBe(existing.kind === "count" ? 1 : 0);
     },
   );
 
@@ -174,5 +228,18 @@ describe("レシート一括登録（DES-RCP-05）", () => {
     const planned = planRegisterMany(current, [entry("b", 2)]);
     expect(planned).toMatchObject({ registeredCount: 0, clampedCount: 1 });
     expect(planned.shopping).toBe(current);
+  });
+  it("TC-FR-RCP-01-02 新しい行の余分なキーを状態と保存に渡さない", () => {
+    const input = { ...entry("a", 2), line: 99, needsCheck: true };
+    const planned = planRegisterMany(shopping, [input]);
+    expect(planned.shopping.items).toEqual([entry("a", 2)]);
+    const state = basketReducer(
+      { ...initialAppState, shoppings: [shopping] },
+      { type: "registerMany", shoppingId: "s", entries: [input] },
+    );
+    expect(state.shoppings[0].items).toEqual([entry("a", 2)]);
+    expect(JSON.parse(serializeState(state)).shoppings[0].items).toEqual([
+      entry("a", 2),
+    ]);
   });
 });

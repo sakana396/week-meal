@@ -165,6 +165,6 @@
 | FR-SYS-01、NFR-13 | #110 | DES-STO-13 | TC-FR-SYS-01-13、TC-NFR-13-16 | src/core/storage.ts, src/ui/storage.ts, src/core/storageIt05.test.ts, src/ui/storage.test.ts, e2e/register-home.spec.ts | 保存版 4・旧版移行・版ごとの退避を実装済み |
 | NFR-12 | #110 | DES-STO-14 | TC-NFR-12-39 | src/core/storage.ts, src/ui/components/StorageNotice.tsx, src/core/storageIt05.test.ts, src/ui/components/StorageNoticeIt05.test.ts, e2e/register-home.spec.ts | 不正な量の除外と買い物・食材の件数通知を実装済み |
 | NFR-08 | #110 | DES-QTY-03〜06、DES-STO-13, 14 | lint、TC-FR-QTY-07-01〜03、TC-FR-SYS-01-13 | src/core/quantity.ts, src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |
-| FR-RCP-01 | #113 | DES-RCP-03、DES-RCP-05 | TC-FR-RCP-01-01、TC-FR-RCP-01-02 | src/core/receipt.ts, src/core/basket.ts, src/core/receipt.test.ts | 読み取りと一括登録の core を実装済み。画面は #114 |
+| FR-RCP-01 | #113 | DES-RCP-03、DES-RCP-05 | TC-FR-RCP-01-01、TC-FR-RCP-01-02 | src/core/receipt.ts, src/core/basket.ts, src/core/receipt.test.ts | 読み取りと一括登録の core を実装済み。長い行の扱いと余分なキーの除外を確認済み。画面は #114 |
 | FR-RCP-02 | #113 | DES-RCP-02 | TC-FR-RCP-02-01 | src/core/receipt.ts, src/core/receipt.test.ts | 指示文の生成を実装済み。コピー画面は #114 |
 | FR-RCP-03 | #113 | DES-RCP-03 | TC-FR-RCP-01-01 | src/core/receipt.ts, src/core/receipt.test.ts | 一覧にない行を分ける core を実装済み。表示は #114 |
