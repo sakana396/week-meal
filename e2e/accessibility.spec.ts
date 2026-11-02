@@ -92,6 +92,20 @@ async function draft(page: Page) {
   await expect(page.getByText(/下書き元:.*食品番号 06212/)).toBeVisible();
 }
 
+test("TC-NFR-06-04 貼り付け画面と確認の一覧を axe と寸法で検査する", async ({
+  page,
+}, info) => {
+  await page.goto("#/receipt");
+  await geometry(page);
+  await inspect(page, info, "receipt-empty");
+  await page
+    .getByLabel("レシートの食材のテキスト")
+    .fill("にんじん,2\n未知の菓子,1");
+  await page.getByRole("button", { name: "読み取る" }).click();
+  await geometry(page);
+  await inspect(page, info, "receipt-review");
+});
+
 test("TC-NFR-06-01 全画面と候補・削除通知・下書き・食品詳細のaxeを検査する", async ({
   page,
 }, info) => {

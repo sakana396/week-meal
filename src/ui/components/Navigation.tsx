@@ -18,7 +18,8 @@ export function Navigation({
   route: Route;
   navigate: (route: Route) => void;
 }) {
-  const active = route === "foods" ? "settings" : route;
+  const active =
+    route === "foods" ? "settings" : route === "receipt" ? "register" : route;
   return (
     <aside className="sidebar">
       <div className="app-title">

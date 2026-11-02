@@ -319,6 +319,13 @@ export function RegisterScreen({
         {state.shoppings.find((shopping) => shopping.id === shoppingId)?.date ??
           "最初の登録で今日の買い物を作成"}
       </p>
+      <button
+        className="link-button"
+        type="button"
+        onClick={() => navigate("receipt", shoppingId ?? undefined)}
+      >
+        レシートから登録
+      </button>
       {shoppingId && (
         <button
           className="link-button"
