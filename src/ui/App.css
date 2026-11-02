@@ -887,6 +887,9 @@ h3 {
 }
 
 .item-row {
+  /* 画面外の行のレイアウトと描画を必要になるまで省く（DES-PER-05への提案）。 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;

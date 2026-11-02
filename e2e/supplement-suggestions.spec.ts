@@ -262,9 +262,11 @@ test("TC-FR-BAL-06-08 同じ位置の連打で1件だけ登録し、固定枠と
       .locator("ul")
       .evaluate((element) => element.getBoundingClientRect().height),
   ).toBe(listHeight);
-  expect(JSON.parse((await saved(page))!).shoppings[0].items).toHaveLength(
-    disappearingFirst.shoppings[0].items.length + 1,
-  );
+  await expect
+    .poll(
+      async () => JSON.parse((await saved(page))!).shoppings[0].items.length,
+    )
+    .toBe(disappearingFirst.shoppings[0].items.length + 1);
   // DES-UI-42: PC のマウスを欄外へ移し、固定した並びを解放する。
   await page.mouse.move(0, 0);
   await ready(page);
@@ -326,9 +328,11 @@ test("TC-FR-BAL-06-08 再計算前後に通知と空き枠を押しても同じ�
     "data-candidates-revision",
     oldRevision!,
   );
-  expect(JSON.parse((await saved(page))!).shoppings[0].items).toHaveLength(
-    initial.shoppings[0].items.length + 1,
-  );
+  await expect
+    .poll(
+      async () => JSON.parse((await saved(page))!).shoppings[0].items.length,
+    )
+    .toBe(initial.shoppings[0].items.length + 1);
   await page.mouse.move(0, 0);
   await expect(panel(page)).toHaveCount(0);
 });
@@ -355,6 +359,12 @@ test("TC-FR-BAL-06-08 キーボードで登録し、計算待ちの個数変更�
   await page.clock.runFor(100);
   await ready(page);
   await expect(row).toContainText("2 本");
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await saved(page))!).shoppings[0].items[0].quantity.count,
+    )
+    .toBe(2);
   await page.mouse.move(0, 0);
   const selected = panel(page).getByRole("button").first();
   const foodId = (await selected.getAttribute("data-food-id"))!;
@@ -374,16 +384,23 @@ test("TC-FR-BAL-06-08 キーボードで登録し、計算待ちの個数変更�
     foodId,
     displayName: name,
   });
-  expect(
-    JSON.parse((await saved(page))!).shoppings[0].items.map(
-      (item: AppState["shoppings"][number]["items"][number]) => ({
+  await expect
+    .poll(() =>
+      saved(page).then((text) =>
+        JSON.parse(text!).shoppings[0].items.map(
+          (item: AppState["shoppings"][number]["items"][number]) => ({
+            ...item,
+            id: "比較対象外",
+          }),
+        ),
+      ),
+    )
+    .toEqual(
+      expected.shoppings[0].items.map((item) => ({
         ...item,
         id: "比較対象外",
-      }),
-    ),
-  ).toEqual(
-    expected.shoppings[0].items.map((item) => ({ ...item, id: "比較対象外" })),
-  );
+      })),
+    );
 });
 
 test("TC-FR-BAL-06-07 候補なしを説明し、未判定・不足なしでは候補欄を出さない", async ({

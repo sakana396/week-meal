@@ -211,6 +211,15 @@ test("TC-FR-ING-08-13 成分は初期に閉じ開閉で保持しクリアと登�
   await form.getByRole("button", { name: "登録する", exact: true }).click();
   await expect(nameOf(form)).toHaveValue("");
   await expect(details).not.toHaveAttribute("open");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.manualFoods?.[0]?.name,
+      ),
+    )
+    .toBe("成分なし料理");
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("weekmeal:state")!),
   );
@@ -247,6 +256,15 @@ test("TC-FR-ING-16-01 主食も下書きに選べ全成分を直して保存し�
   await expect(remembered).toContainText(
     `下書き元: ${source.name}（食品番号 ${source.id}）。登録値は手入力`,
   );
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.manualFoods?.[0]?.name,
+      ),
+    )
+    .toBe("自分の料理");
   const food = await page.evaluate(
     () =>
       JSON.parse(localStorage.getItem("weekmeal:state")!)
@@ -313,6 +331,15 @@ test("TC-FR-ING-16-02 下書きを再選択すると全成分と来歴を置換�
     await expect(nutrientInput(form, label)).toHaveValue("");
   await nameOf(form).fill("来歴なし料理");
   await form.getByRole("button", { name: "登録する", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("weekmeal:state") ?? "null")
+            ?.manualFoods?.[0]?.name,
+      ),
+    )
+    .toBe("来歴なし料理");
   const food = await page.evaluate(
     () => JSON.parse(localStorage.getItem("weekmeal:state")!).manualFoods[0],
   );

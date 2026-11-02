@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import {
   maximumCount,
   minimumCount,
@@ -11,7 +11,7 @@ import {
   type Quantity,
 } from "../../core/quantity";
 import { formatCount } from "../format";
-import { weightHint } from "../weightHint";
+import { weightHintText } from "../weightHint";
 
 /** 重さの欄へ表示する数値（DES-UI-49）。 */
 function weightText(quantity: Quantity): string {
@@ -49,8 +49,8 @@ function parseWeight(
   return { grams };
 }
 
-/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、DES-QTY-07）。 */
-export function ItemRow({
+/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、DES-QTY-07、DES-PER-05）。 */
+export const ItemRow = memo(function ItemRow({
   item,
   shoppingId,
   detail,
@@ -63,14 +63,16 @@ export function ItemRow({
 }) {
   const weight = unitWeightFor(item.foodId, item.displayName);
   const unit = weight ? weight.unit : "つ（概算）";
+  const hint = weightHintText(weight);
   const selected =
     item.quantity.kind === "count" ? "count" : item.quantity.unit;
+  const currentQuantityKey = quantityKey(item.quantity);
   const [draftState, setDraftState] = useState(() => ({
-    key: quantityKey(item.quantity),
+    key: currentQuantityKey,
     value: weightText(item.quantity),
   }));
   const draft =
-    draftState.key === quantityKey(item.quantity)
+    draftState.key === currentQuantityKey
       ? draftState.value
       : weightText(item.quantity);
   const [error, setError] = useState("");
@@ -183,9 +185,7 @@ export function ItemRow({
                 ＋
               </button>
             </div>
-            <small className="item-weight-hint">
-              {weightHint(item.foodId, item.displayName)}
-            </small>
+            <small className="item-weight-hint">{hint}</small>
           </>
         ) : (
           <div className="item-weight-field">
@@ -200,7 +200,7 @@ export function ItemRow({
                 aria-describedby={error ? errorId : undefined}
                 onChange={(event) => {
                   setDraftState({
-                    key: quantityKey(item.quantity),
+                    key: currentQuantityKey,
                     value: event.target.value,
                   });
                   setError("");
@@ -232,4 +232,4 @@ export function ItemRow({
       </div>
     </li>
   );
-}
+});

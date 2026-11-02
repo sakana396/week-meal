@@ -122,7 +122,9 @@ test("TC-FR-ING-14-03 連続削除は直前だけ取り消せ、画面移動で�
   await openTab(page, "ホーム");
   await expect(undo(page)).toHaveCount(0);
   await expect(names(page)).toHaveText(["先頭", "末尾"]);
-  expect((await stored(page)).profile.portion).toBe("large");
+  await expect
+    .poll(async () => (await stored(page)).profile.portion)
+    .toBe("large");
   await expect(undo(page)).toHaveCount(0);
 });
 
