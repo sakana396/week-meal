@@ -111,7 +111,9 @@ test("TC-FR-RCP-01-05 食材名を選び直し、一覧にない名前を拒む"
   await expect(page.getByRole("button", { name: "1 件を登録" })).toBeDisabled();
   await expect(page.getByRole("alert")).toContainText("0.5 刻み");
   await expect(
-    page.locator(".receipt-review-row").getByRole("button", { name: "g" }),
+    page
+      .locator(".receipt-review-row")
+      .getByRole("button", { name: "g", exact: true }),
   ).toBeDisabled();
   await quantity.fill("1");
   await page.getByRole("button", { name: "1 件を登録" }).click();
@@ -169,9 +171,11 @@ test("TC-FR-RCP-01-03 前の買い物から開くとその買い物へ登録す�
   await page.getByRole("button", { name: "1 件を登録" }).click();
   await expect(page).toHaveURL(/#\/history\/old$/);
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
-  await expect(page.getByRole("status")).toContainText(
-    "レシートから 1 件を登録しました",
-  );
+  await expect(
+    page.getByRole("status").filter({
+      hasText: "レシートから 1 件を登録しました",
+    }),
+  ).toBeVisible();
   await expect.poll(() => savedItems(page, "old")).toHaveLength(1);
   await expect.poll(() => savedItems(page, "new")).toHaveLength(0);
 });
@@ -182,7 +186,7 @@ test("TC-FR-RCP-01-06 確認の一覧で単位を変えると量に焦点が移�
   await page.goto("#/receipt");
   await paste(page, "にんじん,2");
   const row = page.locator(".receipt-review-row");
-  await row.getByRole("button", { name: "g" }).click();
+  await row.getByRole("button", { name: "g", exact: true }).click();
   const amount = row.getByRole("textbox", { name: "量" });
   await expect(amount).toBeFocused();
   await expect(amount).toHaveValue("300");
@@ -231,7 +235,9 @@ test("TC-FR-RCP-01-08 全行が上限で止まっても理由を知らせる", a
   await page.goto("#/receipt?shopping=full");
   await paste(page, "にんじん,1");
   await page.getByRole("button", { name: "1 件を登録" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "レシートから 0 件を登録しました（上限で止めた 1 件）",
-  );
+  await expect(
+    page.getByRole("status").filter({
+      hasText: "レシートから 0 件を登録しました（上限で止めた 1 件）",
+    }),
+  ).toBeVisible();
 });
