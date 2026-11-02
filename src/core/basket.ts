@@ -45,6 +45,12 @@ export type BasketAction =
       initialShopping?: { id: string; date: string };
     }
   | {
+      type: "registerMany";
+      shoppingId: string;
+      entries: BasketEntry[];
+      initialShopping?: { id: string; date: string };
+    }
+  | {
       type: "addManualFood";
       shoppingId: string;
       food: ManualFood;
@@ -149,6 +155,62 @@ function register(
   };
 }
 
+/** 一括登録の結果を dispatch 前にも求める（DES-RCP-05）。 */
+export function planRegisterMany(
+  shopping: Shopping,
+  entries: readonly BasketEntry[],
+  shoppings: readonly Shopping[] = [shopping],
+): { shopping: Shopping; registeredCount: number; clampedCount: number } {
+  let current = shopping;
+  let registeredCount = 0;
+  let clampedCount = 0;
+  const usedIds = new Set(
+    shoppings.flatMap((item) => item.items.map((entry) => entry.id)),
+  );
+  for (const entry of entries) {
+    if (
+      !entry.id ||
+      !entry.foodId ||
+      !entry.displayName ||
+      !validQuantity(entry.quantity)
+    )
+      continue;
+    const existing = current.items.find(
+      (item) =>
+        item.foodId === entry.foodId && item.displayName === entry.displayName,
+    );
+    if (existing) {
+      const added = addQuantity(
+        existing.quantity,
+        entry.quantity,
+        unitWeightFor(entry.foodId, entry.displayName),
+      );
+      if (added.clamped) clampedCount += 1;
+      if (
+        (added.quantity.kind === "count" &&
+          existing.quantity.kind === "count" &&
+          added.quantity.count === existing.quantity.count) ||
+        (added.quantity.kind === "weight" &&
+          existing.quantity.kind === "weight" &&
+          added.quantity.grams === existing.quantity.grams)
+      )
+        continue;
+      current = {
+        ...current,
+        items: current.items.map((item) =>
+          item === existing ? { ...item, quantity: added.quantity } : item,
+        ),
+      };
+    } else {
+      if (usedIds.has(entry.id)) continue;
+      current = { ...current, items: [entry, ...current.items] };
+      usedIds.add(entry.id);
+    }
+    registeredCount += 1;
+  }
+  return { shopping: current, registeredCount, clampedCount };
+}
+
 /** 入力を変更せず買い物単位で操作する（DES-SHP-02）。 */
 export function basketReducer(state: AppState, action: BasketAction): AppState {
   switch (action.type) {
@@ -219,6 +281,24 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
       return updated.manualFoods.some((food) => food.id === action.food.id)
         ? updated
         : { ...updated, manualFoods: [action.food, ...updated.manualFoods] };
+    }
+    // 確認済みの行を一度の状態遷移で登録する（DES-RCP-05）。
+    case "registerMany": {
+      const start =
+        state.shoppings.length === 0 &&
+        action.initialShopping &&
+        action.initialShopping.id === action.shoppingId
+          ? basketReducer(state, {
+              type: "createShopping",
+              ...action.initialShopping,
+            })
+          : state;
+      return changeShopping(
+        start,
+        action.shoppingId,
+        (shopping) =>
+          planRegisterMany(shopping, action.entries, start.shoppings).shopping,
+      );
     }
     case "increment":
     case "decrement":
