@@ -15,7 +15,8 @@ export async function openTab(
 export async function registerFood(page: Page, name: string) {
   await page
     .getByLabel("食材名一覧")
-    .getByRole("button", { name: new RegExp(`^${name}`) })
+    .getByRole("button")
+    .filter({ has: page.getByText(name, { exact: true }) })
     .first()
     .click();
   await expect(

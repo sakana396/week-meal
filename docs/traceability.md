@@ -165,3 +165,5 @@
 | FR-SYS-01、NFR-13 | #110 | DES-STO-13 | TC-FR-SYS-01-13、TC-NFR-13-16 | src/core/storage.ts, src/ui/storage.ts, src/core/storageIt05.test.ts, src/ui/storage.test.ts, e2e/register-home.spec.ts | 保存版 4・旧版移行・版ごとの退避を実装済み |
 | NFR-12 | #110 | DES-STO-14 | TC-NFR-12-39 | src/core/storage.ts, src/ui/components/StorageNotice.tsx, src/core/storageIt05.test.ts, src/ui/components/StorageNoticeIt05.test.ts, e2e/register-home.spec.ts | 不正な量の除外と買い物・食材の件数通知を実装済み |
 | NFR-08 | #110 | DES-QTY-03〜06、DES-STO-13, 14 | lint、TC-FR-QTY-07-01〜03、TC-FR-SYS-01-13 | src/core/quantity.ts, src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |
+| FR-QTY-07、FR-QTY-08 | #112 | DES-QTY-07、DES-UI-49 | TC-FR-QTY-07-04、05、TC-FR-QTY-08-01 | src/ui/components/ItemRow.tsx, src/ui/components/SupplementSuggestions.tsx, src/ui/registerMessage.ts, src/ui/registerMessage.test.ts, src/ui/supplementPresentation.test.ts, src/ui/weightHint.ts, src/ui/weightHint.test.ts, e2e/row-quantity.spec.ts | ホーム・履歴詳細の切り替え、重さの入力、個数行の目安、通知と候補の単位の統一を実装済み |
+| NFR-06、IF-05 | #112 | DES-UI-49 | TC-NFR-06-04（行の部分） | src/ui/App.css, e2e/accessibility.spec.ts | 行の操作と axe 検査を実装済み |
