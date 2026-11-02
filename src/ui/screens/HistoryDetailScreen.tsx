@@ -64,7 +64,11 @@ export function HistoryDetailScreen({
         (element) =>
           element.getAttribute("data-entry-id") === previous.entry.id,
       );
-      row?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+      (
+        row?.querySelector<HTMLButtonElement>(
+          ".item-count button:not(:disabled)",
+        ) ?? row?.querySelector<HTMLInputElement>(".item-weight-field input")
+      )?.focus();
     }
     previousRemoval.current = pendingRemoval;
   }, [pendingRemoval, shopping.id]);

@@ -4,13 +4,13 @@ import {
   type AppState,
   type BasketAction,
 } from "../core/basket";
-import { unitWeights } from "../data/unitWeights";
-import { maximumGrams } from "../core/quantity";
+import { maximumGrams, unitWeightFor } from "../core/quantity";
 import { formatCount } from "./format";
 
 /**
  * 登録したあとに出すお知らせの文言（P-09、DES-UI-21）。
- * 登録後の状態から個数を読み、単位は目安重量の単位（なければ「つ（概算）」）。
+ * 登録後の量を読み、個数の単位は食品 ID に対応する目安重量から求める。
+ * 目安重量がなければ「つ（概算）」とする。
  * 個数が上限のまま増えなかったときは、増やせなかったことを伝える。
  */
 export function registerMessage(state: AppState, action: BasketAction): string {
@@ -26,14 +26,18 @@ export function registerMessage(state: AppState, action: BasketAction): string {
   const before = find(state);
   const after = find(basketReducer(state, action));
   if (!after) return "";
-  const weight = Object.hasOwn(unitWeights, action.displayName)
-    ? unitWeights[action.displayName]
-    : undefined;
+  const weight = unitWeightFor(foodId, action.displayName);
   const unit =
     after.quantity.kind === "weight"
       ? after.quantity.unit
       : (weight?.unit ?? "つ（概算）");
-  const amount = `${formatCount(after.quantity.kind === "count" ? after.quantity.count : after.quantity.grams / (after.quantity.unit === "kg" ? 1000 : 1))} ${unit}`;
+  const value =
+    after.quantity.kind === "count"
+      ? formatCount(after.quantity.count)
+      : String(
+          after.quantity.grams / (after.quantity.unit === "kg" ? 1000 : 1),
+        );
+  const amount = `${value} ${unit}`;
   if (
     before &&
     (before.quantity.kind === "count"

@@ -914,6 +914,56 @@ h3 {
   gap: 6px;
 }
 
+/* 量の切り替えと重さの入力（DES-UI-49、IF-05） */
+.item-quantity {
+  display: grid;
+  gap: 6px;
+}
+
+.item-unit-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-unit-toggle button,
+.item-weight-field input {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d8d2c7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17201b;
+}
+
+.item-unit-toggle button[aria-pressed="true"] {
+  border-color: #2b7a57;
+  background: #e5f4eb;
+  font-weight: 700;
+}
+
+.item-weight-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 6px;
+}
+
+.item-weight-field label {
+  display: grid;
+  gap: 3px;
+}
+
+.item-weight-field input {
+  width: 110px;
+  padding: 0 8px;
+}
+
+.item-weight-field [role="alert"] {
+  flex-basis: 100%;
+  color: #a63a24;
+}
+
 /* 削除の操作間隔を確保する */
 .item-actions {
   gap: 16px;

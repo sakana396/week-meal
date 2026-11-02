@@ -7,7 +7,7 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
-import { itemRow, openTab, registerFoods } from "./helpers";
+import { itemRow, openTab, registerFood, registerFoods } from "./helpers";
 import { initialAppState } from "../src/core/basket";
 
 test.setTimeout(120_000);
@@ -243,7 +243,9 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
     navigation.getByRole("button", { name: "ホーム", exact: true }),
   );
   await expect(
-    itemRow(page, "検査用にんじん").getByRole("group"),
+    itemRow(page, "検査用にんじん").getByRole("group", {
+      name: "検査用にんじんの個数",
+    }),
   ).toContainText("2");
 });
 
@@ -313,4 +315,48 @@ test("TC-NFR-06-03 履歴・詳細・削除確認のaxeとキーボード操作"
   await expect(
     page.getByRole("button", { name: "この買い物を削除" }),
   ).toBeFocused();
+});
+
+test("TC-NFR-06-04 行の量の切り替えを両画面でaxeとキーボード検査", async ({
+  page,
+}, info) => {
+  await page.goto("#/register");
+  await page.getByRole("searchbox", { name: "食材名" }).fill("ひよこまめ");
+  await registerFood(page, "ひよこまめ");
+  await openTab(page, "ホーム");
+  const homeRow = itemRow(page, "ひよこまめ");
+  await keyboardActivate(
+    page,
+    homeRow.getByRole("button", { name: "ひよこまめを g に切り替える" }),
+  );
+  await expect(
+    homeRow.getByRole("textbox", { name: "ひよこまめの重さ" }),
+  ).toBeFocused();
+  await geometry(page);
+  await inspect(page, info, "home-weight-row");
+  await page.getByRole("button", { name: "新しい買い物" }).click();
+  await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
+  await page.getByRole("searchbox", { name: "食材名" }).fill("ひよこまめ");
+  await registerFood(page, "ひよこまめ");
+  await page.goto("#/history");
+  const newShopping = page
+    .locator(".history-button")
+    .filter({ hasText: "最新" });
+  await expect(newShopping).toHaveCount(1);
+  await newShopping.click();
+  const detailRow = itemRow(page, "ひよこまめ");
+  const countToggle = detailRow.getByRole("button", {
+    name: "ひよこまめを 個 に切り替える",
+  });
+  await expect(countToggle).toHaveAttribute("aria-pressed", "true");
+  await keyboardActivate(
+    page,
+    detailRow.getByRole("button", { name: "ひよこまめを kg に切り替える" }),
+  );
+  await expect(
+    detailRow.getByRole("textbox", { name: "ひよこまめの重さ" }),
+  ).toBeFocused();
+  await expect(countToggle).toHaveAttribute("aria-pressed", "false");
+  await geometry(page);
+  await inspect(page, info, "history-weight-row");
 });
