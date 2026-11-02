@@ -1279,6 +1279,10 @@ h3 {
   color: #a63a24;
 }
 
+.receipt-unmatched {
+  overflow-wrap: anywhere;
+}
+
 .notice-panel textarea {
   width: 100%;
   min-height: 120px;

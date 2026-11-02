@@ -118,6 +118,8 @@ export function ReceiptScreen({
   const [read, setRead] = useState(false);
   const [copyFallback, setCopyFallback] = useState(false);
   const fallbackRef = useRef<HTMLTextAreaElement>(null);
+  const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
+  const amountRefs = useRef(new Map<number, HTMLInputElement>());
   const target = state.shoppings.find((shopping) => shopping.id === shoppingId);
   const exactName = (value: string) =>
     names.find(
@@ -125,14 +127,12 @@ export function ReceiptScreen({
         normalizeSearchText(entry.displayName.normalize("NFKC")) ===
         normalizeSearchText(value.normalize("NFKC")),
     );
-  const errors = rows.map((row) =>
-    row.enabled
-      ? (exactName(row.nameDraft) ? "" : "一覧の食材名を選んでください") ||
-        ("error" in readAmount(row)
-          ? (readAmount(row) as { error: string }).error
-          : "")
-      : "",
-  );
+  const errors = rows.map((row) => {
+    if (!row.enabled) return "";
+    if (!exactName(row.nameDraft)) return "一覧の食材名を選んでください";
+    const amount = readAmount(row);
+    return "error" in amount ? amount.error : "";
+  });
   const selectedCount = rows.filter((row) => row.enabled).length;
   const update = (index: number, changes: Partial<ReviewRow>) =>
     setRows((current) =>
@@ -167,23 +167,30 @@ export function ReceiptScreen({
     );
     setUnmatched(result.unmatched);
     setRead(true);
+    requestAnimationFrame(() => reviewHeadingRef.current?.focus());
   }
 
   function register() {
     if (!selectedCount || errors.some(Boolean)) return;
     const id = target?.id ?? localId("shopping");
-    const initialShopping = target ? undefined : { id, date: localDate() };
-    const entries: BasketEntry[] = rows
-      .filter((row) => row.enabled)
-      .map((row) => ({
+    const date = target?.date ?? localDate();
+    const initialShopping = target ? undefined : { id, date };
+    const entries: BasketEntry[] = [];
+    for (const row of rows) {
+      if (!row.enabled) continue;
+      const food = exactName(row.nameDraft);
+      const amount = readAmount(row);
+      if (!food || "error" in amount) return;
+      entries.push({
         id: localId("item"),
-        foodId: exactName(row.nameDraft)!.foodId,
-        displayName: exactName(row.nameDraft)!.displayName,
-        quantity: (readAmount(row) as { quantity: Quantity }).quantity,
-      }));
+        foodId: food.foodId,
+        displayName: food.displayName,
+        quantity: amount.quantity,
+      });
+    }
     const shopping = target ?? {
       id,
-      date: initialShopping!.date,
+      date,
       origin: "normal" as const,
       items: [],
     };
@@ -192,13 +199,13 @@ export function ReceiptScreen({
       entries,
       target ? state.shoppings : [shopping],
     );
-    if (planned.registeredCount === 0) return;
-    dispatch({
-      type: "registerMany",
-      shoppingId: id,
-      entries,
-      initialShopping,
-    });
+    if (planned.registeredCount > 0)
+      dispatch({
+        type: "registerMany",
+        shoppingId: id,
+        entries,
+        initialShopping,
+      });
     const latest = latestShopping(
       target ? state.shoppings : [...state.shoppings, shopping],
     );
@@ -247,7 +254,13 @@ export function ReceiptScreen({
         >
           指示文をコピー
         </button>
-        <pre className="receipt-prompt">{prompt}</pre>
+        <pre
+          className="receipt-prompt"
+          tabIndex={0}
+          aria-label="外部の AI に渡す指示文"
+        >
+          {prompt}
+        </pre>
         {copyFallback && (
           <>
             <p role="status">
@@ -287,7 +300,9 @@ export function ReceiptScreen({
           className="notice-panel"
           aria-labelledby="receipt-review-heading"
         >
-          <h3 id="receipt-review-heading">3. 登録内容を確認</h3>
+          <h3 id="receipt-review-heading" ref={reviewHeadingRef} tabIndex={-1}>
+            3. 登録内容を確認
+          </h3>
           {rows.length === 0 && <p>登録できる食材は見つかりませんでした。</p>}
           <ul className="receipt-review-list">
             {rows.map((row, index) => (
@@ -305,7 +320,7 @@ export function ReceiptScreen({
                 <label className="form-field">
                   食材名
                   <input
-                    list={`receipt-names-${index}`}
+                    list="receipt-names"
                     value={row.nameDraft}
                     onChange={(event) =>
                       update(index, { nameDraft: event.target.value })
@@ -313,16 +328,13 @@ export function ReceiptScreen({
                     aria-invalid={Boolean(
                       errors[index] && !exactName(row.nameDraft),
                     )}
+                    aria-describedby={
+                      errors[index] && !exactName(row.nameDraft)
+                        ? `receipt-error-${index}`
+                        : undefined
+                    }
                   />
                 </label>
-                <datalist id={`receipt-names-${index}`}>
-                  {names.map((entry) => (
-                    <option
-                      key={`${entry.foodId}-${entry.displayName}`}
-                      value={entry.displayName}
-                    />
-                  ))}
-                </datalist>
                 <div className="receipt-quantity">
                   <div
                     role="group"
@@ -334,6 +346,9 @@ export function ReceiptScreen({
                         key={unit}
                         type="button"
                         aria-pressed={row.unit === unit}
+                        disabled={
+                          "error" in readAmount(row) && row.unit !== unit
+                        }
                         onClick={() => {
                           if (row.unit === unit) return;
                           const current = readAmount(row);
@@ -351,6 +366,9 @@ export function ReceiptScreen({
                             unit,
                             amountDraft: amountText(quantity),
                           });
+                          requestAnimationFrame(() =>
+                            amountRefs.current.get(index)?.focus(),
+                          );
                         }}
                       >
                         {unit === "count" ? "個" : unit}
@@ -360,22 +378,52 @@ export function ReceiptScreen({
                   <label className="form-field">
                     量
                     <input
+                      ref={(element) => {
+                        if (element) amountRefs.current.set(index, element);
+                        else amountRefs.current.delete(index);
+                      }}
                       inputMode="decimal"
                       value={row.amountDraft}
                       onChange={(event) =>
                         update(index, { amountDraft: event.target.value })
                       }
-                      aria-invalid={Boolean(errors[index])}
+                      aria-invalid={Boolean(
+                        errors[index] && exactName(row.nameDraft),
+                      )}
+                      aria-describedby={
+                        [
+                          row.needsCheck ? `receipt-check-${index}` : "",
+                          errors[index] && exactName(row.nameDraft)
+                            ? `receipt-error-${index}`
+                            : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ") || undefined
+                      }
                     />
                   </label>
                 </div>
-                {row.needsCheck && <p>量を確かめてください</p>}
-                {errors[index] && <p role="alert">{errors[index]}</p>}
+                {row.needsCheck && (
+                  <p id={`receipt-check-${index}`}>量を確かめてください</p>
+                )}
+                {errors[index] && (
+                  <p id={`receipt-error-${index}`} role="alert">
+                    {errors[index]}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
+          <datalist id="receipt-names">
+            {names.map((entry) => (
+              <option
+                key={`${entry.foodId}-${entry.displayName}`}
+                value={entry.displayName}
+              />
+            ))}
+          </datalist>
           {unmatched.length > 0 && (
-            <div>
+            <div className="receipt-unmatched">
               <h4>登録しない物 {unmatched.length} 件</h4>
               <ul>
                 {unmatched.map((item) => (

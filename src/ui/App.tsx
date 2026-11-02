@@ -90,6 +90,9 @@ export default function App() {
       invalidShopping
     )
       return;
+    // 一括登録で遷移を始めた直後の古い描画から、行き先を上書きしない。
+    const current = routeFromHash(window.location.hash);
+    if (current.route !== route || current.shoppingId !== shoppingId) return;
     const latest = latestShopping(state.shoppings);
     if (latest) replaceRoute(route, latest.id);
   }, [route, shoppingId, state.shoppings, invalidShopping, replaceRoute]);

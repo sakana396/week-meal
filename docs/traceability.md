@@ -170,6 +170,6 @@
 | FR-RCP-01 | #113 | DES-RCP-03、DES-RCP-05 | TC-FR-RCP-01-01、TC-FR-RCP-01-02 | src/core/receipt.ts, src/core/basket.ts, src/core/receipt.test.ts | 読み取りと一括登録の core を実装済み。長い行の扱いと余分なキーの除外を確認済み。画面は #115 |
 | FR-RCP-02 | #113 | DES-RCP-02 | TC-FR-RCP-02-01 | src/core/receipt.ts, src/core/receipt.test.ts | 指示文の生成を実装済み。コピー画面は #115 |
 | FR-RCP-03 | #113 | DES-RCP-03 | TC-FR-RCP-01-01 | src/core/receipt.ts, src/core/receipt.test.ts | 一覧にない行を分ける core を実装済み。表示は #115 |
-| FR-RCP-01〜03 | #115 | DES-RCP-01, 02, 04, 05、DES-UI-49 | TC-FR-RCP-01-03〜05、TC-FR-RCP-02-02（E2E） | src/ui/route.ts, src/ui/App.tsx, src/ui/screens/RegisterScreen.tsx, src/ui/screens/ReceiptScreen.tsx, src/ui/App.css, e2e/receipt.spec.ts | 貼り付け画面・食材名と量の確認・一括登録と通知を実装済み。E2E ケースを追加済み |
+| FR-RCP-01〜03 | #115 | DES-RCP-01, 02, 04, 05、DES-UI-49 | TC-FR-RCP-01-03〜08、TC-FR-RCP-02-02（E2E） | src/ui/route.ts, src/ui/App.tsx, src/ui/screens/RegisterScreen.tsx, src/ui/screens/ReceiptScreen.tsx, src/ui/App.css, e2e/receipt.spec.ts | 貼り付け画面・食材名と量の確認・一括登録と通知を実装済み。単位切り替え後の焦点、要確認の案内、上限時の通知を E2E に追加済み |
 | NFR-06 | #115 | DES-RCP-04、DES-UI-49 | TC-NFR-06-04（貼り付けの部分、E2E） | src/ui/screens/ReceiptScreen.tsx, src/ui/App.css, e2e/accessibility.spec.ts | 貼り付け画面と確認の一覧の axe・寸法の検査ケースを追加済み |
-| FR-SYS-03 | #115 | DES-RCP-01 | TC-FR-SYS-03-02（公開 URL 手動確認） | docs/04_test/receipt-public-check-it05.md | 公開 URL での手動確認手順を作成済み |
+| FR-SYS-03 | #115 | DES-RCP-01 | TC-FR-SYS-03-02（公開 URL 手動確認） | docs/04_test/receipt-public-check-it05.md | 公開 URL での手動確認手順を作成済み。公開 URL での実施は未（マージ後に記録） |

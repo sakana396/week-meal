@@ -41,6 +41,9 @@ test("TC-FR-RCP-01-03 登録画面からコピー・確認・一括登録し、�
   );
   await paste(page, "にんじん,2\n鶏卵,1\n未知の菓子,1");
   await expect(
+    page.getByRole("heading", { name: "3. 登録内容を確認" }),
+  ).toBeFocused();
+  await expect(
     page.getByRole("heading", { name: "登録しない物 1 件" }),
   ).toBeVisible();
   await expect(page.getByText("未知の菓子,1", { exact: true })).toBeVisible();
@@ -97,7 +100,7 @@ test("TC-FR-RCP-01-05 食材名を選び直し、一覧にない名前を拒む"
   await paste(page, "にんじん,1");
   const name = page
     .locator(".receipt-review-row")
-    .getByRole("textbox", { name: "食材名" });
+    .getByRole("combobox", { name: "食材名" });
   await name.fill("存在しない食材");
   await expect(page.getByRole("button", { name: "1 件を登録" })).toBeDisabled();
   await name.fill("キャベツ");
@@ -107,6 +110,9 @@ test("TC-FR-RCP-01-05 食材名を選び直し、一覧にない名前を拒む"
   await quantity.fill("0");
   await expect(page.getByRole("button", { name: "1 件を登録" })).toBeDisabled();
   await expect(page.getByRole("alert")).toContainText("0.5 刻み");
+  await expect(
+    page.locator(".receipt-review-row").getByRole("button", { name: "g" }),
+  ).toBeDisabled();
   await quantity.fill("1");
   await page.getByRole("button", { name: "1 件を登録" }).click();
   await expect(itemRow(page, "キャベツ")).toHaveCount(1);
@@ -163,6 +169,69 @@ test("TC-FR-RCP-01-03 前の買い物から開くとその買い物へ登録す�
   await page.getByRole("button", { name: "1 件を登録" }).click();
   await expect(page).toHaveURL(/#\/history\/old$/);
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
+  await expect(page.getByRole("status")).toContainText(
+    "レシートから 1 件を登録しました",
+  );
   await expect.poll(() => savedItems(page, "old")).toHaveLength(1);
   await expect.poll(() => savedItems(page, "new")).toHaveLength(0);
+});
+
+test("TC-FR-RCP-01-06 確認の一覧で単位を変えると量に焦点が移る", async ({
+  page,
+}) => {
+  await page.goto("#/receipt");
+  await paste(page, "にんじん,2");
+  const row = page.locator(".receipt-review-row");
+  await row.getByRole("button", { name: "g" }).click();
+  const amount = row.getByRole("textbox", { name: "量" });
+  await expect(amount).toBeFocused();
+  await expect(amount).toHaveValue("300");
+});
+
+test("TC-FR-RCP-01-07 量の確認が必要な行には案内を示す", async ({ page }) => {
+  await page.goto("#/receipt");
+  await paste(page, "にんじん");
+  const row = page.locator(".receipt-review-row");
+  await expect(row.getByText("量を確かめてください")).toBeVisible();
+  await expect(
+    row.getByRole("textbox", { name: "量" }),
+  ).toHaveAccessibleDescription("量を確かめてください");
+});
+
+test("TC-FR-RCP-01-08 全行が上限で止まっても理由を知らせる", async ({
+  page,
+}) => {
+  await page.goto("#/");
+  await page.evaluate(
+    (state) =>
+      localStorage.setItem(
+        "weekmeal:state",
+        JSON.stringify({ version: 4, ...state }),
+      ),
+    {
+      ...initialAppState,
+      shoppings: [
+        {
+          id: "full",
+          date: "2026-11-03",
+          origin: "normal",
+          items: [
+            {
+              id: "carrot",
+              foodId: "06212",
+              displayName: "にんじん",
+              quantity: { kind: "count", count: 999 },
+            },
+          ],
+        },
+      ],
+    },
+  );
+  await page.reload();
+  await page.goto("#/receipt?shopping=full");
+  await paste(page, "にんじん,1");
+  await page.getByRole("button", { name: "1 件を登録" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "レシートから 0 件を登録しました（上限で止めた 1 件）",
+  );
 });

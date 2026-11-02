@@ -95,12 +95,13 @@ async function draft(page: Page) {
 test("TC-NFR-06-04 貼り付け画面と確認の一覧を axe と寸法で検査する", async ({
   page,
 }, info) => {
+  await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("#/receipt");
   await geometry(page);
   await inspect(page, info, "receipt-empty");
   await page
     .getByLabel("レシートの食材のテキスト")
-    .fill("にんじん,2\n未知の菓子,1");
+    .fill(`にんじん,2\n${"A".repeat(200)},1`);
   await page.getByRole("button", { name: "読み取る" }).click();
   await geometry(page);
   await inspect(page, info, "receipt-review");
