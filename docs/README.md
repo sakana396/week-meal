@@ -29,9 +29,12 @@
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
 | 設計 | 保存方式 ADR | [adr/0004-storage.md](adr/0004-storage.md) | 採用 |
 | 設計 | 補う候補の選び方 ADR | [adr/0005-supplement-suggestions.md](adr/0005-supplement-suggestions.md) | 採用 |
+| 設計 | 設計書（反復 5）: レシートの貼り付けと重さでの登録 | [03_design/design-it05.md](03_design/design-it05.md) | v0.1 設計案 |
+| 設計 | レシートの貼り付けの方式 ADR | [adr/0006-receipt-paste.md](adr/0006-receipt-paste.md) | 設計案 |
 | 試験 | テスト仕様書（反復 2） | [04_test/test-spec-it02.md](04_test/test-spec-it02.md) | 追記中 |
 | 試験 | テスト仕様書（反復 3） | [04_test/test-spec-it03.md](04_test/test-spec-it03.md) | 骨組み |
 | 試験 | テスト仕様書（反復 4） | [04_test/test-spec-it04.md](04_test/test-spec-it04.md) | v0.1 骨組み |
+| 試験 | テスト仕様書（反復 5） | [04_test/test-spec-it05.md](04_test/test-spec-it05.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 1） | [04_test/test-spec-it01.md](04_test/test-spec-it01.md) | 追記中 |
 | 試験 | 食品の除外・維持の査閲資料（IT03 #59） | [04_test/food-selection-review-it03.md](04_test/food-selection-review-it03.md) | 本人の査閲待ち |
 | 横断 | トレーサビリティマトリクス | [traceability.md](traceability.md) | 反復 1 の行を用意 |
