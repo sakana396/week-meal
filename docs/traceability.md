@@ -155,3 +155,14 @@
 | NFR-03 | #90 | DES-PER-03 | TC-NFR-03-04 | e2e/performance.spec.ts, docs/04_test/performance-measurement-it04.md | 計測コードを実装済み。2026-11-02 の開発者の PC での実測値を performance-measurement-it04.md に記録した。端末条件は本人が CPU 4 倍の模擬に決めた（E-78、SRS v0.7）。その条件で 100 行の日付変更が最大 123.3 ms になり、満たしていない。IT05 で再計算を速くする |
 | NFR-04、QA-04 | #90 | DES-PER-04 | TC-NFR-04-02 | docs/04_test/performance-measurement-it04.md | 公開 URL で Lighthouse を 3 回測り（97・98・98）、performance-measurement-it04.md に記録した |
 | QA-03 | #90 | DES-E2E-10、DES-PER-03 | TC-NFR-03-04、TC-FR-SYS-03-01（公開 URL 手動確認） | e2e/performance.spec.ts, docs/04_test/performance-measurement-it04.md | 買い物単位の性能 E2E と公開 URL の手動確認手順を実装済み |
+
+## 反復 5（IT05）
+
+| 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
+|---|---|---|---|---|---|
+| FR-ING-01、FR-QTY-01 | #110 | DES-QTY-03、DES-QTY-06 | TC-FR-QTY-07-03、TC-FR-ING-01-13 | src/core/basket.ts, src/core/basketIt05.test.ts | 実装済み（新しい行は 1 個、同じ食材への加算） |
+| FR-QTY-05、FR-QTY-07 | #110 | DES-QTY-03〜06 | TC-FR-QTY-07-01〜03、05 | src/core/quantity.ts, src/core/analyze.ts, src/core/basket.ts, src/core/quantityIt05.test.ts, src/core/basketIt05.test.ts | core の量・換算・直接指定を実装済み。切り替えの UI は #112 |
+| FR-BAL-06 | #110 | DES-QTY-06、DES-SUG-02 | TC-FR-BAL-06-09 | src/core/suggestions.ts, src/core/suggestions.test.ts | 重さの行への追加を候補の評価に反映済み |
+| FR-SYS-01、NFR-13 | #110 | DES-STO-13 | TC-FR-SYS-01-13、TC-NFR-13-16 | src/core/storage.ts, src/ui/storage.ts, src/core/storageIt05.test.ts, src/ui/storage.test.ts | 保存版 4・旧版移行・版ごとの退避を実装済み |
+| NFR-12 | #110 | DES-STO-14 | TC-NFR-12-39 | src/core/storage.ts, src/ui/components/StorageNotice.tsx, src/core/storageIt05.test.ts, src/ui/components/StorageNoticeIt05.test.ts | 不正な量の除外と買い物・食材の件数通知を実装済み |
+| NFR-08 | #110 | DES-QTY-03〜06、DES-STO-13, 14 | lint、TC-FR-QTY-07-01〜03、TC-FR-SYS-01-13 | src/core/quantity.ts, src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |

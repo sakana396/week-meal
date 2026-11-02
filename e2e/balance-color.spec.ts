@@ -56,7 +56,7 @@ function fixture(
           id: food.id,
           foodId: food.id,
           displayName: food.name,
-          count: 1,
+          quantity: { kind: "count" as const, count: 1 },
         })),
       },
     ],

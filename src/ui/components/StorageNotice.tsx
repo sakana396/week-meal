@@ -22,9 +22,9 @@ export function StorageNotice({
         : "保存データを読めず、退避もできませんでした。元のデータを消さないよう、この画面での変更は保存しません。",
     );
   } else if (issue) {
-    if (issue.droppedItems > 0) {
+    if (issue.droppedItems > 0 || issue.droppedShoppings > 0) {
       messages.push(
-        `保存データのうち、読み込めなかった食材が ${issue.droppedItems} 件ありました。`,
+        `買い物 ${issue.droppedShoppings} 件・食材 ${issue.droppedItems} 件を読み込めませんでした。`,
       );
     }
     if (issue.profileReset) {
@@ -33,7 +33,9 @@ export function StorageNotice({
   }
   if (!available && issue !== "corrupted") {
     messages.push(
-      "このブラウザでは保存できません（プライベートモードや容量不足など）。ページを閉じると、この画面での変更は消えます。",
+      issue
+        ? "読み込めなかったデータを退避できなかったので、保存を止めています。ブラウザの保存領域を確かめてください"
+        : "このブラウザでは保存できません（プライベートモードや容量不足など）。ページを閉じると、この画面での変更は消えます。",
     );
   } else if (available && saveFailed) {
     messages.push(

@@ -52,7 +52,7 @@ describe("edibleGrams（DES-QTY-02）", () => {
       1200,
     ],
   ])("%s", (_title, item, unitWeight, count, grams) => {
-    expect(edibleGrams(item, unitWeight, count)).toEqual({
+    expect(edibleGrams(item, unitWeight, { kind: "count", count })).toEqual({
       grams,
       approximate: false,
     });
@@ -62,7 +62,7 @@ describe("edibleGrams（DES-QTY-02）", () => {
     ["TC-FR-QTY-05-01 目安重量がないときは 1 単位 = 100g の概算にする", 1, 100],
     ["TC-FR-QTY-05-02 目安重量がないときも個数に比例する", 2.5, 250],
   ])("%s", (_title, count, grams) => {
-    expect(edibleGrams(food(10), undefined, count)).toEqual({
+    expect(edibleGrams(food(10), undefined, { kind: "count", count })).toEqual({
       grams,
       approximate: true,
     });
@@ -74,7 +74,11 @@ describe("edibleGrams（DES-QTY-02）", () => {
     ["TC-FR-QTY-01-03 数でない個数は 0g（異常）", Number.NaN],
     ["TC-FR-QTY-01-04 無限大の個数は 0g（異常）", Number.POSITIVE_INFINITY],
   ])("%s", (_title, count) => {
-    expect(edibleGrams(food(15), cabbage, count).grams).toBe(0);
-    expect(edibleGrams(food(15), undefined, count).grams).toBe(0);
+    expect(edibleGrams(food(15), cabbage, { kind: "count", count }).grams).toBe(
+      0,
+    );
+    expect(
+      edibleGrams(food(15), undefined, { kind: "count", count }).grams,
+    ).toBe(0);
   });
 });

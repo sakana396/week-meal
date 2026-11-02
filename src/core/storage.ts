@@ -3,25 +3,26 @@ import { nutrientDefinitions } from "../data/nutrients";
 import type { NutrientsPer100g } from "../types";
 import {
   initialAppState,
-  maximumCount,
-  minimumCount,
   type AppState,
   validShoppingDate,
   type BasketEntry,
   type Shopping,
 } from "./basket";
 import type { ManualFood } from "./manualFoods";
+import { validQuantity, type Quantity } from "./quantity";
 import { defaultProfile, type Profile } from "./profile";
 
 /** 保存データの版（DES-STO-07、ADR-0004）。形を変えたら上げ、migrations に移行を足す */
-export const storageVersion = 3;
+export const storageVersion = 4;
 
 /** 手入力の食品の ID の接頭辞（DES-BSK-08） */
 export const manualFoodIdPrefix = "manual-";
 
 /** 読み込みで起きた問題（DES-STO-02） */
 export type StorageIssue =
-  null | "corrupted" | { droppedItems: number; profileReset: boolean };
+  | null
+  | "corrupted"
+  | { droppedItems: number; droppedShoppings: number; profileReset: boolean };
 
 /** 移行の途中の保存データ */
 export type StoredState = { version: number } & Record<string, unknown>;
@@ -35,7 +36,11 @@ export type Migrations = Record<
   number,
   (stored: StoredState, context?: MigrationContext) => StoredState
 >;
-const migrations: Migrations = { 1: migrateV1ToV2, 2: migrateV2ToV3 };
+const migrations: Migrations = {
+  1: migrateV1ToV2,
+  2: migrateV2ToV3,
+  3: migrateV3ToV4,
+};
 
 /** 版 1 の台帳・登録行・設定を保つ（DES-STO-08）。 */
 export function migrateV1ToV2(stored: StoredState): StoredState {
@@ -83,6 +88,28 @@ export function migrateV2ToV3(
     shoppings,
     manualFoods: stored.manualFoods,
     profile: stored.profile,
+  };
+}
+
+/** 版 3 の個数を量の形へ移す（DES-STO-13）。 */
+export function migrateV3ToV4(stored: StoredState): StoredState {
+  return {
+    ...stored,
+    version: 4,
+    shoppings: Array.isArray(stored.shoppings)
+      ? stored.shoppings.map((shopping) =>
+          isRecord(shopping) && Array.isArray(shopping.items)
+            ? {
+                ...shopping,
+                items: shopping.items.map((item) => {
+                  if (!isRecord(item)) return item;
+                  const { count, ...rest } = item;
+                  return { ...rest, quantity: { kind: "count", count } };
+                }),
+              }
+            : shopping,
+        )
+      : stored.shoppings,
   };
 }
 
@@ -217,16 +244,24 @@ function parseEntry(
   usableFoodIds: ReadonlySet<string>,
 ): BasketEntry | null {
   if (!isRecord(value)) return null;
-  const { id, foodId, displayName, count } = value;
+  const { id, foodId, displayName, quantity } = value;
+  if (!isRecord(quantity)) return null;
+  let checked: Quantity;
+  if (quantity.kind === "count" && typeof quantity.count === "number")
+    checked = { kind: "count", count: quantity.count };
+  else if (
+    quantity.kind === "weight" &&
+    typeof quantity.grams === "number" &&
+    (quantity.unit === "g" || quantity.unit === "kg")
+  )
+    checked = { kind: "weight", grams: quantity.grams, unit: quantity.unit };
+  else return null;
   return isNonEmptyString(id) &&
     typeof foodId === "string" &&
     usableFoodIds.has(foodId) &&
     isNonEmptyString(displayName) &&
-    typeof count === "number" &&
-    Number.isInteger(count * 2) &&
-    count >= minimumCount &&
-    count <= maximumCount
-    ? { id, foodId, displayName, count }
+    validQuantity(checked)
+    ? { id, foodId, displayName, quantity: checked }
     : null;
 }
 
@@ -280,6 +315,7 @@ export function parseStoredState(
   const entryIds = new Set<string>();
   const shoppings: Shopping[] = [];
   let droppedItems = 0;
+  let droppedShoppings = 0;
   for (const value of stored.shoppings) {
     if (
       !isRecord(value) ||
@@ -289,14 +325,11 @@ export function parseStoredState(
       (value.origin !== "normal" && value.origin !== "usedUpMigration") ||
       !Array.isArray(value.items)
     ) {
-      droppedItems +=
-        isRecord(value) && Array.isArray(value.items)
-          ? Math.max(1, value.items.length)
-          : 1;
+      droppedShoppings++;
       continue;
     }
     if (shoppingIds.has(value.id)) {
-      droppedItems += value.items.length;
+      droppedShoppings++;
       continue;
     }
     shoppingIds.add(value.id);
@@ -319,8 +352,8 @@ export function parseStoredState(
   }
   const profile = parseProfile(stored.profile);
   const issue: StorageIssue =
-    droppedItems > 0 || !profile
-      ? { droppedItems, profileReset: !profile }
+    droppedItems > 0 || droppedShoppings > 0 || !profile
+      ? { droppedItems, droppedShoppings, profileReset: !profile }
       : null;
   return {
     state: {

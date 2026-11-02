@@ -1,6 +1,7 @@
 import { initialAppState, type AppState } from "../core/basket";
 import {
   parseStoredState,
+  storageVersion,
   serializeState,
   type StorageIssue,
   type MigrationContext,
@@ -15,6 +16,9 @@ export const storageKey = "weekmeal:state";
 export const backupKey = "weekmeal:state:backup";
 /** 移行・一部破棄した保存原文の退避先（DES-STO-10、11）。 */
 export const backupMigrationKey = "weekmeal:state:backup-migration";
+/** 版ごとの原文の退避先（DES-STO-13）。 */
+export const backupVersionKey = (version: number) =>
+  `${storageKey}:backup-v${version}`;
 
 /** localStorage のうち、使う操作だけ */
 export type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
@@ -92,10 +96,15 @@ export function loadAppState(
   let backedUp = false;
   if (writable && text !== null) {
     try {
-      store.setItem(
-        issue === "corrupted" ? backupKey : backupMigrationKey,
-        text,
-      );
+      if (migrated) {
+        const parsed = JSON.parse(text) as { version: number };
+        if (parsed.version < storageVersion) {
+          const key = backupVersionKey(parsed.version);
+          if (store.getItem(key) === null) store.setItem(key, text);
+        }
+      }
+      if (issue === "corrupted") store.setItem(backupKey, text);
+      else if (issue !== null) store.setItem(backupMigrationKey, text);
       backedUp = true;
     } catch {
       backedUp = false;

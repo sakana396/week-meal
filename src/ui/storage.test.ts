@@ -4,6 +4,7 @@ import { parseStoredState, serializeState } from "../core/storage";
 import {
   backupKey,
   backupMigrationKey,
+  backupVersionKey,
   loadAppState,
   saveAppState,
   storageKey,
@@ -34,6 +35,44 @@ const saved = basketReducer(initialAppState, {
 });
 
 describe("loadAppState・saveAppState（DES-UI-13）", () => {
+  it("TC-NFR-13-16 版ごとの原文を一度だけ退避し、一部破棄の退避と分ける", () => {
+    const old = JSON.stringify({
+      version: 3,
+      shoppings: [{ id: "bad", date: "不正", origin: "normal", items: [] }],
+      manualFoods: [],
+      profile: initialAppState.profile,
+    });
+    const store = memoryStore({ [storageKey]: old });
+    const first = loadAppState({ store, writable: true }, known);
+    expect(first.available).toBe(true);
+    expect(store.data[backupVersionKey(3)]).toBe(old);
+    expect(store.data[backupMigrationKey]).toBe(old);
+    store.data[storageKey] = JSON.stringify({
+      ...JSON.parse(serializeState(saved)),
+      shoppings: [{ id: "bad", date: "不正", origin: "normal", items: [] }],
+    });
+    loadAppState({ store, writable: true }, known);
+    expect(store.data[backupVersionKey(3)]).toBe(old);
+    expect(store.data[backupMigrationKey]).toBe(store.data[storageKey]);
+  });
+  it("TC-NFR-13-16 版ごとの退避が失敗したら保存を止める", () => {
+    const old = JSON.stringify({
+      version: 3,
+      shoppings: [],
+      manualFoods: [],
+      profile: initialAppState.profile,
+    });
+    const store: KeyValueStore = {
+      getItem: (key) => (key === storageKey ? old : null),
+      setItem: () => {
+        throw new Error("quota");
+      },
+    };
+    expect(loadAppState({ store, writable: true }, known)).toMatchObject({
+      backedUp: false,
+      available: false,
+    });
+  });
   it("TC-FR-SYS-01-05 書き出した状態を、次に開いたときに読み込める", () => {
     const store = memoryStore();
     expect(saveAppState(store, saved)).toBe(true);
@@ -64,9 +103,9 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     const result = loadAppState({ store, writable: true }, known);
     expect(result.available).toBe(true);
     expect(result.state.shoppings[0].items[0].displayName).toBe("にんじん");
-    expect(store.data[backupMigrationKey]).toBe(old);
+    expect(store.data[backupVersionKey(2)]).toBe(old);
     expect(saveAppState(store, result.state)).toBe(true);
-    expect(JSON.parse(store.data[storageKey]).version).toBe(3);
+    expect(JSON.parse(store.data[storageKey]).version).toBe(4);
   });
   it("TC-NFR-13-15 移行は破損データの退避先を上書きしない", () => {
     const old = JSON.stringify({
@@ -81,7 +120,7 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     });
     loadAppState({ store, writable: true }, known);
     expect(store.data[backupKey]).toBe("以前の破損原文");
-    expect(store.data[backupMigrationKey]).toBe(old);
+    expect(store.data[backupVersionKey(1)]).toBe(old);
   });
   it("TC-NFR-12-38 一部破棄の原文を保存前に退避する", () => {
     const text = JSON.stringify({
@@ -93,11 +132,16 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
     });
     const store = memoryStore({ [storageKey]: text });
     expect(parseStoredState(text, known).issue).toEqual({
-      droppedItems: 1,
+      droppedItems: 0,
+      droppedShoppings: 1,
       profileReset: false,
     });
     const result = loadAppState({ store, writable: true }, known);
-    expect(result.issue).toEqual({ droppedItems: 1, profileReset: false });
+    expect(result.issue).toEqual({
+      droppedItems: 0,
+      droppedShoppings: 1,
+      profileReset: false,
+    });
     expect(store.data[backupMigrationKey]).toBe(text);
     expect(store.data[storageKey]).toBe(text);
     expect(saveAppState(store, result.state)).toBe(true);
@@ -117,7 +161,7 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
       },
     };
     expect(loadAppState({ store, writable: true }, known)).toMatchObject({
-      issue: { droppedItems: 1, profileReset: false },
+      issue: { droppedItems: 0, droppedShoppings: 1, profileReset: false },
       backedUp: false,
       available: false,
     });
@@ -130,7 +174,7 @@ describe("loadAppState・saveAppState（DES-UI-13）", () => {
       profile: initialAppState.profile,
     });
     const store: KeyValueStore = {
-      getItem: () => old,
+      getItem: (key) => (key === storageKey ? old : null),
       setItem: () => {
         throw new Error("quota");
       },

@@ -19,7 +19,12 @@ describe("登録通知（DES-UI-21、DES-SHP-02）", () => {
       shoppings: [
         {
           ...state.shoppings[0],
-          items: [{ ...state.shoppings[0].items[0], count: 1.5 }],
+          items: [
+            {
+              ...state.shoppings[0].items[0],
+              quantity: { kind: "count" as const, count: 1.5 },
+            },
+          ],
         },
       ],
     };
@@ -87,7 +92,12 @@ describe("登録通知（DES-UI-21、DES-SHP-02）", () => {
       shoppings: [
         {
           ...state.shoppings[0],
-          items: [{ ...state.shoppings[0].items[0], count: 999 }],
+          items: [
+            {
+              ...state.shoppings[0].items[0],
+              quantity: { kind: "count" as const, count: 999 },
+            },
+          ],
         },
       ],
     };

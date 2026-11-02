@@ -9,7 +9,7 @@ async function seed(page: Page) {
     (state) => {
       localStorage.setItem(
         "weekmeal:state",
-        JSON.stringify({ version: 3, ...state }),
+        JSON.stringify({ version: 4, ...state }),
       );
     },
     {
@@ -24,15 +24,20 @@ async function seed(page: Page) {
               id: "carrot",
               foodId: "06212",
               displayName: "にんじん",
-              count: 1,
+              quantity: { kind: "count" as const, count: 1 },
             },
             {
               id: "cabbage",
               foodId: "06061",
               displayName: "キャベツ",
-              count: 1,
+              quantity: { kind: "count" as const, count: 1 },
             },
-            { id: "pork", foodId: "11115", displayName: "豚肉", count: 1 },
+            {
+              id: "pork",
+              foodId: "11115",
+              displayName: "豚肉",
+              quantity: { kind: "count" as const, count: 1 },
+            },
           ],
         },
         { id: "same", date: "2026-10-01", origin: "normal", items: [] },
@@ -41,7 +46,12 @@ async function seed(page: Page) {
           date: "2026-10-02",
           origin: "normal",
           items: [
-            { id: "egg", foodId: "12004", displayName: "鶏卵", count: 1 },
+            {
+              id: "egg",
+              foodId: "12004",
+              displayName: "鶏卵",
+              quantity: { kind: "count" as const, count: 1 },
+            },
           ],
         },
       ],

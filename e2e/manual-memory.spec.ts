@@ -231,14 +231,14 @@ test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保�
       id: "used",
       foodId: "manual-used",
       displayName: "登録食品",
-      count: 2.5,
+      quantity: { kind: "count" as const, count: 2.5 },
       usedUp: true,
     },
     {
       id: "normal",
       foodId: "06212",
       displayName: "にんじん",
-      count: 1.5,
+      quantity: { kind: "count" as const, count: 1.5 },
       usedUp: false,
     },
   ];

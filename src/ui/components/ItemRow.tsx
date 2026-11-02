@@ -40,7 +40,10 @@ export function ItemRow({
       >
         <button
           aria-label={`${item.displayName}を 0.5 減らす`}
-          disabled={item.count <= minimumCount}
+          disabled={
+            item.quantity.kind !== "count" ||
+            item.quantity.count <= minimumCount
+          }
           onClick={() =>
             dispatch({ type: "decrement", shoppingId, id: item.id })
           }
@@ -49,11 +52,16 @@ export function ItemRow({
           −
         </button>
         <span>
-          {formatCount(item.count)} {unit}
+          {item.quantity.kind === "count"
+            ? `${formatCount(item.quantity.count)} ${unit}`
+            : `${item.quantity.grams / (item.quantity.unit === "kg" ? 1000 : 1)} ${item.quantity.unit}`}
         </span>
         <button
           aria-label={`${item.displayName}を 0.5 増やす`}
-          disabled={item.count >= maximumCount}
+          disabled={
+            item.quantity.kind !== "count" ||
+            item.quantity.count >= maximumCount
+          }
           onClick={() =>
             dispatch({ type: "increment", shoppingId, id: item.id })
           }

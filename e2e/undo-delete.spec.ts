@@ -8,7 +8,7 @@ const items: BasketEntry[] = ["先頭", "中間", "末尾"].map((displayName, i)
   id: `row-${i}`,
   foodId: "06212",
   displayName,
-  count: 1.5,
+  quantity: { kind: "count" as const, count: 1.5 },
 }));
 
 async function seed(
@@ -22,7 +22,7 @@ async function seed(
       localStorage.setItem(
         "weekmeal:state",
         JSON.stringify({
-          version: 3,
+          version: 4,
           shoppings: [
             { id: "s", date: "2026-10-31", origin: "normal", items: entries },
           ],

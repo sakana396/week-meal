@@ -14,9 +14,24 @@ const empty = basketReducer(initialAppState, {
   date: "2026-10-31",
 });
 const entries = [
-  { id: "row-0", foodId: "f0", displayName: "先頭", count: 999 },
-  { id: "row-1", foodId: "f1", displayName: "中央", count: 1 },
-  { id: "row-2", foodId: "f2", displayName: "末尾", count: 0.5 },
+  {
+    id: "row-0",
+    foodId: "f0",
+    displayName: "先頭",
+    quantity: { kind: "count" as const, count: 999 },
+  },
+  {
+    id: "row-1",
+    foodId: "f1",
+    displayName: "中央",
+    quantity: { kind: "count" as const, count: 1 },
+  },
+  {
+    id: "row-2",
+    foodId: "f2",
+    displayName: "末尾",
+    quantity: { kind: "count" as const, count: 0.5 },
+  },
 ];
 const initial = (): BasketSessionState => ({
   appState: {

@@ -1,4 +1,11 @@
 import type { FoodItem } from "../types";
+import foodsJson from "../data/foods.json";
+import {
+  addQuantity,
+  unitWeightFor,
+  validQuantity,
+  type Quantity,
+} from "./quantity";
 import type { RegisteredItem } from "./analyze";
 import type { ManualFood } from "./manualFoods";
 import { defaultProfile, type Profile } from "./profile";
@@ -8,7 +15,7 @@ export type BasketEntry = {
   id: string;
   foodId: string;
   displayName: string;
-  count: number;
+  quantity: Quantity;
 };
 /** 作成順を配列位置で保持する買い物（DES-SHP-01）。 */
 export type Shopping = {
@@ -48,6 +55,7 @@ export type BasketAction =
       shoppingId: string;
       id: string;
     }
+  | { type: "setQuantity"; shoppingId: string; id: string; quantity: Quantity }
   | { type: "removeShopping"; shoppingId: string }
   | { type: "setProfile"; profile: Profile }
   | { type: "replace"; state: AppState };
@@ -104,25 +112,39 @@ function changeShopping(
 
 function register(
   shopping: Shopping,
-  entry: Omit<BasketEntry, "count">,
+  entry: Omit<BasketEntry, "quantity">,
+  food: FoodItem | undefined,
 ): Shopping {
   const existing = shopping.items.find(
     (item) =>
       item.foodId === entry.foodId && item.displayName === entry.displayName,
   );
   if (existing) {
-    if (existing.count >= maximumCount) return shopping;
+    const added = addQuantity(
+      existing.quantity,
+      { kind: "count", count: 1 },
+      food ? unitWeightFor(food, entry.displayName) : undefined,
+    );
+    if (
+      added.quantity.kind === existing.quantity.kind &&
+      JSON.stringify(added.quantity) === JSON.stringify(existing.quantity)
+    )
+      return shopping;
     return {
       ...shopping,
       items: shopping.items.map((item) =>
-        item === existing
-          ? { ...item, count: Math.min(maximumCount, item.count + 1) }
-          : item,
+        item === existing ? { ...item, quantity: added.quantity } : item,
       ),
     };
   }
   if (shopping.items.some((item) => item.id === entry.id)) return shopping;
-  return { ...shopping, items: [{ ...entry, count: 1 }, ...shopping.items] };
+  return {
+    ...shopping,
+    items: [
+      { ...entry, quantity: { kind: "count", count: 1 } },
+      ...shopping.items,
+    ],
+  };
 }
 
 /** 入力を変更せず買い物単位で操作する（DES-SHP-02）。 */
@@ -170,7 +192,26 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
         foodId: action.type === "register" ? action.foodId : action.food.id,
         displayName: action.displayName,
       };
+      const food =
+        action.type === "addManualFood"
+          ? action.food
+          : ((foodsJson as FoodItem[]).find(
+              (candidate) => candidate.id === action.foodId,
+            ) ??
+            start.manualFoods.find(
+              (candidate) => candidate.id === action.foodId,
+            ));
+      const hasExisting = start.shoppings.some(
+        (shopping) =>
+          shopping.id === action.shoppingId &&
+          shopping.items.some(
+            (item) =>
+              item.foodId === entry.foodId &&
+              item.displayName === entry.displayName,
+          ),
+      );
       if (
+        !hasExisting &&
         start.shoppings.some(
           (shopping) =>
             shopping.id !== action.shoppingId &&
@@ -179,7 +220,7 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
       )
         return state;
       const updated = changeShopping(start, action.shoppingId, (shopping) =>
-        register(shopping, entry),
+        register(shopping, entry, food),
       );
       if (updated === state || action.type === "register") return updated;
       return updated.manualFoods.some((food) => food.id === action.food.id)
@@ -191,13 +232,31 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
       return changeShopping(state, action.shoppingId, (shopping) => {
         const item = shopping.items.find((entry) => entry.id === action.id);
         if (!item) return shopping;
+        if (item.quantity.kind !== "count") return shopping;
         const count =
-          item.count + (action.type === "increment" ? countStep : -countStep);
+          item.quantity.count +
+          (action.type === "increment" ? countStep : -countStep);
         if (count < minimumCount || count > maximumCount) return shopping;
         return {
           ...shopping,
           items: shopping.items.map((entry) =>
-            entry === item ? { ...entry, count } : entry,
+            entry === item
+              ? { ...entry, quantity: { kind: "count", count } }
+              : entry,
+          ),
+        };
+      });
+    case "setQuantity":
+      if (!validQuantity(action.quantity)) return state;
+      return changeShopping(state, action.shoppingId, (shopping) => {
+        if (!shopping.items.some((item) => item.id === action.id))
+          return shopping;
+        return {
+          ...shopping,
+          items: shopping.items.map((item) =>
+            item.id === action.id
+              ? { ...item, quantity: action.quantity }
+              : item,
           ),
         };
       });
@@ -239,7 +298,7 @@ export function toRegisteredItems(
   return shopping.items.flatMap((item) => {
     const food = foodsById.get(item.foodId) ?? manualById.get(item.foodId);
     return food
-      ? [{ food, displayName: item.displayName, count: item.count }]
+      ? [{ food, displayName: item.displayName, quantity: item.quantity }]
       : [];
   });
 }
