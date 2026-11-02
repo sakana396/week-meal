@@ -60,7 +60,9 @@ test("TC-FR-ING-14-01 中間行を1回で復元し通知とキーボードのフ
   await expect(
     itemRow(page, "中間").getByRole("button", { name: "中間を 0.5 減らす" }),
   ).toBeFocused();
-  await expect(itemRow(page, "中間").getByRole("group")).toContainText("1.5");
+  await expect(
+    itemRow(page, "中間").getByRole("group", { name: "中間の個数" }),
+  ).toContainText("1.5");
   await expect(undo(page)).toHaveCount(0);
   await expect
     .poll(async () => (await stored(page)).shoppings[0].items)

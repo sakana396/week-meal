@@ -51,6 +51,7 @@ test("TC-FR-QTY-07-04 行で重さを編集し、単位変更と再読み込み�
 
 test("TC-FR-QTY-08-01 個数行の目安重量と重さ行での非表示", async ({ page }) => {
   await page.goto("#/register");
+  await page.getByRole("searchbox", { name: "食材名" }).fill("ひよこまめ");
   await registerFood(page, "ひよこまめ");
   await page.goto("#/");
   const row = itemRow(page, "ひよこまめ");
