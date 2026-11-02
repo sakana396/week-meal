@@ -165,3 +165,4 @@
 | FR-SYS-01、NFR-13 | #110 | DES-STO-13 | TC-FR-SYS-01-13、TC-NFR-13-16 | src/core/storage.ts, src/ui/storage.ts, src/core/storageIt05.test.ts, src/ui/storage.test.ts, e2e/register-home.spec.ts | 保存版 4・旧版移行・版ごとの退避を実装済み |
 | NFR-12 | #110 | DES-STO-14 | TC-NFR-12-39 | src/core/storage.ts, src/ui/components/StorageNotice.tsx, src/core/storageIt05.test.ts, src/ui/components/StorageNoticeIt05.test.ts, e2e/register-home.spec.ts | 不正な量の除外と買い物・食材の件数通知を実装済み |
 | NFR-08 | #110 | DES-QTY-03〜06、DES-STO-13, 14 | lint、TC-FR-QTY-07-01〜03、TC-FR-SYS-01-13 | src/core/quantity.ts, src/core/basket.ts, src/core/storage.ts | 純粋関数として実装済み |
+| NFR-03 | #114 | DES-PER-05, 06 | TC-NFR-03-05 | src/ui/shoppingAnalysisCache.ts, src/ui/shoppingAnalysisCache.test.ts, src/ui/performanceDetail.ts, src/ui/App.tsx, e2e/performance.spec.ts, docs/04_test/performance-measurement-it05.md | 分析キャッシュと内訳・要約の計測を実装済み。CPU 4 倍の 100 ms 達成はこの環境で未実測 |

@@ -463,7 +463,7 @@ const shoppingOperations = [
 for (const size of [3, 30, 100]) {
   for (const historyCount of [0, 100]) {
     for (const rate of [1, 4]) {
-      test(`TC-NFR-03-04 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
+      test(`TC-NFR-03-04 TC-NFR-03-05 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
         page,
         browser,
       }, testInfo) => {
@@ -474,6 +474,8 @@ for (const size of [3, 30, 100]) {
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const report = {
+          startedAt: new Date().toISOString(),
+          finishedAt: "",
           commit: execFileSync("git", ["rev-parse", "HEAD"], {
             encoding: "utf8",
           }).trim(),
@@ -574,12 +576,36 @@ for (const size of [3, 30, 100]) {
                 !register &&
                 !changeDate &&
                 !(size === 3 && operation === "removeLatest");
+              if (changeDate)
+                await page.evaluate(() => {
+                  performance.clearMeasures();
+                  (
+                    window as Window & { weekmealPerformanceDetail?: boolean }
+                  ).weekmealPerformanceDetail = true;
+                });
               await arm(page, trackCandidates);
               await button.click();
               await page.mouse.move(0, 0);
               const measurement = await page.evaluate(
                 () => window.weekmealMeasurement,
               );
+              const dateChangeDetail = changeDate
+                ? await page.evaluate(() => {
+                    (
+                      window as Window & { weekmealPerformanceDetail?: boolean }
+                    ).weekmealPerformanceDetail = false;
+                    return performance
+                      .getEntriesByType("measure")
+                      .filter((entry) =>
+                        entry.name.startsWith("weekmeal:date-change:"),
+                      )
+                      .map((entry) => ({
+                        phase: entry.name.slice("weekmeal:date-change:".length),
+                        startTime: entry.startTime,
+                        duration: entry.duration,
+                      }));
+                  })
+                : null;
               expect(measurement.revision).toBe(1);
               expect(Number.isFinite(measurement.elapsedMs)).toBe(true);
               expect(measurement.elapsedMs).toBeGreaterThan(0);
@@ -661,6 +687,7 @@ for (const size of [3, 30, 100]) {
                 operation,
                 repeat: repeat + 1,
                 ...measurement,
+                dateChangeDetail,
                 initialization,
                 candidate,
                 candidateCalculationMs: candidate?.duration ?? null,
@@ -710,10 +737,41 @@ for (const size of [3, 30, 100]) {
             );
           }
         } finally {
+          report.finishedAt = new Date().toISOString();
           const path = testInfo.outputPath("performance-it04.json");
           writeFileSync(path, JSON.stringify(report, null, 2), "utf8");
           await testInfo.attach("performance-it04.json", {
             path,
+            contentType: "application/json",
+          });
+          const summaryPath = testInfo.outputPath(
+            "performance-it05-summary.json",
+          );
+          writeFileSync(
+            summaryPath,
+            JSON.stringify(
+              {
+                startedAt: report.startedAt,
+                finishedAt: report.finishedAt,
+                commit: report.commit,
+                workingTreeDirty: report.workingTreeDirty,
+                githubSha: report.githubSha,
+                githubHeadRef: report.githubHeadRef,
+                environment: report.environment,
+                operations: samples.filter(
+                  (
+                    sample,
+                  ): sample is { operation: string; maximumMs: number } =>
+                    "maximumMs" in sample,
+                ),
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          await testInfo.attach("performance-it05-summary.json", {
+            path: summaryPath,
             contentType: "application/json",
           });
           await cdp.detach();

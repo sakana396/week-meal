@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { latestShopping, basketReducer } from "../core/basket";
-import { analyzeShopping } from "../core/shoppingAnalysis";
 import {
   basketSessionReducer,
   type BasketSessionState,
@@ -9,6 +8,8 @@ import {
 import { Navigation } from "./components/Navigation";
 import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
+import { createShoppingAnalysisCache } from "./shoppingAnalysisCache";
+import { measurePerformanceDetail } from "./performanceDetail";
 import { routeFromHash, useHashRoute } from "./route";
 import { localId } from "./ids";
 import { localDate } from "./localDate";
@@ -27,7 +28,9 @@ function revisionReducer(
   current: { session: BasketSessionState; revision: number },
   action: BasketSessionAction,
 ) {
-  const session = basketSessionReducer(current.session, action);
+  const session = measurePerformanceDetail("reducer", () =>
+    basketSessionReducer(current.session, action),
+  );
   return session === current.session
     ? current
     : {
@@ -118,10 +121,13 @@ export default function App() {
     });
   }, [invalidShopping, route, shoppingId, state.shoppings, replaceRoute]);
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
+  const [analysisCache] = useState(createShoppingAnalysisCache);
 
   useEffect(() => {
     if (!loaded.available) return;
-    const saved = saveAppState(browser.store, state);
+    const saved = measurePerformanceDetail("save", () =>
+      saveAppState(browser.store, state),
+    );
     // 書き出しの結果を、描画のあとで知らせる。effect の中で同期的に setState すると
     // 描画が連鎖するため（react-hooks の set-state-in-effect 規則）、microtask に回す
     let active = true;
@@ -137,10 +143,20 @@ export default function App() {
     foodsById.get(foodId) ??
     state.manualFoods.find((food) => food.id === foodId);
 
-  const analysis = useMemo(
-    () => analyzeShopping(latestShopping(state.shoppings), state, foodsById),
-    [state],
+  const analysis = analysisCache.analyze(
+    latestShopping(state.shoppings),
+    state,
   );
+
+  useEffect(() => {
+    if (route !== "home") return;
+    const latest = latestShopping(state.shoppings);
+    if (!latest) return;
+    const previous = latestShopping(
+      state.shoppings.filter((shopping) => shopping.id !== latest.id),
+    );
+    if (previous) analysisCache.analyze(previous, state);
+  }, [analysisCache, route, state]);
 
   /** 買い物を空で作り、その詳細へ移る（DES-UI-46）。 */
   function createShopping() {
@@ -164,11 +180,13 @@ export default function App() {
   /** 日付保存で最新の対象が変わることを知らせる（DES-UI-46）。 */
   function changeShoppingDate(id: string, date: string) {
     const before = latestShopping(state.shoppings)?.id;
-    const next = basketReducer(state, {
-      type: "setShoppingDate",
-      shoppingId: id,
-      date,
-    });
+    const next = measurePerformanceDetail("reducer", () =>
+      basketReducer(state, {
+        type: "setShoppingDate",
+        shoppingId: id,
+        date,
+      }),
+    );
     if (next === state) return;
     dispatch({ type: "setShoppingDate", shoppingId: id, date });
     setRouteNotice({
@@ -198,7 +216,7 @@ export default function App() {
     (shopping) => shopping.id === shoppingId,
   );
   const selectedAnalysis = selectedShopping
-    ? analyzeShopping(selectedShopping, state, foodsById)
+    ? analysisCache.analyze(selectedShopping, state)
     : analysis;
   const notice = (
     <StorageNotice
