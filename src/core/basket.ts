@@ -1,9 +1,11 @@
 import type { FoodItem } from "../types";
-import foodsJson from "../data/foods.json";
 import {
   addQuantity,
   unitWeightFor,
   validQuantity,
+  maximumCount,
+  maximumGrams,
+  minimumCount,
   type Quantity,
 } from "./quantity";
 import type { RegisteredItem } from "./analyze";
@@ -61,8 +63,7 @@ export type BasketAction =
   | { type: "replace"; state: AppState };
 
 export const countStep = 0.5;
-export const minimumCount = 0.5;
-export const maximumCount = 999;
+export { minimumCount, maximumCount } from "./quantity";
 export const initialAppState: AppState = {
   shoppings: [],
   manualFoods: [],
@@ -113,7 +114,6 @@ function changeShopping(
 function register(
   shopping: Shopping,
   entry: Omit<BasketEntry, "quantity">,
-  food: FoodItem | undefined,
 ): Shopping {
   const existing = shopping.items.find(
     (item) =>
@@ -123,11 +123,13 @@ function register(
     const added = addQuantity(
       existing.quantity,
       { kind: "count", count: 1 },
-      food ? unitWeightFor(food, entry.displayName) : undefined,
+      unitWeightFor(entry.foodId, entry.displayName),
     );
     if (
-      added.quantity.kind === existing.quantity.kind &&
-      JSON.stringify(added.quantity) === JSON.stringify(existing.quantity)
+      added.clamped &&
+      (existing.quantity.kind === "count"
+        ? existing.quantity.count === maximumCount
+        : existing.quantity.grams === maximumGrams)
     )
       return shopping;
     return {
@@ -192,15 +194,6 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
         foodId: action.type === "register" ? action.foodId : action.food.id,
         displayName: action.displayName,
       };
-      const food =
-        action.type === "addManualFood"
-          ? action.food
-          : ((foodsJson as FoodItem[]).find(
-              (candidate) => candidate.id === action.foodId,
-            ) ??
-            start.manualFoods.find(
-              (candidate) => candidate.id === action.foodId,
-            ));
       const hasExisting = start.shoppings.some(
         (shopping) =>
           shopping.id === action.shoppingId &&
@@ -220,7 +213,7 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
       )
         return state;
       const updated = changeShopping(start, action.shoppingId, (shopping) =>
-        register(shopping, entry, food),
+        register(shopping, entry),
       );
       if (updated === state || action.type === "register") return updated;
       return updated.manualFoods.some((food) => food.id === action.food.id)
@@ -246,6 +239,7 @@ export function basketReducer(state: AppState, action: BasketAction): AppState {
           ),
         };
       });
+    // 量を直接指定する操作（DES-QTY-06）。
     case "setQuantity":
       if (!validQuantity(action.quantity)) return state;
       return changeShopping(state, action.shoppingId, (shopping) => {

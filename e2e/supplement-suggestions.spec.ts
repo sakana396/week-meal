@@ -49,7 +49,7 @@ const disappearingFirst: AppState = {
       ...rotating.shoppings[0],
       items: rotating.shoppings[0].items.map((item, index) => ({
         ...item,
-        count: [8, 10, 10, 8][index],
+        quantity: { kind: "count" as const, count: [8, 10, 10, 8][index] },
       })),
     },
   ],

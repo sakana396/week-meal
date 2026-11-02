@@ -37,21 +37,54 @@ describe("IT05 の量（DES-QTY-03〜06）", () => {
     },
   );
   it.each([
-    [{ kind: "count" as const, count: 2 }, "g" as const, 300],
-    [{ kind: "count" as const, count: 999 }, "kg" as const, 100000],
+    [{ ...food, refusePct: null }, undefined, 2000],
+    [{ ...food, id: "manual-1", refusePct: 25 }, undefined, 1500],
+  ])(
+    "TC-FR-QTY-07-01 廃棄率が欠損の食材と手入力の重さを求める %#",
+    (target, unitWeight, grams) => {
+      expect(
+        edibleGrams(target, unitWeight, {
+          kind: "weight",
+          grams: 2000,
+          unit: "g",
+        }),
+      ).toEqual({ grams, approximate: false });
+    },
+  );
+  it.each([
+    [{ kind: "count" as const, count: 2 }, "g" as const, 300, weight],
+    [{ kind: "count" as const, count: 999 }, "kg" as const, 100000, weight],
     [
       { kind: "weight" as const, grams: 2250, unit: "g" as const },
       "kg" as const,
       2250,
+      weight,
     ],
-  ])("TC-FR-QTY-07-02 個数と重さを換算する %#", (quantity, to, grams) => {
-    const snapshot = structuredClone(quantity);
-    expect(convertQuantity(quantity, to, weight)).toMatchObject({
-      kind: "weight",
-      grams,
-    });
-    expect(quantity).toEqual(snapshot);
-  });
+    [
+      { kind: "weight" as const, grams: 2250, unit: "kg" as const },
+      "g" as const,
+      2250,
+      weight,
+    ],
+    [{ kind: "count" as const, count: 1 }, "g" as const, 100, undefined],
+    [
+      { kind: "count" as const, count: 0.5 },
+      "g" as const,
+      1,
+      { ...weight, purchaseG: 1 },
+    ],
+  ])(
+    "TC-FR-QTY-07-02 個数と重さを換算する %#",
+    (quantity, to, grams, unitWeight) => {
+      const snapshot = structuredClone(quantity);
+      expect(convertQuantity(quantity, to, unitWeight)).toEqual({
+        kind: "weight",
+        grams,
+        unit: to,
+      });
+      expect(quantity).toEqual(snapshot);
+    },
+  );
   it("TC-FR-QTY-07-02 重さから個数へ 0.5 刻みに丸める", () => {
     expect(
       convertQuantity(
@@ -104,8 +137,6 @@ describe("IT05 の量（DES-QTY-03〜06）", () => {
     ).toBe(value);
   });
   it("TC-FR-QTY-07-05 手入力は同名でも目安重量を引かない", () => {
-    expect(
-      unitWeightFor({ ...food, id: "manual-1" }, "にんじん"),
-    ).toBeUndefined();
+    expect(unitWeightFor("manual-1", "にんじん")).toBeUndefined();
   });
 });

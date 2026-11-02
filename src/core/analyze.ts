@@ -115,7 +115,7 @@ export function analyzeBasket(
   const basket: BasketItem[] = active.map((item) => {
     const amount = edibleGrams(
       item.food,
-      unitWeightFor(item.food, item.displayName, data.unitWeights),
+      unitWeightFor(item.food.id, item.displayName, data.unitWeights),
       item.quantity,
     );
     if (amount.approximate && !approximateItems.includes(item.displayName)) {
@@ -190,7 +190,7 @@ export function sensitivity(
         (item) =>
           item.displayName === name &&
           item.quantity.kind === "count" &&
-          unitWeightFor(item.food, name, data.unitWeights),
+          unitWeightFor(item.food.id, name, data.unitWeights),
       ),
   );
   return names.flatMap((name) => {

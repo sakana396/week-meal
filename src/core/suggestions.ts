@@ -126,7 +126,7 @@ export function suggestSupplements(
       food: item.food,
       grams: edibleGrams(
         item.food,
-        unitWeightFor(item.food, item.displayName, data.unitWeights),
+        unitWeightFor(item.food.id, item.displayName, data.unitWeights),
         item.quantity,
       ).grams,
     })),
@@ -170,7 +170,7 @@ export function suggestSupplements(
     const { food, displayName, priority } = candidate;
     if (!((food.nutrientsPer100g.energyKcal ?? 0) > 0)) continue;
     const item = existing.get(food.id)?.get(displayName);
-    const weight = unitWeightFor(food, displayName, data.unitWeights);
+    const weight = unitWeightFor(food.id, displayName, data.unitWeights);
     const beforeQuantity = item?.quantity;
     const afterQuantity = beforeQuantity
       ? addQuantity(beforeQuantity, { kind: "count", count: 1 }, weight)

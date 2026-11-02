@@ -119,7 +119,7 @@ function stripUsedUp(value: unknown): unknown {
   return { id, foodId, displayName, count };
 }
 
-/** 版 3 の JSON に直す（DES-STO-10、12）。 */
+/** 版 4 の JSON に直す（DES-STO-10、12、13）。 */
 export function serializeState(state: AppState): string {
   return JSON.stringify({
     version: storageVersion,
@@ -238,7 +238,7 @@ function parseManualFood(
   };
 }
 
-/** 行を検査し、余計なキーを落とす（DES-STO-11）。 */
+/** 行を検査し、余計なキーを落とす（DES-STO-11、14）。 */
 function parseEntry(
   value: unknown,
   usableFoodIds: ReadonlySet<string>,

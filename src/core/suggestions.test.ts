@@ -130,32 +130,46 @@ function result(changes: Partial<BalanceResult> = {}): BalanceResult {
 }
 
 describe("補う候補（DES-SUG-01〜03）", () => {
+  it("TC-FR-QTY-07-05 手入力の同名食材の候補評価は目安重量を使わない", () => {
+    const manual = { ...candidate("manual-carrot"), displayName: "にんじん" };
+    const weightData = {
+      ...data,
+      unitWeights: {
+        にんじん: { unit: "本", purchaseG: 150, source: "テスト用" },
+      },
+    };
+    const suggestions = suggest([manual], state(), weightData);
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0].approximate).toBe(true);
+  });
   it("TC-FR-BAL-06-09 重さの行への追加を候補の評価に使う", () => {
-    const c = candidate("c");
+    const c = { ...candidate("06212"), displayName: "にんじん" };
     const current = state();
     current.shoppings[0].items.push({
-      id: "c",
-      foodId: "c",
-      displayName: "c",
+      id: "carrot",
+      foodId: "06212",
+      displayName: "にんじん",
       quantity: { kind: "weight", grams: 100, unit: "g" },
     });
     const snapshot = structuredClone(current);
     const weightData = {
       ...data,
-      unitWeights: { c: { unit: "個", purchaseG: 100, source: "テスト用" } },
+      unitWeights: {
+        にんじん: { unit: "本", purchaseG: 150, source: "テスト用" },
+      },
     };
     const before = suggest([c], current, weightData);
     const after = basketReducer(current, {
       type: "register",
       shoppingId: "s",
       id: "unused",
-      foodId: "c",
-      displayName: "c",
+      foodId: "06212",
+      displayName: "にんじん",
     });
     expect(before).toHaveLength(1);
     expect(after.shoppings[0].items.at(-1)?.quantity).toEqual({
       kind: "weight",
-      grams: 200,
+      grams: 250,
       unit: "g",
     });
     expect(suggest([c], after, weightData)).toEqual([]);

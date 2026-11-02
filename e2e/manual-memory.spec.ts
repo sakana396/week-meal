@@ -216,7 +216,7 @@ test("TC-FR-ING-15-06 旧分類はその他に表示し成分と来歴を保持�
   expect(food.nutrientsPer100g.energyKcal).toBe(30);
 });
 
-test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保存する", async ({
+test("TC-NFR-13-12 版 1 を版 4 に移行し買い物・台帳・設定を保存する", async ({
   page,
 }) => {
   const profile = {
@@ -231,14 +231,14 @@ test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保�
       id: "used",
       foodId: "manual-used",
       displayName: "登録食品",
-      quantity: { kind: "count" as const, count: 2.5 },
+      count: 2.5,
       usedUp: true,
     },
     {
       id: "normal",
       foodId: "06212",
       displayName: "にんじん",
-      quantity: { kind: "count" as const, count: 1.5 },
+      count: 1.5,
       usedUp: false,
     },
   ];
@@ -266,7 +266,7 @@ test("TC-NFR-13-12 版 1 を版 3 に移行し買い物・台帳・設定を保�
   const migrated = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("weekmeal:state")!),
   );
-  expect(migrated.version).toBe(3);
+  expect(migrated.version).toBe(4);
   expect(
     migrated.shoppings.map((shopping: { origin: string; items: unknown[] }) => [
       shopping.origin,
@@ -328,7 +328,7 @@ test("TC-FR-ING-15-07 同名・同棚の食品を追加しても既存の番号�
   expect(
     stored.shoppings[0].items.find(
       (item: { foodId: string }) => item.foodId === "manual-old",
-    ).count,
+    ).quantity.count,
   ).toBe(2);
 });
 

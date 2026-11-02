@@ -167,7 +167,7 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
             id: `keyboard-${index}`,
             foodId,
             displayName,
-            count: 10,
+            quantity: { kind: "count" as const, count: 10 },
           })),
         },
       ],

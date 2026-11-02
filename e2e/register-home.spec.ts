@@ -144,7 +144,7 @@ test("TC-FR-ING-10-08 999 個では増やせない", async ({ page }) => {
             id: "item-999",
             foodId: "06212",
             displayName: "にんじん",
-            quantity: { kind: "count" as const, count: 999 },
+            count: 999,
             usedUp: false,
           },
         ],
@@ -239,7 +239,7 @@ test("TC-NFR-12-34 不正な行を捨てた件数を知らせる", async ({ page
             id: "bad",
             foodId: "unknown",
             displayName: "不明",
-            quantity: { kind: "count" as const, count: 1 },
+            count: 1,
             usedUp: false,
           },
         ],
@@ -255,9 +255,48 @@ test("TC-NFR-12-34 不正な行を捨てた件数を知らせる", async ({ page
   });
   await page.goto("#/");
   await expect(
-    page.getByText("保存データのうち、読み込めなかった食材が 1 件ありました。"),
+    page.getByText("食材 1 件を読み込めませんでした。"),
   ).toBeVisible();
   await expect(page.getByText("登録した食材がありません")).toBeVisible();
+});
+
+test("TC-NFR-12-39 版 3 の行を保って版別に原文を退避する", async ({ page }) => {
+  const original = JSON.stringify({
+    version: 3,
+    shoppings: [
+      {
+        id: "legacy",
+        date: "2026-11-02",
+        origin: "normal",
+        items: [
+          { id: "carrot", foodId: "06212", displayName: "にんじん", count: 2 },
+        ],
+      },
+    ],
+    manualFoods: [],
+    profile: {
+      staple: "rice",
+      portion: "medium",
+      sex: "unspecified",
+      ageGroup: "30-49",
+    },
+  });
+  await page.addInitScript(
+    (text) => localStorage.setItem("weekmeal:state", text),
+    original,
+  );
+  await page.goto("#/");
+  await expect(itemRow(page, "にんじん")).toContainText("2 本");
+  const saved = await page.evaluate(() => ({
+    current: localStorage.getItem("weekmeal:state"),
+    backup: localStorage.getItem("weekmeal:state:backup-v3"),
+  }));
+  expect(JSON.parse(saved.current!).version).toBe(4);
+  expect(JSON.parse(saved.current!).shoppings[0].items[0].quantity).toEqual({
+    kind: "count",
+    count: 2,
+  });
+  expect(saved.backup).toBe(original);
 });
 
 test("TC-NFR-12-35 設定がないと初期値に戻した旨を知らせる", async ({

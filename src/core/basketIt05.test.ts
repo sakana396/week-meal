@@ -64,16 +64,47 @@ describe("量の reducer（DES-QTY-06）", () => {
       unit: "g",
     });
   });
-  it("TC-FR-ING-01-13 同じ食材の加算は他の買い物の行 ID と重複しても行う", () => {
+  it("TC-FR-QTY-07-03 未知の行 ID と重さの上限では変更しない", () => {
+    const unknown = basketReducer(first, {
+      type: "setQuantity",
+      shoppingId: "s",
+      id: "missing",
+      quantity: { kind: "count", count: 2 },
+    });
+    expect(unknown).toBe(first);
+    const maximum = basketReducer(first, {
+      type: "setQuantity",
+      shoppingId: "s",
+      id: "r",
+      quantity: { kind: "weight", grams: 100000, unit: "g" },
+    });
+    expect(
+      basketReducer(maximum, {
+        type: "register",
+        shoppingId: "s",
+        id: "unused",
+        foodId: "06212",
+        displayName: "にんじん",
+      }),
+    ).toBe(maximum);
+  });
+  it("TC-FR-ING-01-13 既存の同じ食材なら他の買い物の行 ID と重複しても加算する", () => {
     const other = basketReducer(first, {
       type: "createShopping",
       id: "t",
       date: "2026-11-02",
     });
-    const added = basketReducer(other, {
+    const withDuplicate = basketReducer(other, {
+      type: "register",
+      shoppingId: "t",
+      id: "x",
+      foodId: "06061",
+      displayName: "キャベツ",
+    });
+    const added = basketReducer(withDuplicate, {
       type: "register",
       shoppingId: "s",
-      id: "r",
+      id: "x",
       foodId: "06212",
       displayName: "にんじん",
     });
@@ -81,5 +112,29 @@ describe("量の reducer（DES-QTY-06）", () => {
       kind: "count",
       count: 2,
     });
+    expect(added.shoppings[1]).toBe(withDuplicate.shoppings[1]);
+  });
+  it("TC-FR-ING-01-13 新しい食材の行 ID が他の買い物と重複すると変更しない", () => {
+    const other = basketReducer(first, {
+      type: "createShopping",
+      id: "t",
+      date: "2026-11-02",
+    });
+    const withDuplicate = basketReducer(other, {
+      type: "register",
+      shoppingId: "t",
+      id: "x",
+      foodId: "06061",
+      displayName: "キャベツ",
+    });
+    expect(
+      basketReducer(withDuplicate, {
+        type: "register",
+        shoppingId: "s",
+        id: "x",
+        foodId: "12004",
+        displayName: "鶏卵",
+      }),
+    ).toBe(withDuplicate);
   });
 });

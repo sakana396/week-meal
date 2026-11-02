@@ -335,7 +335,7 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
       id: "legacy-row",
       foodId: food.id,
       displayName: food.name,
-      quantity: { kind: "count" as const, count: 1 },
+      count: 1,
       usedUp: false,
     };
     await page.addInitScript(
@@ -372,7 +372,7 @@ for (const sourceFoodId of ["99999", 123, null, ""]) {
         id: item.id,
         foodId: item.foodId,
         displayName: item.displayName,
-        quantity: { kind: "count" as const, count: item.quantity.count },
+        quantity: { kind: "count" as const, count: item.count },
       },
     ]);
     expect(stored.manualFoods[0].nutrientsPer100g).toEqual(

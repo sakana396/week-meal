@@ -24,7 +24,7 @@ export function StorageNotice({
   } else if (issue) {
     if (issue.droppedItems > 0 || issue.droppedShoppings > 0) {
       messages.push(
-        `買い物 ${issue.droppedShoppings} 件・食材 ${issue.droppedItems} 件を読み込めませんでした。`,
+        `${[issue.droppedShoppings > 0 ? `買い物 ${issue.droppedShoppings} 件` : "", issue.droppedItems > 0 ? `食材 ${issue.droppedItems} 件` : ""].filter(Boolean).join("・")}を読み込めませんでした。`,
       );
     }
     if (issue.profileReset) {
@@ -34,7 +34,7 @@ export function StorageNotice({
   if (!available && issue !== "corrupted") {
     messages.push(
       issue
-        ? "読み込めなかったデータを退避できなかったので、保存を止めています。ブラウザの保存領域を確かめてください"
+        ? "読み込めなかったデータを退避できなかったので、保存を止めています。ブラウザの保存領域を確かめてください。"
         : "このブラウザでは保存できません（プライベートモードや容量不足など）。ページを閉じると、この画面での変更は消えます。",
     );
   } else if (available && saveFailed) {

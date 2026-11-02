@@ -5,7 +5,7 @@ import {
   type BasketAction,
 } from "../core/basket";
 import { unitWeights } from "../data/unitWeights";
-import { unitWeightFor } from "../core/quantity";
+import { maximumGrams } from "../core/quantity";
 import { formatCount } from "./format";
 
 /**
@@ -26,12 +26,9 @@ export function registerMessage(state: AppState, action: BasketAction): string {
   const before = find(state);
   const after = find(basketReducer(state, action));
   if (!after) return "";
-  const weight =
-    action.type === "addManualFood"
-      ? unitWeightFor(action.food, action.displayName)
-      : Object.hasOwn(unitWeights, action.displayName)
-        ? unitWeights[action.displayName]
-        : undefined;
+  const weight = Object.hasOwn(unitWeights, action.displayName)
+    ? unitWeights[action.displayName]
+    : undefined;
   const unit =
     after.quantity.kind === "weight"
       ? after.quantity.unit
@@ -41,7 +38,7 @@ export function registerMessage(state: AppState, action: BasketAction): string {
     before &&
     (before.quantity.kind === "count"
       ? before.quantity.count >= maximumCount
-      : before.quantity.grams >= 100000)
+      : before.quantity.grams >= maximumGrams)
   ) {
     return `${action.displayName}はこれ以上増やせません（${amount}）`;
   }

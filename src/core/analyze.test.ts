@@ -33,6 +33,20 @@ const basket = [
 ];
 
 describe("analyzeBasket（DES-ANL-01）", () => {
+  it("TC-FR-QTY-07-05 手入力は一覧と同名でも目安重量を使わない", () => {
+    const manual = {
+      ...basket[1],
+      food: { ...basket[1].food, id: "manual-carrot", refusePct: 0 },
+      quantity: { kind: "count" as const, count: 1 },
+    };
+    const result = analyzeBasket(
+      [basket[0], manual, basket[2]],
+      defaultProfile,
+    );
+    expect(result.kind).toBe("judged");
+    if (result.kind === "judged")
+      expect(result.approximateItems).toContain("にんじん");
+  });
   it("TC-FR-QTY-07-05 重さの行は感度分析の対象にせず、正の量なら品目に数える", () => {
     const weighted = [
       {
