@@ -16,9 +16,11 @@ IT04 の実測では CPU 4 倍・100 行・別履歴 100 件の日付変更が�
 
 計測コマンドは `npm run test:e2e -- --project=performance --workers=1 --output=test-results/performance`。機能 E2E や Lighthouse と同時に流さない。
 
-Claude Code の手元で 2026-11-02T21:06Z（JST 2026-11-03 06:06）から、コミット `5cd7de5`、作業差分なしで `npm run test:e2e -- --project=performance --workers=1` を実行し、19 件成功した。環境は Linux 6.18.54.1-microsoft-standard-WSL2（WSL2）、Intel Core i5-10400F、12 コア、Chromium 156.0.8078.4、表示 360×740、各条件 5 回。CPU 4 倍の `changeLatestDate` の最大値は、100 行・別履歴 100 件で 87.7 ms、100 行・別履歴 0 件で 89.3 ms、30 行で 35.2 / 35.0 ms、3 行で 22.6 / 22.9 ms（順に別履歴 100 / 0 件）。ほかの操作の最大値は 35.3 ms（100 行・別履歴 0 件の `registerLatest`）。全条件が 100 ms 以内だった。Codex 側のサンドボックスでは性能 E2E を実行していない。今回の可視性と E2E 待機の修正後の値は未実測である。
+Claude Code の手元で 2026-11-02T21:06Z（JST 2026-11-03 06:06）から、コミット `5cd7de5`、作業差分なしで `npm run test:e2e -- --project=performance --workers=1` を実行し、19 件成功した。環境は Linux 6.18.54.1-microsoft-standard-WSL2（WSL2）、Intel Core i5-10400F、12 コア、Chromium 156.0.8078.4、表示 360×740、各条件 5 回。CPU 4 倍の `changeLatestDate` の最大値は、100 行・別履歴 100 件で 87.7 ms、100 行・別履歴 0 件で 89.3 ms、30 行で 35.2 / 35.0 ms、3 行で 22.6 / 22.9 ms（順に別履歴 100 / 0 件）。ほかの操作の最大値は 35.3 ms（100 行・別履歴 0 件の `registerLatest`）。全条件が 100 ms 以内だった。Codex 側のサンドボックスでは性能 E2E を実行していない。この時点では今回の可視性と E2E 待機の修正後の値は未実測だった。
 
-同じコミットの機能 E2E は desktop・mobile で 179 件成功、2 件失敗した。両方とも `e2e/manual-memory.spec.ts` の TC-FR-ING-15-07 で、保存直後の読み取りが旧い `quantity.count`（期待 2、実際 1）を取得した。今回、保存済みの値になるまで待つように修正した。修正後の機能 E2E も Codex 側では未実行である。
+同じコミットの機能 E2E は desktop・mobile で 179 件成功、2 件失敗した。両方とも `e2e/manual-memory.spec.ts` の TC-FR-ING-15-07 で、保存直後の読み取りが旧い `quantity.count`（期待 2、実際 1）を取得した。今回、保存済みの値になるまで待つように修正した。この時点では修正後の機能 E2E も Codex 側では未実行だった。
+
+Claude Code の手元で 2026-11-03 JST 06:30〜06:36 に、コミット `64a2fab`、作業差分なしで再計測した。PC・環境は `5cd7de5` の計測時と同じ。機能 E2E（desktop・mobile）は 2 回続けて実行し、各回 181 件すべて成功した。性能 E2E（`npm run test:e2e -- --project=performance --workers=1`）は 19 件成功した。CPU 4 倍の `changeLatestDate` の最大値は、100 行・別履歴 0 件で 82.7 ms、100 行・別履歴 100 件で 83.7 ms、30 行・別履歴 0 件で 35.7 ms、30 行・別履歴 100 件で 37.5 ms、3 行・別履歴 0 件で 20.0 ms、3 行・別履歴 100 件で 21.6 ms。ほかの操作の最大値は 36.1 ms（30 行・別履歴 0 件の `registerLatest`）。全条件が 100 ms 以内で、NFR-03 を満たした。各条件の要約 JSON は手元の `test-results/…/performance-it05-summary.json` にあり、CI の成果物ではない。
 
 ## 新しい操作の扱い
 
