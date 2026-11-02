@@ -583,29 +583,15 @@ for (const size of [3, 30, 100]) {
                     window as Window & { weekmealPerformanceDetail?: boolean }
                   ).weekmealPerformanceDetail = true;
                 });
+              const storedBefore = await page.evaluate(() =>
+                localStorage.getItem("weekmeal:state"),
+              );
               await arm(page, trackCandidates);
               await button.click();
               await page.mouse.move(0, 0);
               const measurement = await page.evaluate(
                 () => window.weekmealMeasurement,
               );
-              const dateChangeDetail = changeDate
-                ? await page.evaluate(() => {
-                    (
-                      window as Window & { weekmealPerformanceDetail?: boolean }
-                    ).weekmealPerformanceDetail = false;
-                    return performance
-                      .getEntriesByType("measure")
-                      .filter((entry) =>
-                        entry.name.startsWith("weekmeal:date-change:"),
-                      )
-                      .map((entry) => ({
-                        phase: entry.name.slice("weekmeal:date-change:".length),
-                        startTime: entry.startTime,
-                        duration: entry.duration,
-                      }));
-                  })
-                : null;
               expect(measurement.revision).toBe(1);
               expect(Number.isFinite(measurement.elapsedMs)).toBe(true);
               expect(measurement.elapsedMs).toBeGreaterThan(0);
@@ -628,6 +614,28 @@ for (const size of [3, 30, 100]) {
                   candidate.reflectedAt - measurement.paintedAt,
                 );
               }
+              await expect
+                .poll(() =>
+                  page.evaluate(() => localStorage.getItem("weekmeal:state")),
+                )
+                .not.toBe(storedBefore);
+              const dateChangeDetail = changeDate
+                ? await page.evaluate(() => {
+                    (
+                      window as Window & { weekmealPerformanceDetail?: boolean }
+                    ).weekmealPerformanceDetail = false;
+                    return performance
+                      .getEntriesByType("measure")
+                      .filter((entry) =>
+                        entry.name.startsWith("weekmeal:date-change:"),
+                      )
+                      .map((entry) => ({
+                        phase: entry.name.slice("weekmeal:date-change:".length),
+                        startTime: entry.startTime,
+                        duration: entry.duration,
+                      }));
+                  })
+                : null;
               const stored = (await page.evaluate(() =>
                 JSON.parse(localStorage.getItem("weekmeal:state") ?? "null"),
               )) as AppState;

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   maximumCount,
   minimumCount,
@@ -8,10 +9,10 @@ import { unitWeights } from "../../data/unitWeights";
 import { formatCount } from "../format";
 
 /**
- * 登録した食材 1 行（DES-UI-40）。個数の −/＋（0.5 刻み）と削除。
+ * 登録した食材 1 行（DES-UI-40、DES-PER-05）。個数の −/＋（0.5 刻み）と削除。
  * 同じ食材名の行が 2 つあるときは、正式名称の短い説明（detail）を添える。
  */
-export function ItemRow({
+export const ItemRow = memo(function ItemRow({
   item,
   shoppingId,
   detail,
@@ -82,4 +83,4 @@ export function ItemRow({
       </div>
     </li>
   );
-}
+});

@@ -15,6 +15,10 @@ import { BalancePanel } from "../components/BalancePanel";
 import { SupplementSuggestions } from "../components/SupplementSuggestions";
 import { ItemRow } from "../components/ItemRow";
 import type { Route } from "../route";
+import {
+  performanceDetailEnd,
+  performanceDetailStart,
+} from "../performanceDetail";
 
 /**
  * ホーム（DES-SHP-03、DES-UI-20, 40, 41）。最新の買い物の判定と食材一覧。
@@ -44,6 +48,10 @@ export function HomeScreen({
   onDateChange: (shoppingId: string, date: string) => void;
   routeNotice: string;
 }) {
+  const renderStart = performanceDetailStart();
+  useLayoutEffect(() => {
+    performanceDetailEnd("home-render-to-commit", renderStart);
+  });
   const listRef = useRef<HTMLUListElement>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
   const previousRemoval = useRef<PendingRemoval | null>(pendingRemoval);

@@ -1,4 +1,10 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { latestShopping, basketReducer } from "../core/basket";
 import {
   basketSessionReducer,
@@ -10,6 +16,7 @@ import { StorageNotice } from "./components/StorageNotice";
 import { foodsById } from "./foodData";
 import { createShoppingAnalysisCache } from "./shoppingAnalysisCache";
 import { measurePerformanceDetail } from "./performanceDetail";
+import { scheduleAfterPaint } from "./scheduleAfterPaint";
 import { routeFromHash, useHashRoute } from "./route";
 import { localId } from "./ids";
 import { localDate } from "./localDate";
@@ -123,19 +130,28 @@ export default function App() {
   const [saveFailed, setSaveFailed] = useState(!loaded.available);
   const [analysisCache] = useState(createShoppingAnalysisCache);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!loaded.available) return;
-    const saved = measurePerformanceDetail("save", () =>
-      saveAppState(browser.store, state),
-    );
-    // 書き出しの結果を、描画のあとで知らせる。effect の中で同期的に setState すると
-    // 描画が連鎖するため（react-hooks の set-state-in-effect 規則）、microtask に回す
     let active = true;
-    void Promise.resolve().then(() => {
+    let completed = false;
+    const save = () => {
+      if (completed) return;
+      completed = true;
+      const saved = measurePerformanceDetail("save", () =>
+        saveAppState(browser.store, state),
+      );
       if (active) setSaveFailed(!saved);
-    });
+    };
+    const cancel = scheduleAfterPaint(save);
+    const flush = () => {
+      cancel();
+      save();
+    };
+    window.addEventListener("pagehide", flush);
     return () => {
       active = false;
+      cancel();
+      window.removeEventListener("pagehide", flush);
     };
   }, [loaded.available, browser, state]);
 
@@ -147,16 +163,6 @@ export default function App() {
     latestShopping(state.shoppings),
     state,
   );
-
-  useEffect(() => {
-    if (route !== "home") return;
-    const latest = latestShopping(state.shoppings);
-    if (!latest) return;
-    const previous = latestShopping(
-      state.shoppings.filter((shopping) => shopping.id !== latest.id),
-    );
-    if (previous) analysisCache.analyze(previous, state);
-  }, [analysisCache, route, state]);
 
   /** 買い物を空で作り、その詳細へ移る（DES-UI-46）。 */
   function createShopping() {

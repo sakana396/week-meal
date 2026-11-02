@@ -1,5 +1,10 @@
 import { expect, it } from "vitest";
-import { basketReducer, initialAppState, type Shopping } from "../core/basket";
+import {
+  basketReducer,
+  initialAppState,
+  latestShopping,
+  type Shopping,
+} from "../core/basket";
 import { createShoppingAnalysisCache } from "./shoppingAnalysisCache";
 
 const shopping: Shopping = {
@@ -43,3 +48,23 @@ it.each(["items", "manualFoods", "profile"] as const)(
     );
   },
 );
+
+it("TC-NFR-03-05 最新が入れ替わっても表示に使う分析は対象の買い物のもの", () => {
+  const cache = createShoppingAnalysisCache();
+  const previous: Shopping = {
+    ...shopping,
+    id: "previous",
+    date: "2026-10-30",
+  };
+  const state = { ...initialAppState, shoppings: [shopping, previous] };
+  const before = cache.analyze(previous, state);
+  const changed = basketReducer(state, {
+    type: "setShoppingDate",
+    shoppingId: shopping.id,
+    date: "2026-10-29",
+  });
+  expect(latestShopping(changed.shoppings)?.id).toBe("previous");
+  expect(cache.analyze(latestShopping(changed.shoppings), changed)).toBe(
+    before,
+  );
+});
