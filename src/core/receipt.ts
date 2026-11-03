@@ -24,9 +24,9 @@ export function receiptPrompt(names: string[]): string {
   );
   return [
     "添付するレシートの画像から食べ物だけを書き出してください。日用品など食べ物でない物は書かないでください。",
-    "下の一覧の名前に当てはまる食べ物は、その名前をそのまま使ってください。当てはまらない食べ物は、レシートの商品名のまま書いてください。",
+    "レシートの表記が一覧と違っても、同じ食べ物なら一覧の名前に置き換えてください（例: 生椎茸→しいたけ、コマツ菜→こまつな）。一覧に当てはまらない食べ物は、レシートの商品名のまま書いてください。",
     "1 行に 1 品、食材名,量 の形で書いてください。重さが分かれば 300g や 2kg、分からなければ個数（2）を書いてください。量が分からなければ 1 としてください。数字に桁区切りのコンマと分数を使わず、4 分の 1 は 0.25 と書いてください。",
-    "説明や見出しは書かないでください。",
+    "説明や見出しは書かないでください。マークダウンや装飾を使わず、プレーンテキストで答えてください。コードブロックに入れてもかまいません。",
     "食材名の一覧:",
     ...sorted,
   ].join("\n");
@@ -96,13 +96,17 @@ export function parseReceiptText(
   text.split(/\r?\n/).forEach((original, index) => {
     const line = index + 1;
     const normalized = original.normalize("NFKC");
-    let value = normalized.trim();
-    if (!value || value.startsWith("```") || value.startsWith("#")) return;
+    if (!normalized.trim()) return;
     // 長い行は正規表現の後戻りを避け、元の行を一覧にない物として返す。
     if (normalized.length > 200) {
       unmatched.push({ line, text: original });
       return;
     }
+    let value = normalized
+      .trim()
+      .replace(/[\\ \t]+$/, "")
+      .trim();
+    if (!value || value.startsWith("```") || value.startsWith("#")) return;
     value = value
       .replace(/^(?:[-*・]\s*|\d+\.\s*)/, "")
       .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
