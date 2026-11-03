@@ -96,12 +96,16 @@ export function parseReceiptText(
   text.split(/\r?\n/).forEach((original, index) => {
     const line = index + 1;
     const normalized = original.normalize("NFKC");
+    if (!normalized.trim()) return;
     // 長い行は正規表現の後戻りを避け、元の行を一覧にない物として返す。
     if (normalized.length > 200) {
       unmatched.push({ line, text: original });
       return;
     }
-    let value = normalized.replace(/(?:\\[ \t]*| {2,})+$/, "").trim();
+    let value = normalized
+      .trim()
+      .replace(/[\\ \t]+$/, "")
+      .trim();
     if (!value || value.startsWith("```") || value.startsWith("#")) return;
     value = value
       .replace(/^(?:[-*・]\s*|\d+\.\s*)/, "")

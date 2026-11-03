@@ -155,6 +155,8 @@ describe("レシート読み取り（DES-RCP-03）", () => {
     ["にんじん,1  ", 1],
     ["にんじん,1　　", 1],
     ["にんじん,1\\  ", 1],
+    ["にんじん,1  \\", 1],
+    ["にんじん,1 \\ \\", 1],
     ["にんじん,2", 2],
   ])("TC-FR-RCP-01-09 行末の改行印を外して量を読む %#", (line, count) => {
     const result = parseReceiptText(line, catalog);
@@ -195,6 +197,24 @@ describe("レシート読み取り（DES-RCP-03）", () => {
     expect(parseReceiptText(line, catalog)).toEqual({
       candidates: [],
       unmatched: [{ line: 1, text: line }],
+    });
+  });
+  it("TC-FR-RCP-01-09 行中に空白が 100 個あっても短時間で終わる", () => {
+    const line = `にんじん${" ".repeat(100)}x`;
+    const start = performance.now();
+    const result = parseReceiptText(line, catalog);
+    expect(performance.now() - start).toBeLessThan(100);
+    expect(result).toEqual({
+      candidates: [],
+      unmatched: [{ line: 1, text: line }],
+    });
+  });
+  it("TC-FR-RCP-01-09 201 字以上の空白だけの行を飛ばす", () => {
+    expect(
+      parseReceiptText(`${" ".repeat(201)}\nにんじん,1`, catalog),
+    ).toMatchObject({
+      candidates: [{ line: 2, displayName: "にんじん" }],
+      unmatched: [],
     });
   });
 });
