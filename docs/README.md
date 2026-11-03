@@ -9,7 +9,7 @@
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
 | 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.8 確定 |
-| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.6 承認 |
+| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.7（E-110 を反映） |
 | 反復 | 反復 1 振り返り | [iterations/it01/retrospective.md](iterations/it01/retrospective.md) | 1.0 確定 |
 | 反復 | 反復 2 振り返り | [iterations/it02/retrospective.md](iterations/it02/retrospective.md) | 0.2 案（本人の記入待ち） |
 | 反復 | 反復 1（計算の核とデータ）計画書 | [iterations/it01/plan.md](iterations/it01/plan.md) | v0.3 承認 |
@@ -22,8 +22,9 @@
 | 反復 | 反復 3（提案と仕上げ）計画書 | [iterations/it03/plan.md](iterations/it03/plan.md) | v0.1 |
 | 反復 | 反復 3 振り返り | [iterations/it03/retrospective.md](iterations/it03/retrospective.md) | 0.2 案（本人の記入待ち） |
 | 反復 | 反復 4（買い物の単位と公開）計画書 | [iterations/it04/plan.md](iterations/it04/plan.md) | v0.2 |
-| 反復 | 反復 4 振り返り | [iterations/it04/retrospective.md](iterations/it04/retrospective.md) | 0.3 案（H-04・NFR-01 は本人の回答待ち） |
+| 反復 | 反復 4 振り返り | [iterations/it04/retrospective.md](iterations/it04/retrospective.md) | 0.3 案（H-04・NFR-01 の回答は IT05-RETRO に記録） |
 | 反復 | 反復 5（レシートの貼り付けと重さでの登録）計画書 | [iterations/it05/plan.md](iterations/it05/plan.md) | v0.1 |
+| 反復 | 反復 5 振り返り | [iterations/it05/retrospective.md](iterations/it05/retrospective.md) | v0.1（E-103〜E-110 を反映） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
