@@ -22,7 +22,7 @@
 | 反復 | 反復 3（提案と仕上げ）計画書 | [iterations/it03/plan.md](iterations/it03/plan.md) | v0.1 |
 | 反復 | 反復 3 振り返り | [iterations/it03/retrospective.md](iterations/it03/retrospective.md) | 0.2 案（本人の記入待ち） |
 | 反復 | 反復 4（買い物の単位と公開）計画書 | [iterations/it04/plan.md](iterations/it04/plan.md) | v0.2 |
-| 反復 | 反復 4 振り返り | [iterations/it04/retrospective.md](iterations/it04/retrospective.md) | 0.3 案（H-04・NFR-01 の回答は IT05-RETRO に記録） |
+| 反復 | 反復 4 振り返り | [iterations/it04/retrospective.md](iterations/it04/retrospective.md) | 0.3 案（H-04・NFR-01 は本人の回答待ち） |
 | 反復 | 反復 5（レシートの貼り付けと重さでの登録）計画書 | [iterations/it05/plan.md](iterations/it05/plan.md) | v0.1 |
 | 反復 | 反復 5 振り返り | [iterations/it05/retrospective.md](iterations/it05/retrospective.md) | v0.1（E-103〜E-110 を反映） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
