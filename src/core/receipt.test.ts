@@ -47,12 +47,20 @@ describe("レシート指示文（DES-RCP-02）", () => {
       "はるさめ（乾燥）",
     ]);
   });
-  it("TC-FR-RCP-02-01 登録一覧 186 件での実文字数は 1236", () => {
+  it("TC-FR-RCP-02-01 登録一覧 186 件での実文字数は 1316", () => {
     const names = groupFoods(
       (foodsJson as FoodItem[]).filter(isRegistrable),
     ).map((group) => group.name);
     expect(names).toHaveLength(186);
-    expect(receiptPrompt(names)).toHaveLength(1236);
+    expect(receiptPrompt(names)).toHaveLength(1316);
+  });
+  it.each([
+    "マークダウンや装飾を使わず、プレーンテキストで答えてください",
+    "コードブロックに入れてもかまいません",
+    "生椎茸→しいたけ",
+    "コマツ菜→こまつな",
+  ])("TC-FR-RCP-02-03 指示文に貼り付けの注意を含む: %s", (phrase) => {
+    expect(receiptPrompt(["しいたけ", "こまつな"])).toContain(phrase);
   });
 });
 
@@ -141,6 +149,53 @@ describe("レシート読み取り（DES-RCP-03）", () => {
         needsCheck: false,
       },
     ]);
+  });
+  it.each([
+    ["にんじん,1\\", 1],
+    ["にんじん,1  ", 1],
+    ["にんじん,1　　", 1],
+    ["にんじん,1\\  ", 1],
+    ["にんじん,2", 2],
+  ])("TC-FR-RCP-01-09 行末の改行印を外して量を読む %#", (line, count) => {
+    const result = parseReceiptText(line, catalog);
+    expect(result.unmatched).toEqual([]);
+    expect(result.candidates[0]).toMatchObject({
+      displayName: "にんじん",
+      quantity: { kind: "count", count },
+      needsCheck: false,
+    });
+  });
+  it("TC-FR-RCP-01-09 5 行の貼り付けでは一覧にない生椎茸だけを残す", () => {
+    const receiptCatalog: ReceiptCatalog = {
+      foods: ["しいたけ", "こまつな", "バナナ", "トマト", "ねぎ"].map(
+        (displayName) => ({ displayName, foodId: displayName }),
+      ),
+      manualFoods: [],
+    };
+    const result = parseReceiptText(
+      "生椎茸,1\\\nこまつな,1\\\nバナナ,1\\\nトマト,1\\\nねぎ,1",
+      receiptCatalog,
+    );
+    expect(
+      result.candidates.map(({ displayName, quantity }) => ({
+        displayName,
+        quantity,
+      })),
+    ).toEqual(
+      ["こまつな", "バナナ", "トマト", "ねぎ"].map((displayName) => ({
+        displayName,
+        quantity: { kind: "count", count: 1 },
+      })),
+    );
+    expect(result.unmatched).toEqual([{ line: 1, text: "生椎茸,1\\" }]);
+  });
+  it("TC-FR-RCP-01-09 200 字超の行は改行印を外す前に除外する", () => {
+    const line = `にんじん,${"1".repeat(195)}\\`;
+    expect(line.length).toBe(201);
+    expect(parseReceiptText(line, catalog)).toEqual({
+      candidates: [],
+      unmatched: [{ line: 1, text: line }],
+    });
   });
 });
 
