@@ -18,6 +18,12 @@ export const foodCategoryGroupAliases: Record<string, string> = {
   "果実類:かき": "柿",
 };
 
+/** 分類と品種名から、単位の異なる食材名を決める（DES-CAT-07）。 */
+export const foodVarietyGroupNames: Record<string, string> = {
+  "野菜類:赤色ミニトマト": "ミニトマト",
+  "野菜類:かいわれだいこん": "かいわれだいこん",
+};
+
 /** 一般名を押したときに使う代表データ。先に書いた文字列を優先します。 */
 export const foodRepresentativePatterns: Record<string, string[]> = {
   あじ: ["まあじ 皮つき 生"],

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { initialAppState } from "./basket";
+import { unitWeightFor } from "./quantity";
 import {
   parseStoredState,
   serializeState,
@@ -33,6 +34,22 @@ const stored = (version: number, shoppings: unknown) =>
   });
 
 describe("保存版 4（DES-STO-13・14）", () => {
+  it.each([
+    ["06183", "トマト", 200, "個"],
+    ["06128", "大根", 1000, "本"],
+  ])(
+    "TC-FR-ING-06-24 旧い %s の表示名と目安重量を保つ",
+    (foodId, displayName, purchaseG, unit) => {
+      const original = { ...row, foodId, displayName };
+      const text = stored(4, [{ ...shopping, items: [original] }]);
+      const result = parseStoredState(text, new Set([foodId]));
+      expect(result.state.shoppings[0].items[0]).toEqual(original);
+      expect(unitWeightFor(foodId, displayName)).toMatchObject({
+        purchaseG,
+        unit,
+      });
+    },
+  );
   it.each([1, 2, 3])(
     "TC-FR-SYS-01-13 版 %i から版 4 に値を保って移行する",
     (version) => {

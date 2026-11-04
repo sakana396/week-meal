@@ -6,6 +6,7 @@ import type { Quantity } from "./quantity";
 export type ReceiptCatalog = {
   foods: readonly { displayName: string; foodId: string }[];
   manualFoods: readonly { displayName: string; foodId: string }[];
+  aliases?: Readonly<Record<string, string>>;
 };
 
 /** 読み取った登録候補（DES-RCP-03）。 */
@@ -15,6 +16,7 @@ export type ReceiptCandidate = {
   foodId: string;
   quantity: Quantity;
   needsCheck: boolean;
+  aliasFrom?: string;
 };
 
 /** 外部の AI に渡す指示文を組み立てる（DES-RCP-02）。 */
@@ -78,7 +80,7 @@ function parsedQuantity(
   };
 }
 
-/** 行ごとに読み、完全一致した食材と一覧にない物を返す（DES-RCP-03）。 */
+/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06）。 */
 export function parseReceiptText(
   text: string,
   catalog: ReceiptCatalog,
@@ -91,6 +93,12 @@ export function parseReceiptText(
     const key = normalizeSearchText(food.displayName.normalize("NFKC"));
     if (!names.has(key)) names.set(key, food);
   }
+  const aliases = new Map(
+    Object.entries(catalog.aliases ?? {}).map(([alias, name]) => [
+      normalizeSearchText(alias.normalize("NFKC")),
+      name,
+    ]),
+  );
   const candidates: ReceiptCandidate[] = [];
   const unmatched: { line: number; text: string }[] = [];
   text.split(/\r?\n/).forEach((original, index) => {
@@ -118,7 +126,14 @@ export function parseReceiptText(
       : match
         ? parsedQuantity(Number(match[2]), match[3])
         : { quantity: { kind: "count" as const, count: 1 }, needsCheck: true };
-    const found = names.get(normalizeSearchText(name.normalize("NFKC")));
+    const key = normalizeSearchText(name.normalize("NFKC"));
+    const direct = names.get(key);
+    const aliasedName = direct ? undefined : aliases.get(key);
+    const found =
+      direct ??
+      (aliasedName
+        ? names.get(normalizeSearchText(aliasedName.normalize("NFKC")))
+        : undefined);
     if (!found) {
       unmatched.push({ line, text: original });
       return;
@@ -129,6 +144,7 @@ export function parseReceiptText(
       foodId: found.foodId,
       quantity: amount.quantity,
       needsCheck: amount.needsCheck || Boolean(fraction),
+      ...(aliasedName ? { aliasFrom: name } : {}),
     });
   });
   return { candidates, unmatched };

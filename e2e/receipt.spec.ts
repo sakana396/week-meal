@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { initialAppState } from "../src/core/basket";
-import { itemRow } from "./helpers";
+import { itemRow, registerFood } from "./helpers";
 
 /** 確認済みの食材を保存値から読む（DES-RCP-05）。 */
 async function savedItems(page: Page, shoppingId?: string) {
@@ -17,6 +18,41 @@ async function paste(page: Page, value: string) {
   await page.getByLabel("レシートの食材のテキスト").fill(value);
   await page.getByRole("button", { name: "読み取る" }).click();
 }
+
+test("TC-FR-RCP-04-03 言い換えた行の元表記を確認して登録する", async ({
+  page,
+}) => {
+  await page.goto("#/receipt");
+  await paste(page, "生椎茸,1\nプチトマト,1\nﾄﾘﾑﾈ,1");
+  const rows = page.locator(".receipt-review-row");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText("レシートの表記: 生椎茸");
+  await expect(rows.nth(1)).toContainText("レシートの表記: プチトマト");
+  await expect(
+    page.getByRole("heading", { name: "登録しない物 1 件" }),
+  ).toBeVisible();
+  await expect(page.getByText("ﾄﾘﾑﾈ,1", { exact: true })).toBeVisible();
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(
+    axe.violations.filter(
+      ({ impact }) => impact === "critical" || impact === "serious",
+    ),
+  ).toEqual([]);
+  await page.getByRole("button", { name: "2 件を登録" }).click();
+  await expect(itemRow(page, "しいたけ")).toHaveCount(1);
+  await expect(itemRow(page, "ミニトマト")).toHaveCount(1);
+});
+
+test("TC-FR-ING-06-23 分けた食材にパック単位の目安を示す", async ({ page }) => {
+  await page.goto("#/register");
+  await registerFood(page, "ミニトマト");
+  await registerFood(page, "かいわれだいこん");
+  await page.goto("#/");
+  await expect(itemRow(page, "ミニトマト")).toContainText("1 パック ≒ 200 g");
+  await expect(itemRow(page, "かいわれだいこん")).toContainText(
+    "1 パック ≒ 50 g",
+  );
+});
 
 test("TC-FR-RCP-01-03 登録画面からコピー・確認・一括登録し、外部へ送らない", async ({
   page,

@@ -2,6 +2,7 @@ import {
   foodCategoryGroupAliases,
   foodGroupAliases,
   foodRepresentativePatterns,
+  foodVarietyGroupNames,
 } from "../data/foodDisplayNames";
 import { foodShelf, foodShelves, type FoodShelf } from "../data/foodShelves";
 import { supermarketFoodPriorities } from "../data/supermarketFoods";
@@ -70,7 +71,12 @@ export function foodPresentation(officialName: string, category?: string) {
     ? foodCategoryGroupAliases[`${category}:${groupedName}`]
     : undefined;
   const baseName =
-    categoryAlias || foodGroupAliases[groupedName] || groupedName;
+    (category
+      ? foodVarietyGroupNames[`${category}:${specificName}`]
+      : undefined) ||
+    categoryAlias ||
+    foodGroupAliases[groupedName] ||
+    groupedName;
   const separateForm = separateFoodForms.find(({ pattern }) =>
     pattern.test(nameWithoutFamily),
   );

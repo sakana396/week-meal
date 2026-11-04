@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import foodsJson from "../data/foods.json";
+import { receiptAliases } from "../data/receiptAliases";
 import type { FoodItem } from "../types";
 import {
   basketReducer,
@@ -47,12 +48,12 @@ describe("レシート指示文（DES-RCP-02）", () => {
       "はるさめ（乾燥）",
     ]);
   });
-  it("TC-FR-RCP-02-01 登録一覧 186 件での実文字数は 1316", () => {
+  it("TC-FR-RCP-02-01 登録一覧 188 件での実文字数を確かめる", () => {
     const names = groupFoods(
       (foodsJson as FoodItem[]).filter(isRegistrable),
     ).map((group) => group.name);
-    expect(names).toHaveLength(186);
-    expect(receiptPrompt(names)).toHaveLength(1316);
+    expect(names).toHaveLength(188);
+    expect(receiptPrompt(names)).toHaveLength(1331);
   });
   it.each([
     "マークダウンや装飾を使わず、プレーンテキストで答えてください",
@@ -65,6 +66,77 @@ describe("レシート指示文（DES-RCP-02）", () => {
 });
 
 describe("レシート読み取り（DES-RCP-03）", () => {
+  it.each([
+    ["生椎茸", "しいたけ"],
+    ["コマツ菜", "こまつな"],
+    ["プチトマト", "ミニトマト"],
+    ["カイワレ", "かいわれだいこん"],
+    ["玉子", "鶏卵"],
+    ["長ねぎ", "ねぎ"],
+  ])(
+    "TC-FR-RCP-04-01 初版の言い換え表で %s を %s に当てる",
+    (alias, expected) => {
+      const foods = [expected].map((displayName) => ({
+        displayName,
+        foodId: displayName,
+      }));
+      const catalogWithAlias = {
+        foods,
+        manualFoods: [],
+        aliases: receiptAliases,
+      };
+      const snapshot = JSON.stringify(catalogWithAlias);
+      const result = parseReceiptText(`${alias},1`, catalogWithAlias);
+      expect(result.candidates[0]).toMatchObject({
+        displayName: expected,
+        aliasFrom: alias,
+      });
+      expect(JSON.stringify(catalogWithAlias)).toBe(snapshot);
+    },
+  );
+  it.each([
+    ["生椎茸,1", "しいたけ", "生椎茸"],
+    ["プチトマト,1", "ミニトマト", "プチトマト"],
+    ["生椎茸,1", "生椎茸", undefined],
+  ])(
+    "TC-FR-RCP-04-01 言い換えと直接一致を区別する %#",
+    (line, expected, aliasFrom) => {
+      const foods = ["しいたけ", "ミニトマト", "生椎茸"].map((displayName) => ({
+        displayName,
+        foodId: displayName,
+      }));
+      const result = parseReceiptText(line, {
+        foods: aliasFrom ? foods.slice(0, 2) : foods,
+        manualFoods: [],
+        aliases: { 生椎茸: "しいたけ", プチトマト: "ミニトマト" },
+      });
+      expect(result.candidates[0]).toMatchObject({ displayName: expected });
+      expect(result.candidates[0].aliasFrom).toBe(aliasFrom);
+      expect(result.unmatched).toEqual([]);
+    },
+  );
+
+  it("TC-FR-RCP-04-01 言い換えは一段だけで、手入力名を優先し、表にない名前は残す", () => {
+    const result = parseReceiptText("生椎茸,1\nプチトマト,1\n似た名前,1", {
+      foods: [{ displayName: "しいたけ", foodId: "1" }],
+      manualFoods: [{ displayName: "生椎茸", foodId: "manual-1" }],
+      aliases: { 生椎茸: "しいたけ", プチトマト: "生椎茸" },
+    });
+    expect(result.candidates.map(({ foodId }) => foodId)).toEqual([
+      "manual-1",
+      "manual-1",
+    ]);
+    expect(result.unmatched).toEqual([{ line: 3, text: "似た名前,1" }]);
+  });
+  it("TC-FR-RCP-04-01 言い換えの先は再び言い換えない", () => {
+    const result = parseReceiptText("A,1", {
+      foods: [{ displayName: "しいたけ", foodId: "1" }],
+      manualFoods: [],
+      aliases: { A: "B", B: "しいたけ" },
+    });
+    expect(result.candidates).toEqual([]);
+    expect(result.unmatched).toEqual([{ line: 1, text: "A,1" }]);
+  });
   it.each([
     ["にんじん,2", { kind: "count", count: 2 }, false],
     ["－ にんじん、１．３個", { kind: "count", count: 1.5 }, true],

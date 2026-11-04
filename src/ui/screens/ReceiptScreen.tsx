@@ -26,6 +26,7 @@ import { baseFoods } from "../foodData";
 import { localDate } from "../localDate";
 import { localId } from "../ids";
 import type { Route } from "../route";
+import { receiptAliases } from "../../data/receiptAliases";
 
 type ReviewRow = ReceiptCandidate & {
   enabled: boolean;
@@ -99,6 +100,7 @@ export function ReceiptScreen({
         displayName: food.name,
         foodId: food.id,
       })),
+      aliases: receiptAliases,
     }),
     [state.manualFoods],
   );
@@ -335,6 +337,9 @@ export function ReceiptScreen({
                     }
                   />
                 </label>
+                {row.aliasFrom && (
+                  <small>レシートの表記: {row.aliasFrom}</small>
+                )}
                 <div className="receipt-quantity">
                   <div
                     role="group"
