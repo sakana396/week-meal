@@ -27,7 +27,7 @@ const foodIds = new Set(foods.map((food) => food.id));
 const groupNames = new Set(groupFoods(foods).map((group) => group.name));
 
 describe("食品データの整合性（DES-FDB-04）", () => {
-  it("TC-FR-RCP-04-02 言い換え表は登録名を指し、正規化後の重複と同名の値がない", () => {
+  it("TC-FR-RCP-04-02 言い換え表は登録名を指し、重複・同名の値・肉の部位名がない", () => {
     const registrable = new Set(
       groupFoods(foods.filter(isRegistrable)).map((group) =>
         normalizeSearchText(group.name.normalize("NFKC")),
@@ -37,6 +37,11 @@ describe("食品データの整合性（DES-FDB-04）", () => {
       normalizeSearchText(key.normalize("NFKC")),
     );
     expect(keys.length).toBe(new Set(keys).size);
+    const meatCutPattern =
+      /(?:豚|鶏|牛)(?:肉)?.*(?:ばら|バラ|こま|コマ|もも|モモ|むね|ムネ|ささみ|ササミ|手羽|ロース|ヒレ|肩|かた)/;
+    expect(
+      Object.keys(receiptAliases).filter((key) => meatCutPattern.test(key)),
+    ).toEqual([]);
     for (const [alias, name] of Object.entries(receiptAliases)) {
       const key = normalizeSearchText(alias.normalize("NFKC"));
       const value = normalizeSearchText(name.normalize("NFKC"));
