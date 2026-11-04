@@ -26,6 +26,7 @@
 | 反復 | 反復 5（レシートの貼り付けと重さでの登録）計画書 | [iterations/it05/plan.md](iterations/it05/plan.md) | v0.1 |
 | 反復 | 反復 5 振り返り | [iterations/it05/retrospective.md](iterations/it05/retrospective.md) | v0.1（E-103〜E-110 を反映） |
 | 反復 | 反復 6（レシートの当てはめと判定の点検）計画書 | [iterations/it06/plan.md](iterations/it06/plan.md) | v0.1 |
+| 反復 | 反復 6 炭水化物の判定の調査記録 | [iterations/it06/carbohydrate-investigation.md](iterations/it06/carbohydrate-investigation.md) | 調査・報告案（本人の直し方の選択待ち） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
