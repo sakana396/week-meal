@@ -181,6 +181,9 @@
 | 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
 |---|---|---|---|---|---|
 | FR-ING-06、FR-ING-04 | #131 | DES-CAT-07 | TC-FR-ING-06-22〜24、TC-FR-ING-04-07 | src/core/catalog.ts, src/core/catalog.test.ts, src/data/foodDisplayNames.ts, src/data/supermarketFoods.ts, src/data/integrity.test.ts, src/core/storageIt05.test.ts, e2e/receipt.spec.ts | 実装済み。新しい食材名と順位、旧い保存行の維持を単体テストで確認 |
-| FR-QTY-02、FR-QTY-08 | #131 | DES-CAT-07 | TC-FR-ING-06-23、24 | src/data/unitWeights.ts, src/data/integrity.test.ts, src/core/storageIt05.test.ts, e2e/receipt.spec.ts | 実装済み。2 食材のパック重量は概算で本人の査閲待ち |
+| FR-QTY-02、FR-QTY-08 | #131 | DES-CAT-07 | TC-FR-ING-06-23、24 | src/data/unitWeights.ts, src/data/integrity.test.ts, src/core/storageIt05.test.ts, e2e/receipt.spec.ts | 実装済み。2 食材のパック重量は概算。2026-11-05 に本人が「このままでよい」と回答（E-122） |
 | FR-RCP-03、FR-RCP-04 | #131 | DES-RCP-06、07 | TC-FR-RCP-04-01〜03 | src/data/receiptAliases.ts, src/core/receipt.ts, src/core/receipt.test.ts, src/ui/screens/ReceiptScreen.tsx, e2e/receipt.spec.ts | 実装済み。完全一致の一段の言い換えと元表記の表示を単体テストで確認 |
 | NFR-11 | #131 | DES-CAT-07、DES-RCP-06 | TC-FR-ING-06-23、TC-FR-RCP-04-02 | src/data/integrity.test.ts | 実装済み。表の参照先とキーの衝突を単体テストで確認 |
+| NFR-03 | #133 | DES-PER-07、DES-IT06 6.1、6.3 | TC-NFR-03-06 | e2e/row-layout.spec.ts, e2e/performance.spec.ts, docs/04_test/performance-measurement-it06.md | 計測を実装済み。幅別の行の実寸・中央値を JSON 化し、性能計測外の準備を 30 秒待ちで記録。測定方法・判定規則は維持。2026-11-05 の実測中央値から内容領域の推定値を 767 px 以下 213.5 px、それ以外 113 px に変更。変更前の日付変更は最大 119.69999999925494 ms で予算超過。変更後は Claude Code がローカル WSL2 で E2E 全体を再実行し、238 件成功・1 件スキップ。CPU 4 倍の全条件・全操作が 100 ms 以内（日付変更の最大 92.09999999962747 ms）で TC-NFR-03-06 は合格、同模擬条件で NFR-03 を満たす。CI の時間超過は記録のみのため、変更前の E2E 成功は予算達成を示さない。目視確認は未実施。詳細は計測記録に記載 |
+| NFR-06 | #133 | DES-PER-07、DES-IT06 6.2 | TC-NFR-06-05 | e2e/row-layout.spec.ts, docs/04_test/performance-measurement-it06.md | 調査テストを実装済み。画面外とスクロール後のテキスト・アクセシビリティ情報・ロケーター・操作を検査し JSON 化。ページ内検索の手順と影響の判断欄を計測記録に記載 |
+| FR-QTY-07 | #133 | DES-UI-51 | TC-FR-QTY-07-06 | src/ui/components/ItemRow.tsx, e2e/row-quantity.spec.ts | 既存の焦点移動に通常時の「＋」と 999 個時の「−」の E2E を追加済み |

@@ -118,3 +118,55 @@ test("TC-NFR-03-05 画面外の行へ焦点を移して操作できる", async (
     ),
   ).toBe(true);
 });
+
+for (const [grams, count, direction] of [
+  [200, 2, "増やす"],
+  [99900, 999, "減らす"],
+] as const) {
+  test(`TC-FR-QTY-07-06 個へ戻した後に${count}個の操作ボタンへ焦点を移す`, async ({
+    page,
+  }) => {
+    await page.goto("#/");
+    await page.evaluate(
+      ({ grams, initialAppState }) =>
+        localStorage.setItem(
+          "weekmeal:state",
+          JSON.stringify({
+            version: 4,
+            ...initialAppState,
+            shoppings: [
+              {
+                id: "focus",
+                date: "2026-11-04",
+                origin: "normal",
+                items: [
+                  {
+                    id: "focus-item",
+                    foodId: "06212",
+                    displayName: "焦点試料",
+                    quantity: { kind: "weight", grams, unit: "g" },
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      { grams, initialAppState },
+    );
+    await page.reload();
+    const row = itemRow(page, "焦点試料");
+    await row
+      .getByRole("button", { name: "焦点試料を 個 に切り替える" })
+      .click();
+    await expect(
+      row.getByRole("group", { name: "焦点試料の個数", exact: true }),
+    ).toContainText(`${count} つ`);
+    await expect(
+      row.getByRole("button", { name: `焦点試料を 0.5 ${direction}` }),
+    ).toBeFocused();
+    if (count === 999)
+      await expect(
+        row.getByRole("button", { name: "焦点試料を 0.5 増やす" }),
+      ).toBeDisabled();
+  });
+}

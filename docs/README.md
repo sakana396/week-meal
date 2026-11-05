@@ -26,7 +26,7 @@
 | 反復 | 反復 5（レシートの貼り付けと重さでの登録）計画書 | [iterations/it05/plan.md](iterations/it05/plan.md) | v0.1 |
 | 反復 | 反復 5 振り返り | [iterations/it05/retrospective.md](iterations/it05/retrospective.md) | v0.1（E-103〜E-110 を反映） |
 | 反復 | 反復 6（レシートの当てはめと判定の点検）計画書 | [iterations/it06/plan.md](iterations/it06/plan.md) | v0.1 |
-| 反復 | 反復 6 炭水化物の判定の調査記録 | [iterations/it06/carbohydrate-investigation.md](iterations/it06/carbohydrate-investigation.md) | 調査・報告案（本人の直し方の選択待ち） |
+| 反復 | 反復 6 炭水化物の判定の調査記録 | [iterations/it06/carbohydrate-investigation.md](iterations/it06/carbohydrate-investigation.md) | 調査・報告（E-121: 今は変えず、実際の買い物で調べ直す） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
@@ -40,6 +40,7 @@
 | 試験 | テスト仕様書（反復 4） | [04_test/test-spec-it04.md](04_test/test-spec-it04.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 5） | [04_test/test-spec-it05.md](04_test/test-spec-it05.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 6） | [04_test/test-spec-it06.md](04_test/test-spec-it06.md) | v0.1 骨組み |
+| 試験 | IT06 行の高さ・画面外の行・性能の計測記録 | [04_test/performance-measurement-it06.md](04_test/performance-measurement-it06.md) | 記録中 |
 | 試験 | 日付変更の性能計測（反復 5） | [04_test/performance-measurement-it05.md](04_test/performance-measurement-it05.md) | 記録中 |
 | 試験 | テスト仕様書（反復 1） | [04_test/test-spec-it01.md](04_test/test-spec-it01.md) | 追記中 |
 | 試験 | 食品の除外・維持の査閲資料（IT03 #59） | [04_test/food-selection-review-it03.md](04_test/food-selection-review-it03.md) | 本人の査閲待ち |

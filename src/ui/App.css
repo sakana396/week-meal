@@ -887,9 +887,9 @@ h3 {
 }
 
 .item-row {
-  /* 画面外の行のレイアウトと描画を必要になるまで省く（DES-PER-05への提案）。 */
+  /* 画面外の行の配置と描画を省く。推定値は内容領域の実測中央値（DES-PER-07、TC-NFR-03-06）。 */
   content-visibility: auto;
-  contain-intrinsic-size: auto 180px;
+  contain-intrinsic-size: auto 113px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
@@ -1001,6 +1001,7 @@ h3 {
 
 @media (max-width: 767px) {
   .item-row {
+    contain-intrinsic-size: auto 213.5px;
     grid-template-columns: 1fr;
   }
 }
