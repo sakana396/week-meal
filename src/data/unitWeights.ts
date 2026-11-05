@@ -24,7 +24,8 @@ export type UnitWeight = {
  * 本人が確認した（REV-010）。
  */
 const estimate = "概算（一般的な市販品の重さ。本人が確認、REV-010）";
-const it06Estimate = "概算（エージェント作成、IT06。本人の査閲待ち）";
+const it06Estimate =
+  "概算（エージェント作成、IT06。2026-11-05 に本人が『このままでよい』と回答、E-122）";
 
 export const unitWeights: Record<string, UnitWeight> = {
   がんもどき: { unit: "枚", purchaseG: 100, source: estimate },

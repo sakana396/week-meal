@@ -7,6 +7,33 @@ import { nutrientDefinitions } from "../src/data/nutrients";
 import type { NutrientsPer100g } from "../src/types";
 import { itemRow } from "./helpers";
 
+/** 計測外の画面準備は CPU 4 倍・履歴 100 件でも待つ（DES-IT06 6.3）。 */
+const preparationTimeoutMs = 30_000;
+const preparationExpect = expect.configure({ timeout: preparationTimeoutMs });
+
+/** 準備の所要時間を、失敗時も性能の値と分けて記録する（DES-IT06 6.3）。 */
+async function prepare(
+  samples: object[],
+  operation: string,
+  repeat: number,
+  phase: string,
+  action: () => Promise<void>,
+) {
+  const start = performance.now();
+  try {
+    await action();
+  } finally {
+    samples.push({
+      kind: "preparation",
+      operation,
+      repeat: repeat + 1,
+      phase,
+      elapsedMs: performance.now() - start,
+      timeoutMs: preparationTimeoutMs,
+    });
+  }
+}
+
 type Measurement = {
   revision: number;
   elapsedMs: number;
@@ -190,21 +217,29 @@ for (const size of [3, 30, 100]) {
           const calculationValues: number[] = [];
           const reflectionValues: number[] = [];
           for (let repeat = 0; repeat < 5; repeat++) {
-            await page.evaluate(
-              (state) =>
-                localStorage.setItem(
-                  "weekmeal:state",
-                  JSON.stringify({ version: 4, ...state }),
-                ),
-              fixture(size),
-            );
-            await page.goto("#/");
-            await page.reload();
-            await page.mouse.move(0, 0);
             const panel = page.locator("[data-candidates-revision]");
-            await expect(panel).toHaveAttribute(
-              "data-candidates-revision",
-              "0",
+            await prepare(
+              samples,
+              operation,
+              repeat,
+              "試料の書き込み・ホームの候補 revision=0",
+              async () => {
+                await page.evaluate(
+                  (state) =>
+                    localStorage.setItem(
+                      "weekmeal:state",
+                      JSON.stringify({ version: 4, ...state }),
+                    ),
+                  fixture(size),
+                );
+                await page.goto("#/");
+                await page.reload();
+                await page.mouse.move(0, 0);
+                await preparationExpect(panel).toHaveAttribute(
+                  "data-candidates-revision",
+                  "0",
+                );
+              },
             );
             const initialization = await page.evaluate(() =>
               performance
@@ -212,13 +247,23 @@ for (const size of [3, 30, 100]) {
                 .map((entry) => entry.toJSON()),
             );
             const openingStart = await page.evaluate(() => performance.now());
-            if (operation === "register") {
-              await page
-                .getByRole("navigation")
-                .getByRole("button", { name: "登録", exact: true })
-                .click();
-              await expect(page.getByLabel("食材名一覧")).toBeVisible();
-            }
+            await prepare(
+              samples,
+              operation,
+              repeat,
+              "登録画面・食材名一覧",
+              async () => {
+                if (operation === "register") {
+                  await page
+                    .getByRole("navigation")
+                    .getByRole("button", { name: "登録", exact: true })
+                    .click();
+                  await preparationExpect(
+                    page.getByLabel("食材名一覧"),
+                  ).toBeVisible();
+                }
+              },
+            );
             const registerOpeningMs =
               operation === "register"
                 ? await page.evaluate(
@@ -242,7 +287,19 @@ for (const size of [3, 30, 100]) {
                       exact: true,
                     });
             // Playwright のスクロール・待機は計測開始より前。捕捉対象の次の click だけを測る。
-            await button.scrollIntoViewIfNeeded();
+            await prepare(
+              samples,
+              operation,
+              repeat,
+              "操作対象の表示・有効化・スクロール",
+              async () => {
+                await preparationExpect(button).toBeVisible();
+                await preparationExpect(button).toBeEnabled();
+                await button.scrollIntoViewIfNeeded({
+                  timeout: preparationTimeoutMs,
+                });
+              },
+            );
             if (operation === "candidate") {
               // 候補登録はキーボード由来のclickで測り、意図的なポインター待ちを含めない。
               await button.focus();
@@ -463,7 +520,7 @@ const shoppingOperations = [
 for (const size of [3, 30, 100]) {
   for (const historyCount of [0, 100]) {
     for (const rate of [1, 4]) {
-      test(`TC-NFR-03-04 TC-NFR-03-05 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
+      test(`TC-NFR-03-04 TC-NFR-03-05 TC-NFR-03-06 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
         page,
         browser,
       }, testInfo) => {
@@ -507,32 +564,42 @@ for (const size of [3, 30, 100]) {
             const calculationValues: number[] = [];
             const reflectionValues: number[] = [];
             for (let repeat = 0; repeat < 5; repeat++) {
-              await page.goto("#/");
-              await page.evaluate(
-                (state) =>
-                  localStorage.setItem(
-                    "weekmeal:state",
-                    JSON.stringify({ version: 4, ...state }),
-                  ),
-                shoppingFixture(size, historyCount),
-              );
-              await page.reload();
-              await page.mouse.move(0, 0);
               const previous = operation.endsWith("Previous");
               const register = operation.startsWith("register");
               const changeDate = operation === "changeLatestDate";
               const targetId = previous ? "previous" : "latest";
-              if (previous) {
-                await page.goto("#/history/previous");
-                await expect(page.getByLabel("買い物詳細画面")).toBeVisible();
-              }
               const panel = page.locator("[data-candidates-revision]");
-              if (!previous) {
-                await expect(panel).toHaveAttribute(
-                  "data-candidates-revision",
-                  "0",
-                );
-              }
+              await prepare(
+                samples,
+                operation,
+                repeat,
+                "試料の書き込み・対象画面と候補 revision=0",
+                async () => {
+                  await page.goto("#/");
+                  await page.evaluate(
+                    (state) =>
+                      localStorage.setItem(
+                        "weekmeal:state",
+                        JSON.stringify({ version: 4, ...state }),
+                      ),
+                    shoppingFixture(size, historyCount),
+                  );
+                  await page.reload();
+                  await page.mouse.move(0, 0);
+                  if (previous) {
+                    await page.goto("#/history/previous");
+                    await preparationExpect(
+                      page.getByLabel("買い物詳細画面"),
+                    ).toBeVisible();
+                  }
+                  if (!previous) {
+                    await preparationExpect(panel).toHaveAttribute(
+                      "data-candidates-revision",
+                      "0",
+                    );
+                  }
+                },
+              );
               const initialization = previous
                 ? []
                 : await page.evaluate(() =>
@@ -540,19 +607,29 @@ for (const size of [3, 30, 100]) {
                       .getEntriesByName("weekmeal:candidate-initialization")
                       .map((entry) => entry.toJSON()),
                   );
-              if (register) {
-                if (previous) {
-                  await page
-                    .getByRole("button", { name: "この買い物に食材を登録" })
-                    .click();
-                } else {
-                  await page
-                    .getByRole("navigation")
-                    .getByRole("button", { name: "登録", exact: true })
-                    .click();
-                }
-                await expect(page.getByLabel("食材名一覧")).toBeVisible();
-              }
+              await prepare(
+                samples,
+                operation,
+                repeat,
+                "登録画面・食材名一覧",
+                async () => {
+                  if (register) {
+                    if (previous) {
+                      await page
+                        .getByRole("button", { name: "この買い物に食材を登録" })
+                        .click();
+                    } else {
+                      await page
+                        .getByRole("navigation")
+                        .getByRole("button", { name: "登録", exact: true })
+                        .click();
+                    }
+                    await preparationExpect(
+                      page.getByLabel("食材名一覧"),
+                    ).toBeVisible();
+                  }
+                },
+              );
               if (changeDate) {
                 await page.getByLabel("買い物の日付").fill("2026-10-29");
               }
@@ -570,7 +647,19 @@ for (const size of [3, 30, 100]) {
                           ? "キャベツを 0.5 減らす"
                           : "キャベツを削除",
                     });
-              await button.scrollIntoViewIfNeeded();
+              await prepare(
+                samples,
+                operation,
+                repeat,
+                "操作対象の表示・有効化・スクロール",
+                async () => {
+                  await preparationExpect(button).toBeVisible();
+                  await preparationExpect(button).toBeEnabled();
+                  await button.scrollIntoViewIfNeeded({
+                    timeout: preparationTimeoutMs,
+                  });
+                },
+              );
               const trackCandidates =
                 !previous &&
                 !register &&
