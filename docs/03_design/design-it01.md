@@ -47,7 +47,7 @@ flowchart TB
 |---|---|
 | DES-DEV-01 | `npm run typecheck`（`tsc -b`）、`npm run lint`（ESLint）、`npm run format:check`（Prettier）、`npm test`（Vitest）、`npm run test:coverage`、`npm run build` を用意する |
 | DES-DEV-02 | Vitest の網羅率の対象は `src/core/**`。命令網羅率 80% を下回ったら失敗にする（NFR-09） |
-| DES-DEV-03 | GitHub Actions（`.github/workflows/ci.yml`）で、プッシュとプルリクエストごとに DES-DEV-01 をすべて実行する（QA-01） |
+| DES-DEV-03 | GitHub Actions（`.github/workflows/ci.yml`）で、main へのプッシュとプルリクエストごとに DES-DEV-01 をすべて実行する。`push.branches: [main]` とし、PR のブランチへのプッシュは `pull_request` だけで検証する（QA-01、#138） |
 | DES-DEV-04 | ESLint で `@typescript-eslint/no-explicit-any` を誤りにする（NFR-10） |
 
 ## 2. データ
