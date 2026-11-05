@@ -64,7 +64,8 @@ describe("食品データの整合性（DES-FDB-04）", () => {
       expect(unitWeights[name]).toMatchObject({
         unit: "パック",
         purchaseG,
-        source: "概算（エージェント作成、IT06。本人の査閲待ち）",
+        source:
+          "概算（エージェント作成、IT06。2026-11-05 に本人が『このままでよい』と回答、E-122）",
       });
     },
   );
