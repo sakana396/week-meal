@@ -18,6 +18,7 @@ import foodsJson from "./foods.json";
 import { stapleFoodIds } from "./staples";
 import { supermarketFoodPriorities } from "./supermarketFoods";
 import { unitWeights } from "./unitWeights";
+import { receiptAliases } from "./receiptAliases";
 
 // 定義データが食品データにあるものだけを参照していることを確かめる（DES-FDB-04、NFR-11）
 // UI の baseFoods と同じ配列を使い、data から ui への依存を避ける。
@@ -26,6 +27,47 @@ const foodIds = new Set(foods.map((food) => food.id));
 const groupNames = new Set(groupFoods(foods).map((group) => group.name));
 
 describe("食品データの整合性（DES-FDB-04）", () => {
+  it("TC-FR-RCP-04-02 言い換え表は登録名を指し、重複・同名の値・肉の部位名がない", () => {
+    const registrable = new Set(
+      groupFoods(foods.filter(isRegistrable)).map((group) =>
+        normalizeSearchText(group.name.normalize("NFKC")),
+      ),
+    );
+    const keys = Object.keys(receiptAliases).map((key) =>
+      normalizeSearchText(key.normalize("NFKC")),
+    );
+    expect(keys.length).toBe(new Set(keys).size);
+    const meatCutPattern =
+      /(?:豚|鶏|牛)(?:肉)?.*(?:ばら|バラ|こま|コマ|もも|モモ|むね|ムネ|ささみ|ササミ|手羽|ロース|ヒレ|肩|かた)/;
+    expect(
+      Object.keys(receiptAliases).filter((key) => meatCutPattern.test(key)),
+    ).toEqual([]);
+    for (const [alias, name] of Object.entries(receiptAliases)) {
+      const key = normalizeSearchText(alias.normalize("NFKC"));
+      const value = normalizeSearchText(name.normalize("NFKC"));
+      expect(registrable.has(value), alias).toBe(true);
+      expect(registrable.has(key), alias).toBe(false);
+      expect(key, alias).not.toBe(value);
+    }
+  });
+  it.each([
+    ["ミニトマト", "06183", 200],
+    ["かいわれだいこん", "06128", 50],
+  ])(
+    "TC-FR-ING-06-23 %s は代表食品 %s とパックの概算重量を持つ",
+    (name, id, purchaseG) => {
+      const group = groupFoods(foods.filter(isRegistrable)).find(
+        (item) => item.name === name,
+      );
+      expect(group).toBeDefined();
+      expect(group?.foods.map((item) => item.id)).toEqual([id]);
+      expect(unitWeights[name]).toMatchObject({
+        unit: "パック",
+        purchaseG,
+        source: "概算（エージェント作成、IT06。本人の査閲待ち）",
+      });
+    },
+  );
   // DES-SUG-01 の候補集合の入口。候補選定関数自体は別 Issue の担当。
   const candidates = groupFoods(foods.filter(isRegistrable))
     .filter((group) => supermarketPriority(group.name) !== null)

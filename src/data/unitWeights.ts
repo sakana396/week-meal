@@ -24,6 +24,7 @@ export type UnitWeight = {
  * 本人が確認した（REV-010）。
  */
 const estimate = "概算（一般的な市販品の重さ。本人が確認、REV-010）";
+const it06Estimate = "概算（エージェント作成、IT06。本人の査閲待ち）";
 
 export const unitWeights: Record<string, UnitWeight> = {
   がんもどき: { unit: "枚", purchaseG: 100, source: estimate },
@@ -59,9 +60,11 @@ export const unitWeights: Record<string, UnitWeight> = {
   じゃがいも: { unit: "個", purchaseG: 150, source: estimate },
   キャベツ: { unit: "玉", purchaseG: 1200, source: estimate },
   大根: { unit: "本", purchaseG: 1000, source: estimate },
+  かいわれだいこん: { unit: "パック", purchaseG: 50, source: it06Estimate },
   はくさい: { unit: "1/4株", purchaseG: 600, source: estimate },
   きゅうり: { unit: "本", purchaseG: 100, source: estimate },
   トマト: { unit: "個", purchaseG: 200, source: estimate },
+  ミニトマト: { unit: "パック", purchaseG: 200, source: it06Estimate },
   なす: { unit: "本", purchaseG: 80, source: estimate },
   ピーマン: { unit: "袋", purchaseG: 150, source: estimate, note: "5個入り" },
   レタス: { unit: "玉", purchaseG: 400, source: estimate },

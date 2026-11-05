@@ -175,3 +175,12 @@
 | FR-RCP-01〜03 | #123 | DES-RCP-02, 03 | TC-FR-RCP-01-09、TC-FR-RCP-02-03 | src/core/receipt.ts, src/core/receipt.test.ts | 実装済み。行末の空白と `\` を除去し、空白だけの長い行を飛ばし、行中の長い空白を短時間で処理する。指示文にプレーンテキストと一覧名への置き換えを明記 |
 | NFR-06 | #115 | DES-RCP-04、DES-UI-49 | TC-NFR-06-04（貼り付けの部分、E2E） | src/ui/screens/ReceiptScreen.tsx, src/ui/App.css, e2e/accessibility.spec.ts | 貼り付け画面と確認の一覧の axe・寸法の検査ケースを追加済み |
 | FR-SYS-03 | #115 | DES-RCP-01 | TC-FR-SYS-03-02（公開 URL 手動確認） | docs/04_test/receipt-public-check-it05.md | 公開 URL での手動確認手順を作成済み。2026-11-03 に配信コミット 96f1efc の公開 URL で、Playwright による自動操作で手順 1〜5 を行い、記録した範囲では期待どおりだった（鶏卵の量など、確かめていない点は記録に書いた）。page の request イベントで数えた外部への要求は 0 件 |
+
+## 反復 6（IT06）
+
+| 要求 | Issue | 設計 | テストケース | 実装 | 状態 |
+|---|---|---|---|---|---|
+| FR-ING-06、FR-ING-04 | #131 | DES-CAT-07 | TC-FR-ING-06-22〜24、TC-FR-ING-04-07 | src/core/catalog.ts, src/core/catalog.test.ts, src/data/foodDisplayNames.ts, src/data/supermarketFoods.ts, src/data/integrity.test.ts, src/core/storageIt05.test.ts, e2e/receipt.spec.ts | 実装済み。新しい食材名と順位、旧い保存行の維持を単体テストで確認 |
+| FR-QTY-02、FR-QTY-08 | #131 | DES-CAT-07 | TC-FR-ING-06-23、24 | src/data/unitWeights.ts, src/data/integrity.test.ts, src/core/storageIt05.test.ts, e2e/receipt.spec.ts | 実装済み。2 食材のパック重量は概算で本人の査閲待ち |
+| FR-RCP-03、FR-RCP-04 | #131 | DES-RCP-06、07 | TC-FR-RCP-04-01〜03 | src/data/receiptAliases.ts, src/core/receipt.ts, src/core/receipt.test.ts, src/ui/screens/ReceiptScreen.tsx, e2e/receipt.spec.ts | 実装済み。完全一致の一段の言い換えと元表記の表示を単体テストで確認 |
+| NFR-11 | #131 | DES-CAT-07、DES-RCP-06 | TC-FR-ING-06-23、TC-FR-RCP-04-02 | src/data/integrity.test.ts | 実装済み。表の参照先とキーの衝突を単体テストで確認 |

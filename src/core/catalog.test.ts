@@ -18,6 +18,31 @@ function food(id: string, name: string, category: string): FoodItem {
 
 describe("foodPresentation（DES-CAT-01）", () => {
   it.each([
+    ["（トマト類） 赤色ミニトマト 果実 生", "野菜類", "ミニトマト"],
+    ["（だいこん類） かいわれだいこん 芽ばえ 生", "野菜類", "かいわれだいこん"],
+    ["（トマト類） トマト 果実 生", "野菜類", "トマト"],
+    ["（だいこん類） だいこん 根 生", "野菜類", "大根"],
+  ])(
+    "TC-FR-ING-06-22 品種ごとの食材名を決める %#",
+    (officialName, category, expected) => {
+      expect(foodPresentation(officialName, category).name).toBe(expected);
+    },
+  );
+  it.each([
+    ["（トマト類） 赤色ミニトマト 果実 生", "06183", "ミニトマト"],
+    ["（だいこん類） かいわれだいこん 芽ばえ 生", "06128", "かいわれだいこん"],
+  ])("TC-FR-ING-06-22 分けた食材の代表食品は単体 %#", (name, id, expected) => {
+    const groups = groupFoods([food(id, name, "野菜類")]);
+    expect(groups[0].name).toBe(expected);
+    expect(representativeFood(groups[0]).id).toBe(id);
+  });
+  it.each([
+    ["大根", "かいわれだいこん"],
+    ["トマト", "ミニトマト"],
+  ])("TC-FR-ING-04-07 %s の直後に %s を並べる", (before, after) => {
+    expect(supermarketPriority(after)).toBe(supermarketPriority(before)! + 1);
+  });
+  it.each([
     [
       "TC-FR-ING-05-01 （あじ類）の分類を食材名にまとめる",
       "＜魚類＞ （あじ類） まあじ 皮つき 生",
