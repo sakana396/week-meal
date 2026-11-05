@@ -25,6 +25,8 @@
 | TC-NFR-08-03 | NFR-08 / DES-PKG-05 | 同上 | `src/core/` で `.tsx` からの react の import、下の階層からの `../../App`・`../ui/*` の import、`globalThis.localStorage`、引数なしの `new Date()`、動的 `import("react")`、`import("react").FC` を書いて `npm run lint` | すべて誤りになる。`../data/*` の import と `new Date(0)` は誤りにならない（#2 で手動確認） | 異常 |
 | TC-QA-02-01 | QA-02 / DES-DEV-02 | 網羅率の閾値 80% | テストのない関数を `src/core/` に置いて `npm run test:coverage` | 終了コードが 0 以外になる（#2 で手動確認） | 異常 |
 | TC-QA-01-01 | QA-01 / DES-DEV-03 | CI の設定がある | プルリクエストを作る | 型検査・lint・フォーマット確認・単体テスト・ビルドが実行される | 正常 |
+| TC-QA-01-02 | QA-01 / DES-DEV-03 | PR のブランチが main 以外 | ワークフローの起動条件を読み、PR のブランチへのプッシュを照合する | `push` は対象外で、PR 更新時の `pull_request` だけが CI を起動する。PR のないブランチへのプッシュでも起動しない（#138 で設定を静的確認） | 境界 |
+| TC-QA-01-03 | QA-01、FR-SYS-03 / DES-DEV-03、DES-DEP-02 | main へのマージ後のプッシュ | ワークフローの起動条件と job の条件・依存を読む | CI が起動し、check・e2e の成功後に deploy が動く。check・e2e・deploy の手順・条件・依存は変更前と同じ（#138 で設定を静的確認。GitHub 上の実行は未確認） | 正常 |
 | TC-H-02-01 | 仮説 H-02 / DES-ANL-02 | 4 品目 | 倍率 1 | 変化なし | 境界 |
 | TC-H-02-02 | 仮説 H-02 / DES-ANL-02 | 豚肉・鶏卵 6 個・にんじん・牛乳 | にんじんだけ 20 倍 | にんじんの名前つきで、炭水化物が不足 → 適正に変わる | 正常 |
 | TC-H-02-03 | 仮説 H-02 / DES-ANL-02 | 1 品目（判定できない） | 1.3 倍 | 空の配列 | 境界 |

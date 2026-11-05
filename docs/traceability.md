@@ -40,7 +40,7 @@
 | NFR-10 | #2 | DES-DEV-04 | TC-NFR-10-01 | eslint.config.js, tsconfig.app.json | 実装済み |
 | NFR-11 | #4, #5, #59 | DES-FDB-04, 06 | TC-NFR-11-01〜08, TC-FR-FDB-01-03 | src/data/integrity.test.ts | 実装済み |
 | NFR-15 | #7 | DES-NUT-01〜04 | TC-FR-NUT-01-01, 02-01, 04-01, TC-FR-STP-03-01 | src/core/nutrition.test.ts | 実装済み |
-| QA-01 | #2 | DES-DEV-03 | TC-QA-01-01 | .github/workflows/ci.yml | 実装済み |
+| QA-01 | #2, #138 | DES-DEV-03 | TC-QA-01-01〜03 | .github/workflows/ci.yml | 実装済み（#138: 起動条件と job の維持を静的確認。GitHub 上の実行は未確認） |
 | QA-02 | #2 | DES-DEV-02 | TC-QA-02-01 | vite.config.ts | 実装済み |
 | QA-09 | #5, #6, #59 | DES-QTY-01, DES-BAL-01, DES-FDB-06 | TC-FR-QTY-02-05、査閲（基準値の出典: REV-007） | src/data/unitWeights.ts, src/data/dietaryReference.ts, docs/04_test/food-selection-review-it03.md | 実装済み（#59 の食品データの原典照合は未実施と明記） |
 
