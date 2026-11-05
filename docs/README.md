@@ -10,6 +10,7 @@
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
 | 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.8 確定 |
 | 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.9（E-126 を反映） |
+| 計画 | 反復の進め方（エージェント向けの手順、PLAN-002） | [00_plan/iteration-workflow.md](00_plan/iteration-workflow.md) | v0.1 |
 | 反復 | 反復 1 振り返り | [iterations/it01/retrospective.md](iterations/it01/retrospective.md) | 1.0 確定 |
 | 反復 | 反復 2 振り返り | [iterations/it02/retrospective.md](iterations/it02/retrospective.md) | 0.2 案（本人の記入待ち） |
 | 反復 | 反復 1（計算の核とデータ）計画書 | [iterations/it01/plan.md](iterations/it01/plan.md) | v0.3 承認 |

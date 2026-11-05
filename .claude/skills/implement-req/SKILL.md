@@ -10,9 +10,13 @@ argument-hint: "<#Issue番号 | 要求ID | 設計ID> [...]"
 
 AGENTS.md のルールに従う。以下の手順を順に行い、各段階で問題があれば止めて人に報告する。
 
-## Claude Code が使うとき（実装は Codex に任せる）
+## Codex がメインのとき
 
-AGENTS.md の「エージェントの分担」により、Claude Code は手順 3〜6 を自分で行わず、Codex に任せる。
+AGENTS.md の「エージェントの分担」により、Codex がメインのときは手順 0〜8 を自分で行う。コミット・`gh`・E2E を使えるように許可して起動されていること。レビュー（手順 8）は、別に起動した Codex のセッションなど、自分以外のエージェントに頼む。
+
+## Claude Code がメインのとき（実装は Codex に任せる）
+
+AGENTS.md の「エージェントの分担」により、Claude Code がメインのときは手順 3〜6 を自分で行わず、Codex に任せる。
 
 1. 手順 0〜1 を確かめ、手順 2 のブランチを git worktree で作る（`git worktree add <パス> -b <ブランチ名> origin/main`）。Codex は既定でネットワークを使えないので、worktree で `npm ci` を済ませておく
 2. Codex に、このスキルの手順 0〜6 を行い、「コミット・push・プルリクエストの作成・マージ・force push・`git stash` はしない。変更は worktree に残す」ことを伝えて実行させる
