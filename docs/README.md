@@ -39,7 +39,7 @@
 | 試験 | テスト仕様書（反復 3） | [04_test/test-spec-it03.md](04_test/test-spec-it03.md) | 骨組み |
 | 試験 | テスト仕様書（反復 4） | [04_test/test-spec-it04.md](04_test/test-spec-it04.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 5） | [04_test/test-spec-it05.md](04_test/test-spec-it05.md) | v0.1 骨組み |
-| 試験 | テスト仕様書（反復 6） | [04_test/test-spec-it06.md](04_test/test-spec-it06.md) | v0.1 骨組み |
+| 試験 | テスト仕様書（反復 6） | [04_test/test-spec-it06.md](04_test/test-spec-it06.md) | v0.3（#133 の行の実測・画面外の行・焦点・性能準備を具体化） |
 | 試験 | IT06 行の高さ・画面外の行・性能の計測記録 | [04_test/performance-measurement-it06.md](04_test/performance-measurement-it06.md) | 記録中 |
 | 試験 | 日付変更の性能計測（反復 5） | [04_test/performance-measurement-it05.md](04_test/performance-measurement-it05.md) | 記録中 |
 | 試験 | テスト仕様書（反復 1） | [04_test/test-spec-it01.md](04_test/test-spec-it01.md) | 追記中 |
