@@ -10,9 +10,13 @@ argument-hint: "<#Issue番号 | 要求ID | 設計ID> [...]"
 
 AGENTS.md のルールに従う。以下の手順を順に行い、各段階で問題があれば止めて人に報告する。
 
-## Claude Code が使うとき（実装は Codex に任せる）
+## Codex がメインのとき
 
-AGENTS.md の「エージェントの分担」により、Claude Code は手順 3〜6 を自分で行わず、Codex に任せる。
+AGENTS.md の「エージェントの分担」により、Codex がメインのときは手順 0〜8 を自分で行う。コミット・`gh`・E2E を使えるように許可して起動されていること。レビュー（手順 8）は、別に起動した Codex のセッションなど、自分以外のエージェントに頼む。
+
+## Claude Code がメインのとき（実装は Codex に任せる）
+
+AGENTS.md の「エージェントの分担」により、Claude Code がメインのときは手順 3〜6 を自分で行わず、Codex に任せる。
 
 1. 手順 0〜1 を確かめ、手順 2 のブランチを git worktree で作る（`git worktree add <パス> -b <ブランチ名> origin/main`）。Codex は既定でネットワークを使えないので、worktree で `npm ci` を済ませておく
 2. Codex に、このスキルの手順 0〜6 を行い、「コミット・push・プルリクエストの作成・マージ・force push・`git stash` はしない。変更は worktree に残す」ことを伝えて実行させる
@@ -110,7 +114,7 @@ gh pr create --base main --title "<要約>" --body "<AGENTS.md の形式>"
 ## 8. レビューとマージ
 
 1. CI の結果を待つ: `gh pr checks <番号> --watch`。失敗したら直して push し直す
-2. 実装者とは別のエージェントにレビューを頼む（例: 実装が Codex なら、コミットした Claude Code とは別のサブエージェント。Claude Code なら別のサブエージェント）。人がいる場合は人でもよい。レビュアーには「読み取りだけ・マージしない」と伝える。指摘に対応し、`docs/reviews/REV-<連番>-issue<番号>.md` に記録する
+2. 実装者とは別のエージェントにレビューを頼む（例: Claude Code がメインで実装が Codex なら、Claude Code の別のサブエージェント。Codex がメインで自分で実装したなら、別に起動した Codex のセッション（`codex exec`）や Claude Code のサブエージェント。自分の会話を引き継ぐ分岐（fork）は別のエージェントとみなさない）。人がいる場合は人でもよい。レビュアーには「読み取りだけ・マージしない」と伝える。指摘に対応し、`docs/reviews/REV-<連番>-issue<番号>.md` に記録する
 3. 指摘に対応して直したときは、**修正分を同じ方法で再レビュー**し、「承認」を得る。再レビューの結果をレビュー記録に追記する
 4. AGENTS.md の「自動マージの条件」をすべて確かめる。特に、`git diff --name-only origin/main...HEAD` に `docs/01_concept/`、`docs/02_requirements/` 、`AGENTS.md`、`CLAUDE.md`、`.claude/`、`docs/00_plan/` が含まれるなら、本人の指示か承認がレビュー記録にあるかを確かめる。採用した設計への提案は、レビュー記録と今の反復の振り返り（`docs/iterations/itNN/retrospective.md`）に書く
 5. 条件を満たせば、マージの直前に `gh pr checks <番号>` を確かめ、`gh pr merge <番号> --merge` を 1 回だけ実行する。拒否されたら AGENTS.md の「マージのしかた」に従う。条件を満たさなければマージせず、理由を報告する
