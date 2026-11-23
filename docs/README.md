@@ -9,7 +9,7 @@
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
 | 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.8 確定 |
-| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.10（IT07、E-127・E-128 を反映） |
+| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.11（E-140 を反映） |
 | 計画 | 反復の進め方（エージェント向けの手順、PLAN-002） | [00_plan/iteration-workflow.md](00_plan/iteration-workflow.md) | v0.1 |
 | 反復 | 反復 1 振り返り | [iterations/it01/retrospective.md](iterations/it01/retrospective.md) | 1.0 確定 |
 | 反復 | 反復 2 振り返り | [iterations/it02/retrospective.md](iterations/it02/retrospective.md) | 0.2 案（本人の記入待ち） |
@@ -29,9 +29,10 @@
 | 反復 | 反復 6（レシートの当てはめと判定の点検）計画書 | [iterations/it06/plan.md](iterations/it06/plan.md) | v0.1（IT06 完了。E-126） |
 | 反復 | 反復 6 振り返り | [iterations/it06/retrospective.md](iterations/it06/retrospective.md) | v0.1（E-118〜E-126 を反映。M7 完了） |
 | 反復 | 反復 6 炭水化物の判定の調査記録 | [iterations/it06/carbohydrate-investigation.md](iterations/it06/carbohydrate-investigation.md) | 調査・報告（E-121: 今は変えず、実際の買い物で調べ直す） |
-| 反復 | 反復 7（実際の買い物での検証と判定の再調査）計画書 | [iterations/it07/plan.md](iterations/it07/plan.md) | v0.1（範囲と調査の到達点は E-127・E-128。書き起こしの文は本人の確認待ち） |
+| 反復 | 反復 7（実際の買い物での検証と判定の再調査）計画書 | [iterations/it07/plan.md](iterations/it07/plan.md) | v0.1（IT07 完了。E-140） |
 | 反復 | 反復 7 レシート貼り付けの実地検証記録 | [iterations/it07/receipt-validation.md](iterations/it07/receipt-validation.md) | v0.1（本人の試用 1 回。H-17・H-18 は未検証） |
 | 反復 | 反復 7 炭水化物の不足判定の再調査記録 | [iterations/it07/carbohydrate-investigation.md](iterations/it07/carbohydrate-investigation.md) | v0.1（本人の買い物での再計算は未実施。直さない、E-138） |
+| 反復 | 反復 7 振り返り | [iterations/it07/retrospective.md](iterations/it07/retrospective.md) | v0.1（E-131〜E-142 を反映。M8 完了） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
