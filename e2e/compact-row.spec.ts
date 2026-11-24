@@ -182,10 +182,17 @@ for (const screen of ["home", "history"] as const) {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await expect(toggle).toBeFocused();
     await expect(row).toContainText("200 g");
-    const state = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("weekmeal:state")!),
-    );
-    expect(state.shoppings[screen === "home" ? 0 : 1].items).toHaveLength(1);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (index) => {
+            const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
+            return state.shoppings[index].items.length;
+          },
+          screen === "home" ? 0 : 1,
+        ),
+      )
+      .toBe(1);
   });
 }
 

@@ -152,6 +152,15 @@ test("TC-NFR-06-05 画面外の行のテキストとアクセシビリティを�
       if (phase === "スクロール後") {
         await row.scrollIntoViewIfNeeded();
         await expect(row).toBeInViewport();
+        await expect
+          .poll(() =>
+            row.evaluate((element) =>
+              element.firstElementChild?.checkVisibility({
+                contentVisibilityAuto: true,
+              }),
+            ),
+          )
+          .toBe(true);
       }
       // ariaSnapshot やロケーターの評価より先に、描画状態とテキストを採る。
       const text = await row.evaluate((element) => ({
