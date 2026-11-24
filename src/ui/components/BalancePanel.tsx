@@ -1,10 +1,10 @@
-import type { AnalysisResult } from "../../core/analyze";
+import { needsFewItemsNotice, type AnalysisResult } from "../../core/analyze";
 import type { Profile } from "../../core/profile";
 import { balanceTone } from "../balanceTone";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
 
 /**
- * 偏りの判定結果を出す（DES-UI-01, 41、FR-UI-01, 07、NFR-07）。
+ * 偏りの判定結果を出す（DES-UI-01, 41、DES-BAL-08、FR-UI-01, 07、NFR-07）。
  * 不足・過剰は色だけでなく文字でも示す。
  */
 export function BalancePanel({
@@ -62,6 +62,12 @@ export function BalancePanel({
             ? "判定できた栄養素には、目立った偏りはありません"
             : "目立った偏りはありません"}
       </h3>
+      {needsFewItemsNotice(analysis) && (
+        <p className="balance-note">
+          登録した食材が少ないため、判定は登録した食材
+          {profile.staple !== "none" && "と設定した主食"}に基づく目安です。
+        </p>
+      )}
       {flagged.length > 0 && (
         <ul className="balance-list">
           {flagged.map((result) => (

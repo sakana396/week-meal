@@ -157,6 +157,7 @@ it("TC-NFR-07-02 紫の全256段階と不足の全256段階は黒文字と4.5:1�
 it("TC-FR-UI-06-02 比のない不足でも両画面に文字と栄養素名を残す", () => {
   const analysis: AnalysisResult = {
     kind: "judged",
+    itemCount: 5,
     results: [result({ sufficiency: null })],
     pfc: null,
     approximateItems: [],

@@ -190,3 +190,4 @@
 | FR-RCP-01〜04、FR-ING-06、FR-QTY-02・08 | #149 | DES-RCP-08 | TC-FR-RCP-04-04、TC-FR-ING-06-25 | docs/iterations/it07/receipt-validation.md | 手動検証を実施（2026-11-23、本人の買い物 1 回）。H-17・H-18 は未検証（言い換えに当たる行・対象の食品がなかった）。ChatGPT のコピーボタンで改行のない 1 行になり登録できない件を改善候補として記録（E-135 で次の反復の候補）。コードの変更なし |
 | FR-BAL-02、FR-NUT-04、FR-STP-03 | #150 | DES-BAL-07 | TC-FR-BAL-02-08〜10 | docs/iterations/it07/carbohydrate-investigation.md | 調査を終了（2026-11-24）。本人の買い物での再計算は未実施（E-139）。本人の観察（E-137）と例による参考計算を記録し、肉・卵の割合が大きいと不足になることを例の計算で確かめた（本人の入力では未確認）。本人は直さないと判断（E-138）。コードの変更なし |
 | FR-RCP-01・02・05 | #159 | DES-RCP-02、DES-RCP-09 | TC-FR-RCP-02-01、TC-FR-RCP-05-01〜03 | src/core/receipt.ts, src/ui/screens/ReceiptScreen.tsx, src/core/receipt.test.ts, e2e/receipt.spec.ts | 実装済み |
+| FR-BAL-09 | #161 | DES-BAL-08 | TC-FR-BAL-09-01、02 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx, src/core/analyze.test.ts, e2e/balance-notice.spec.ts | 実装済み |
