@@ -4,7 +4,7 @@
 - 日付: 2026-11-24
 - 作成者: Codex（実装）、コミットと PR は Claude Code
 - レビュアー: 作成者とは別の Claude Code サブエージェント
-- 結果: 要修正（指摘 #1）
+- 結果: 承認（2026-11-24。指摘 #1〜#3 の修正分（71a86df）を同じレビュアーが再レビューして承認）
 
 ## 自動マージの条件 3
 
@@ -39,3 +39,14 @@
 ## 人の査閲が必要な点
 
 境目 5 行と案内の文言（H-20）。設計どおりエージェントの判断として扱われている。マージを止めない（振り返りで確認）。
+
+## 再レビュー
+
+承認（2026-11-24）。`git show 71a86df` を確かめた。
+
+- #1: `src/core/analyze.ts` の `minimumItemCount` の直後に、非公開の定数 `fewItemsNoticeCount = 5` を置いた。コメントに「根拠のある栄養学上の閾値ではない、エージェントの仮置き（DES-BAL-08、E-146、H-20）」とある。純粋関数 `needsFewItemsNotice(result)`（DES-BAL-08）は `judged` かつ `itemCount < 5` のときだけ true を返し、未判定では false を返す。`BalancePanel` はこの関数を使い、UI から数値の直書きがなくなった。表示の条件と文言・位置は変わっていない。TC-FR-BAL-09-01 の `it.each` は 2 行: false、3・4 行: true、5 行: false を、主食 `rice`・`none` の両方で確かめる。テスト仕様書の該当行にも案内の有無を書き足した。core の約束（React・DOM・時刻・乱数を使わない、引数を変えない、例外を投げない）を守り、`any` もない。
+- #2: E2E の 2・5 行は `panel` に「登録した食材が少ないため」がないことを確かめるようになった。3・4 行は引き続き `h3 + p` の全文を確かめる。
+- #3: TST-IT08 の TC-FR-BAL-09-01 に「判定結果は従来どおり（既存テストが変更なしで通ることで確かめる）」が入った。TC-FR-BAL-09-02 の書き足しも E2E の変更と合っている。
+- #4: 情報。メインがマージの順に合わせて traceability の置き場所をそろえる。本 PR の承認は止めない。
+- 検証: `npx vitest run src/core/analyze.test.ts`（26 件）が成功した。E2E（`balance-notice.spec.ts`・`screens.spec.ts` の mobile・desktop、19 件成功・1 件スキップ）と `typecheck`・`lint`・`format:check`・`test:coverage`（795 件）はメインが実行して成功したとのこと。レビュアーは E2E を実行していない。
+- 新しい指摘はない。
