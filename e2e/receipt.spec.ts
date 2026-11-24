@@ -277,3 +277,33 @@ test("TC-FR-RCP-01-08 全行が上限で止まっても理由を知らせる", a
     }),
   ).toBeVisible();
 });
+
+test("TC-FR-RCP-05-03 複数組の確認と登録", async ({ page }) => {
+  await page.goto("#/receipt");
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "指示文をコピー" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
+    "必ず食材 1 品ごとに改行",
+  );
+  await paste(page, "にんじん,1 鶏卵,2 未知,1 洗剤,1\nにんじん,1");
+  await expect(
+    page.getByRole("checkbox", { name: "1 行目の 1 品目を登録する" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("checkbox", { name: "1 行目の 2 品目を登録する" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: "1 行目の 2 品目の量の単位" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("checkbox", { name: "2 行目を登録する" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "登録しない物 2 件" }),
+  ).toBeVisible();
+  await expect(page.getByText("未知,1", { exact: true })).toBeVisible();
+  await expect(page.getByText("洗剤,1", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "3 件を登録" }).click();
+  await expect(itemRow(page, "にんじん")).toHaveCount(1);
+  await expect(itemRow(page, "鶏卵")).toHaveCount(1);
+});

@@ -53,7 +53,7 @@ describe("レシート指示文（DES-RCP-02）", () => {
       (foodsJson as FoodItem[]).filter(isRegistrable),
     ).map((group) => group.name);
     expect(names).toHaveLength(188);
-    expect(receiptPrompt(names)).toHaveLength(1331);
+    expect(receiptPrompt(names)).toHaveLength(1376);
   });
   it.each([
     "マークダウンや装飾を使わず、プレーンテキストで答えてください",
@@ -66,6 +66,94 @@ describe("レシート指示文（DES-RCP-02）", () => {
 });
 
 describe("レシート読み取り（DES-RCP-03）", () => {
+  it("TC-FR-RCP-05-01 複数組を順番付きで読み、未一致は正規化後の組を返す", () => {
+    const result = parseReceiptText(
+      "にんじん,1　ﾐｼﾗﾇ,2\tにんじん,1,000g",
+      catalog,
+    );
+    expect(
+      result.candidates.map((item) => [item.line, item.itemOrder]),
+    ).toEqual([
+      [1, 1],
+      [1, 3],
+    ]);
+    expect(result.unmatched).toEqual([
+      { line: 1, itemOrder: 2, text: "ミシラヌ,2" },
+    ]);
+  });
+  it.each([
+    ["A,1 B,2 C,3", ["A", "B", "C"]],
+    ["豚肉,1 個 鶏卵,1", ["豚肉", "個 鶏卵"]],
+    ["豚肉,1,000g 鶏卵,1", ["豚肉", "鶏卵"]],
+    ["豚肉,1 • 鶏卵,1", ["豚肉", "• 鶏卵"]],
+    ["A,1 B,2\\", ["A", "B"]],
+    ["• 豚肉,1 鶏卵,1", ["豚肉", "鶏卵"]],
+  ])("TC-FR-RCP-05-01 組の境界を解析する %#", (input, names) => {
+    const result = parseReceiptText(input, {
+      foods: names.map((displayName) => ({ displayName, foodId: displayName })),
+      manualFoods: [],
+    });
+    expect(result.candidates.map((item) => item.displayName)).toEqual(names);
+  });
+  it("TC-FR-RCP-05-02 分割できない行と長さの上限を扱う", () => {
+    expect(
+      parseReceiptText("にんじん, 1 にんじん,1", catalog).candidates,
+    ).toHaveLength(0);
+    expect(parseReceiptText("にんじん,1\\", catalog).candidates).toHaveLength(
+      1,
+    );
+    const valid = `${"x".repeat(198)},1 にんじん,1`;
+    expect(parseReceiptText(valid, catalog).candidates).toHaveLength(1);
+    const invalid = `${"x".repeat(199)},1 にんじん,1`;
+    expect(parseReceiptText(invalid, catalog).unmatched).toEqual([
+      { line: 1, text: invalid },
+    ]);
+    const boundary = `${Array(20)
+      .fill(`${"x".repeat(197)},1`)
+      .join(" ")} `;
+    expect(boundary.length).toBe(4000);
+    expect(parseReceiptText(boundary, catalog).unmatched).toHaveLength(20);
+    expect(parseReceiptText(`${boundary} `, catalog).unmatched).toEqual([
+      { line: 1, text: `${boundary} ` },
+    ]);
+    const long = `${"x".repeat(3996)},1 a,1`;
+    expect(parseReceiptText(long, catalog).unmatched).toEqual([
+      { line: 1, text: long },
+    ]);
+  });
+  it.each([
+    "豚肉 300g",
+    "ロース ハム,1",
+    "豚肉,1 個",
+    "豚肉,1 鶏卵,1 余り",
+    ",1 鶏卵,1",
+  ])("TC-FR-RCP-05-02 分割しない行を従来解析に渡す: %s", (input) => {
+    const result = parseReceiptText(input, { foods: [], manualFoods: [] });
+    expect(result.unmatched).toEqual([{ line: 1, text: input }]);
+  });
+  it("TC-FR-RCP-05-01 未一致の組の桁区切りを除く", () => {
+    expect(
+      parseReceiptText("豚肉,1 未知,1,000g", { foods: [], manualFoods: [] })
+        .unmatched,
+    ).toEqual([
+      { line: 1, itemOrder: 1, text: "豚肉,1" },
+      { line: 1, itemOrder: 2, text: "未知,1000g" },
+    ]);
+  });
+  it.each([`# ${"x".repeat(249)}`, "\\".repeat(250)])(
+    "TC-FR-RCP-05-02 分割しない長い行を登録しない: %s",
+    (input) => {
+      expect(parseReceiptText(input, catalog).unmatched).toEqual([
+        { line: 1, text: input },
+      ]);
+    },
+  );
+  it("TC-FR-RCP-05-02 行中に長い空白がある 4000 文字の行を短時間で処理する", () => {
+    const input = `a${" ".repeat(3998)}b`;
+    const start = performance.now();
+    for (let i = 0; i < 100; i++) parseReceiptText(input, catalog);
+    expect(performance.now() - start).toBeLessThan(1000);
+  });
   it.each([
     ["生椎茸", "しいたけ"],
     ["コマツ菜", "こまつな"],

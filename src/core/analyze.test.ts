@@ -5,6 +5,7 @@ import type { FoodItem } from "../types";
 import {
   analyzeBasket,
   defaultAnalysisData,
+  needsFewItemsNotice,
   sensitivity,
   type RegisteredItem,
 } from "./analyze";
@@ -33,6 +34,60 @@ const basket = [
 ];
 
 describe("analyzeBasket（DES-ANL-01）", () => {
+  it.each([
+    [2, false],
+    [3, true],
+    [4, true],
+    [5, false],
+  ])("TC-FR-BAL-09-01 有効な %i 行を数える", (count, notice) => {
+    const entries = [...basket, basket[0]].slice(0, count);
+    for (const staple of ["rice", "none"] as const) {
+      const result = analyzeBasket(entries, { ...defaultProfile, staple });
+      expect(result.kind).toBe(count < 3 ? "insufficient" : "judged");
+      expect(result.itemCount).toBe(count);
+      expect(needsFewItemsNotice(result)).toBe(notice);
+    }
+  });
+
+  it("TC-FR-BAL-09-01 無効行とエネルギー欠損を除き同名行を数える", () => {
+    const missing = {
+      ...basket[0],
+      food: {
+        ...basket[0].food,
+        nutrientsPer100g: {
+          ...basket[0].food.nutrientsPer100g,
+          energyKcal: null,
+        },
+      },
+    };
+    const zero = {
+      ...basket[0],
+      quantity: { kind: "count" as const, count: 0 },
+    };
+    const negative = {
+      ...basket[0],
+      quantity: { kind: "weight" as const, grams: -1, unit: "g" as const },
+    };
+    expect(
+      analyzeBasket(
+        [basket[0], basket[0], basket[1], missing, zero, negative],
+        defaultProfile,
+      ),
+    ).toMatchObject({ kind: "judged", itemCount: 3 });
+    const noEnergy = basket.map((entry) => ({
+      ...entry,
+      food: {
+        ...entry.food,
+        nutrientsPer100g: { ...entry.food.nutrientsPer100g, energyKcal: 0 },
+      },
+    }));
+    expect(analyzeBasket(noEnergy, defaultProfile)).toMatchObject({
+      kind: "insufficient",
+      reason: "noEnergy",
+      itemCount: 4,
+    });
+  });
+
   it("TC-FR-QTY-07-05 手入力は一覧と同名でも目安重量を使わない", () => {
     const manual = {
       ...basket[1],

@@ -82,7 +82,6 @@
 | FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | TC-FR-UI-05-07 | src/ui/components/BalancePanel.tsx, src/ui/screens/BalanceDetailScreen.tsx | 実装済み |
 | FR-UI-08 | #34 | DES-UI-24 | TC-FR-UI-08-01 | src/ui/screens/FoodsScreen.tsx | 実装済み |
 | FR-UI-09 | #29 | DES-UI-23 | TC-FR-STP-01-02 | src/ui/screens/SettingsScreen.tsx | 実装済み |
-| FR-UI-10 | #162 | DES-UI-52 | TC-FR-UI-10-01〜03、TC-NFR-03-07 | src/ui/components/ItemRow.tsx, src/ui/App.css, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx, e2e/compact-row.spec.ts, e2e/history.spec.ts, e2e/accessibility.spec.ts, e2e/row-quantity.spec.ts, e2e/undo-delete.spec.ts, e2e/row-layout.spec.ts, e2e/performance.spec.ts, docs/04_test/performance-measurement-it08.md | 実装済み。機能 E2E 235 件成功・1 件スキップ、性能 E2E 19 件成功。CPU 4 倍の再計測で登録 151.7 ms の超過あり。詳細は計測記録を参照 |
 | FR-SYS-01 | #24, #25, #26, #56 | DES-STO-01〜07, DES-UI-13, DES-STO-08, 09、DES-UI-50 | TC-FR-SYS-01-01〜10、TC-NFR-13-12〜14 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx, e2e/manual-memory.spec.ts | 実装済み（版 2。移行の E2E 成功（ローカル・CI）） |
 | FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |
 | IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | TC-IF-02-01, 02, TC-IF-03-01 | src/ui/App.css, src/ui/components/Navigation.tsx, e2e/screens.spec.ts | 実装済み（IF-01 は査閲、IF-02 の主な流れはタップ・キーボードで確認、IF-03〜05 は E2E） |
@@ -190,3 +189,6 @@
 | FR-QTY-07 | #133 | DES-UI-51 | TC-FR-QTY-07-06 | src/ui/components/ItemRow.tsx, e2e/row-quantity.spec.ts | 既存の焦点移動に通常時の「＋」と 999 個時の「−」の E2E を追加済み |
 | FR-RCP-01〜04、FR-ING-06、FR-QTY-02・08 | #149 | DES-RCP-08 | TC-FR-RCP-04-04、TC-FR-ING-06-25 | docs/iterations/it07/receipt-validation.md | 手動検証を実施（2026-11-23、本人の買い物 1 回）。H-17・H-18 は未検証（言い換えに当たる行・対象の食品がなかった）。ChatGPT のコピーボタンで改行のない 1 行になり登録できない件を改善候補として記録（E-135 で次の反復の候補）。コードの変更なし |
 | FR-BAL-02、FR-NUT-04、FR-STP-03 | #150 | DES-BAL-07 | TC-FR-BAL-02-08〜10 | docs/iterations/it07/carbohydrate-investigation.md | 調査を終了（2026-11-24）。本人の買い物での再計算は未実施（E-139）。本人の観察（E-137）と例による参考計算を記録し、肉・卵の割合が大きいと不足になることを例の計算で確かめた（本人の入力では未確認）。本人は直さないと判断（E-138）。コードの変更なし |
+| FR-RCP-01・02・05 | #159 | DES-RCP-02、DES-RCP-09 | TC-FR-RCP-02-01、TC-FR-RCP-05-01〜03 | src/core/receipt.ts, src/ui/screens/ReceiptScreen.tsx, src/core/receipt.test.ts, e2e/receipt.spec.ts | 実装済み |
+| FR-BAL-09 | #161 | DES-BAL-08 | TC-FR-BAL-09-01、02 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx, src/core/analyze.test.ts, e2e/balance-notice.spec.ts | 実装済み |
+| FR-UI-10 | #162 | DES-UI-52 | TC-FR-UI-10-01〜03、TC-NFR-03-07 | src/ui/components/ItemRow.tsx, src/ui/App.css, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx, e2e/compact-row.spec.ts, e2e/history.spec.ts, e2e/accessibility.spec.ts, e2e/row-quantity.spec.ts, e2e/undo-delete.spec.ts, e2e/row-layout.spec.ts, e2e/performance.spec.ts, docs/04_test/performance-measurement-it08.md | 実装済み。機能 E2E 235 件成功・1 件スキップ、性能 E2E 19 件成功。CPU 4 倍の再計測で登録 151.7 ms の超過あり。詳細は計測記録を参照 |
