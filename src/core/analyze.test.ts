@@ -5,6 +5,7 @@ import type { FoodItem } from "../types";
 import {
   analyzeBasket,
   defaultAnalysisData,
+  needsFewItemsNotice,
   sensitivity,
   type RegisteredItem,
 } from "./analyze";
@@ -33,12 +34,18 @@ const basket = [
 ];
 
 describe("analyzeBasket（DES-ANL-01）", () => {
-  it.each([2, 3, 4, 5])("TC-FR-BAL-09-01 有効な %i 行を数える", (count) => {
+  it.each([
+    [2, false],
+    [3, true],
+    [4, true],
+    [5, false],
+  ])("TC-FR-BAL-09-01 有効な %i 行を数える", (count, notice) => {
     const entries = [...basket, basket[0]].slice(0, count);
     for (const staple of ["rice", "none"] as const) {
       const result = analyzeBasket(entries, { ...defaultProfile, staple });
       expect(result.kind).toBe(count < 3 ? "insufficient" : "judged");
       expect(result.itemCount).toBe(count);
+      expect(needsFewItemsNotice(result)).toBe(notice);
     }
   });
 

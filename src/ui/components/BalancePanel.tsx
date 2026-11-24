@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "../../core/analyze";
+import { needsFewItemsNotice, type AnalysisResult } from "../../core/analyze";
 import type { Profile } from "../../core/profile";
 import { balanceTone } from "../balanceTone";
 import { nutrientLabel, stapleNote, statusLabels } from "../labels";
@@ -62,7 +62,7 @@ export function BalancePanel({
             ? "判定できた栄養素には、目立った偏りはありません"
             : "目立った偏りはありません"}
       </h3>
-      {analysis.itemCount < 5 && (
+      {needsFewItemsNotice(analysis) && (
         <p className="balance-note">
           登録した食材が少ないため、判定は登録した食材
           {profile.staple !== "none" && "と設定した主食"}に基づく目安です。

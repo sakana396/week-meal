@@ -56,7 +56,7 @@ test("TC-FR-BAL-09-02 ホームと前の買い物の案内と境界", async ({ p
               : "登録した食材が少ないため、判定は登録した食材と設定した主食に基づく目安です。",
           );
         } else {
-          await expect(notice).toHaveCount(0);
+          await expect(panel).not.toContainText("登録した食材が少ないため");
         }
       }
     }

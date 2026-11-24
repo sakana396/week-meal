@@ -36,6 +36,9 @@ export type RegisteredItem = {
 /** 判定に必要な、主食を除いた食材の最低品目数（TBD-12 の仮置き、DES-BAL-05） */
 export const minimumItemCount = 3;
 
+/** 案内の境目は根拠のある栄養学上の閾値ではない、エージェントの仮置き（DES-BAL-08、E-146、H-20） */
+const fewItemsNoticeCount = 5;
+
 export type AnalysisResult =
   | {
       kind: "insufficient";
@@ -58,6 +61,11 @@ export type AnalysisResult =
       /** 判定しないビタミン・ミネラルの充足率（栄養詳細用。DES-BAL-06） */
       details: DetailResult[];
     };
+
+/** 登録が少ないときの案内を出すか判定する（DES-BAL-08）。 */
+export function needsFewItemsNotice(result: AnalysisResult): boolean {
+  return result.kind === "judged" && result.itemCount < fewItemsNoticeCount;
+}
 
 /** 計算に使う定義データ。テストで差し替えられるようにする */
 export type AnalysisData = {
