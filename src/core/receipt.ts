@@ -9,7 +9,7 @@ export type ReceiptCatalog = {
   aliases?: Readonly<Record<string, string>>;
 };
 
-/** 読み取った登録候補（DES-RCP-03、09）。 */
+/** 読み取った登録候補（DES-RCP-03、09、DES-RCP-10）。 */
 export type ReceiptCandidate = {
   line: number;
   itemOrder?: number;
@@ -17,6 +17,7 @@ export type ReceiptCandidate = {
   foodId: string;
   quantity: Quantity;
   needsCheck: boolean;
+  convertedFromMl?: boolean;
   aliasFrom?: string;
 };
 
@@ -48,29 +49,38 @@ const escapedWords = unitWords.map((word) =>
   word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
 );
 const quantityPattern = new RegExp(
-  `^(.*?)[\\s,、\\t]*(\\d+(?:\\.\\d+)?)\\s*(kg|g|${escapedWords.join("|")})?$`,
+  `^(.*?)[\\s,、\\t]*([+\\-−]?)(\\d+(?:\\.\\d+)?)(?:/(\\d+))?\\s*(kg|g|ml|${escapedWords.join("|")})?$`,
   "i",
 );
-const fractionPattern = /^(.*?)[\s,、\t]*(\d+)\/(\d+)\s*$/;
 
+/** 量を個数または重さに換算する（DES-RCP-10）。 */
 function parsedQuantity(
   value: number,
   unit: string | undefined,
 ): { quantity: Quantity; needsCheck: boolean } {
   if (!Number.isFinite(value))
     return { quantity: { kind: "count", count: 1 }, needsCheck: true };
-  if (unit?.toLowerCase() === "g" || unit?.toLowerCase() === "kg") {
-    const grams = Math.round(value * (unit.toLowerCase() === "kg" ? 1000 : 1));
+  if (["g", "kg", "ml"].includes(unit?.toLowerCase() ?? "")) {
+    // 外部資料による値ではない概算。本人の査閲待ち。
+    const mlToGrams = 1;
+    const factor =
+      unit?.toLowerCase() === "kg"
+        ? 1000
+        : unit?.toLowerCase() === "ml"
+          ? mlToGrams
+          : 1;
+    const grams = Math.round(value * factor);
     const bounded = Math.max(1, Math.min(100000, grams));
     return {
       quantity: {
         kind: "weight",
         grams: bounded,
-        unit: unit.toLowerCase() as "g" | "kg",
+        unit: unit?.toLowerCase() === "kg" ? "kg" : "g",
       },
       needsCheck:
         grams !== bounded ||
-        value * (unit.toLowerCase() === "kg" ? 1000 : 1) !== grams,
+        value * factor !== grams ||
+        unit?.toLowerCase() === "ml",
     };
   }
   const rounded = Math.round(value * 2) / 2;
@@ -87,7 +97,7 @@ function splitPairs(value: string): string[] {
   const pairs: string[] = [];
   let start = 0;
   const amountPattern = new RegExp(
-    `^[+\\-−]?(?:\\d+(?:\\.\\d+)?|\\d+/\\d+)(?:kg|g|ml|${escapedWords.join("|")})?$`,
+    `^[+\\-−]?\\d+(?:\\.\\d+)?(?:/\\d+)?(?:kg|g|ml|${escapedWords.join("|")})?$`,
     "i",
   );
   for (const match of tokens) {
@@ -109,7 +119,7 @@ function splitPairs(value: string): string[] {
   return !value.slice(start).trim() && pairs.length > 1 ? pairs : [];
 }
 
-/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09）。 */
+/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09、DES-RCP-10）。 */
 export function parseReceiptText(
   text: string,
   catalog: ReceiptCatalog,
@@ -165,20 +175,28 @@ export function parseReceiptText(
         .trim();
       if (!pairs.length)
         value = value
-          .replace(/^(?:[-*・]\s*|\d+\.\s*)/, "")
+          .replace(/^(?:[-*・•]\s*|\d+\.\s*)/, "")
           .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
       const itemOrder = pairs.length ? pairIndex + 1 : undefined;
-      const fraction = value.match(fractionPattern);
-      const match = fraction ?? value.match(quantityPattern);
+      const match = value.match(quantityPattern);
       const name = match ? match[1].replace(/[\s,、\t]+$/, "").trim() : value;
-      const amount = fraction
-        ? parsedQuantity(Number(fraction[2]) / Number(fraction[3]), undefined)
-        : match
-          ? parsedQuantity(Number(match[2]), match[3])
-          : {
-              quantity: { kind: "count" as const, count: 1 },
-              needsCheck: true,
-            };
+      if (match && (match[2] === "-" || match[2] === "−")) {
+        unmatched.push({
+          line,
+          ...(itemOrder ? { itemOrder } : {}),
+          text: pairs.length ? raw : original,
+        });
+        return;
+      }
+      const fraction = Boolean(match?.[4]);
+      const amount = match
+        ? parsedQuantity(
+            fraction ? Number(match[3]) / Number(match[4]) : Number(match[3]),
+            match[5],
+          )
+        : { quantity: { kind: "count" as const, count: 1 }, needsCheck: true };
+      const convertedFromMl =
+        match?.[5]?.toLowerCase() === "ml" && amount.quantity.kind === "weight";
       const key = normalizeSearchText(name.normalize("NFKC"));
       const direct = names.get(key);
       const aliasedName = direct ? undefined : aliases.get(key);
@@ -201,7 +219,8 @@ export function parseReceiptText(
         displayName: found.displayName,
         foodId: found.foodId,
         quantity: amount.quantity,
-        needsCheck: amount.needsCheck || Boolean(fraction),
+        needsCheck: amount.needsCheck || fraction,
+        ...(convertedFromMl ? { convertedFromMl: true } : {}),
         ...(aliasedName ? { aliasFrom: name } : {}),
       });
     });

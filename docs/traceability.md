@@ -191,3 +191,4 @@
 | FR-BAL-02、FR-NUT-04、FR-STP-03 | #150 | DES-BAL-07 | TC-FR-BAL-02-08〜10 | docs/iterations/it07/carbohydrate-investigation.md | 調査を終了（2026-11-24）。本人の買い物での再計算は未実施（E-139）。本人の観察（E-137）と例による参考計算を記録し、肉・卵の割合が大きいと不足になることを例の計算で確かめた（本人の入力では未確認）。本人は直さないと判断（E-138）。コードの変更なし |
 | FR-RCP-01・02・05 | #159 | DES-RCP-02、DES-RCP-09 | TC-FR-RCP-02-01、TC-FR-RCP-05-01〜03 | src/core/receipt.ts, src/ui/screens/ReceiptScreen.tsx, src/core/receipt.test.ts, e2e/receipt.spec.ts | 実装済み |
 | FR-BAL-09 | #161 | DES-BAL-08 | TC-FR-BAL-09-01、02 | src/core/analyze.ts, src/ui/components/BalancePanel.tsx, src/core/analyze.test.ts, e2e/balance-notice.spec.ts | 実装済み |
+| FR-RCP-01・06 | #160 | DES-RCP-10 | TC-FR-RCP-06-01〜03 | src/core/receipt.ts, src/core/receipt.test.ts, src/ui/screens/ReceiptScreen.tsx, e2e/receipt.spec.ts | 実装済み。ml の概算係数は本人の査閲が必要 |
