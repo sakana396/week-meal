@@ -327,6 +327,7 @@ test("TC-FR-RCP-06-03 ml の換算を確認して修正し、負数を登録し�
   await expect(page.getByText("鶏卵,−1/2個", { exact: true })).toBeVisible();
   await row.getByRole("textbox", { name: "1 行目の 1 品目の量" }).fill("150");
   await page.getByRole("button", { name: "1 件を登録" }).click();
+  await expect.poll(() => savedItems(page)).toHaveLength(1);
   const items = await savedItems(page);
   expect(items).toHaveLength(1);
   expect(items[0].quantity).toMatchObject({

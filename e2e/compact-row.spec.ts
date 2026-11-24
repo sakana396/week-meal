@@ -79,6 +79,9 @@ test("TC-FR-UI-10-02 TC-FR-UI-10-03 同名行の詳細名と操作名を区別�
   page,
 }) => {
   await page.goto("#/");
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("weekmeal:state")))
+    .not.toBeNull();
   await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
     state.shoppings = [
@@ -134,6 +137,9 @@ for (const screen of ["home", "history"] as const) {
     page,
   }) => {
     await page.goto("#/");
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("weekmeal:state")))
+      .not.toBeNull();
     await page.evaluate(() => {
       const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
       const item = {
@@ -182,10 +188,17 @@ for (const screen of ["home", "history"] as const) {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await expect(toggle).toBeFocused();
     await expect(row).toContainText("200 g");
-    const state = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("weekmeal:state")!),
-    );
-    expect(state.shoppings[screen === "home" ? 0 : 1].items).toHaveLength(1);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (index) => {
+            const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
+            return state.shoppings[index].items.length;
+          },
+          screen === "home" ? 0 : 1,
+        ),
+      )
+      .toBe(1);
   });
 }
 
@@ -209,6 +222,9 @@ test("TC-FR-UI-10-03 閉じた行と開いた行の axe を検査する", async 
 test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("#/");
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("weekmeal:state")))
+    .not.toBeNull();
   const name = "目安重量の定義がない長い食材名の測定用試料";
   await page.evaluate((name) => {
     const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
