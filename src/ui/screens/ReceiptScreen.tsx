@@ -72,7 +72,7 @@ function readAmount(
     : { error: "重さは 1 g から 100,000 g までで入力してください" };
 }
 
-/** レシートの指示文・貼り付け・確認・一括登録（DES-RCP-01、04、DES-UI-49）。 */
+/** レシートの指示文・貼り付け・確認・一括登録（DES-RCP-01、04、09、DES-UI-49）。 */
 export function ReceiptScreen({
   state,
   shoppingId,

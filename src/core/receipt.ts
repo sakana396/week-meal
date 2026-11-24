@@ -9,7 +9,7 @@ export type ReceiptCatalog = {
   aliases?: Readonly<Record<string, string>>;
 };
 
-/** 読み取った登録候補（DES-RCP-03）。 */
+/** 読み取った登録候補（DES-RCP-03、09）。 */
 export type ReceiptCandidate = {
   line: number;
   itemOrder?: number;
@@ -109,7 +109,7 @@ function splitPairs(value: string): string[] {
   return !value.slice(start).trim() && pairs.length > 1 ? pairs : [];
 }
 
-/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06）。 */
+/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09）。 */
 export function parseReceiptText(
   text: string,
   catalog: ReceiptCatalog,
@@ -140,10 +140,8 @@ export function parseReceiptText(
     }
     const cleaned = normalized
       .trim()
-      .replace(/[\\ \t]+$/, "")
+      .replace(/(?<![\\ \t])[\\ \t]+$/, "")
       .trim();
-    if (!cleaned || cleaned.startsWith("```") || cleaned.startsWith("#"))
-      return;
     const splitValue = cleaned
       .replace(/^(?:[-*・•]\s*|\d+\.\s*)/, "")
       .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
@@ -156,12 +154,14 @@ export function parseReceiptText(
       unmatched.push({ line, text: original });
       return;
     }
+    if (!cleaned || cleaned.startsWith("```") || cleaned.startsWith("#"))
+      return;
     const values = pairs.length ? pairs : [original];
     values.forEach((raw, pairIndex) => {
       let value = raw
         .normalize("NFKC")
         .trim()
-        .replace(/[\\ \t]+$/, "")
+        .replace(/(?<![\\ \t])[\\ \t]+$/, "")
         .trim();
       if (!pairs.length)
         value = value
