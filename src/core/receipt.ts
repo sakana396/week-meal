@@ -9,7 +9,7 @@ export type ReceiptCatalog = {
   aliases?: Readonly<Record<string, string>>;
 };
 
-/** 読み取った登録候補（DES-RCP-03、09）。 */
+/** 読み取った登録候補（DES-RCP-03、09、DES-RCP-10）。 */
 export type ReceiptCandidate = {
   line: number;
   itemOrder?: number;
@@ -53,6 +53,7 @@ const quantityPattern = new RegExp(
   "i",
 );
 
+/** 量を個数または重さに換算する（DES-RCP-10）。 */
 function parsedQuantity(
   value: number,
   unit: string | undefined,
@@ -96,7 +97,7 @@ function splitPairs(value: string): string[] {
   const pairs: string[] = [];
   let start = 0;
   const amountPattern = new RegExp(
-    `^[+\\-−]?(?:\\d+(?:\\.\\d+)?|\\d+/\\d+)(?:kg|g|ml|${escapedWords.join("|")})?$`,
+    `^[+\\-−]?\\d+(?:\\.\\d+)?(?:/\\d+)?(?:kg|g|ml|${escapedWords.join("|")})?$`,
     "i",
   );
   for (const match of tokens) {
@@ -118,7 +119,7 @@ function splitPairs(value: string): string[] {
   return !value.slice(start).trim() && pairs.length > 1 ? pairs : [];
 }
 
-/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09）。 */
+/** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09、DES-RCP-10）。 */
 export function parseReceiptText(
   text: string,
   catalog: ReceiptCatalog,
@@ -188,13 +189,14 @@ export function parseReceiptText(
         return;
       }
       const fraction = Boolean(match?.[4]);
-      const convertedFromMl = match?.[5]?.toLowerCase() === "ml";
       const amount = match
         ? parsedQuantity(
             fraction ? Number(match[3]) / Number(match[4]) : Number(match[3]),
             match[5],
           )
         : { quantity: { kind: "count" as const, count: 1 }, needsCheck: true };
+      const convertedFromMl =
+        match?.[5]?.toLowerCase() === "ml" && amount.quantity.kind === "weight";
       const key = normalizeSearchText(name.normalize("NFKC"));
       const direct = names.get(key);
       const aliasedName = direct ? undefined : aliases.get(key);
