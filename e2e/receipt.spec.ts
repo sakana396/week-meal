@@ -313,3 +313,25 @@ test("TC-FR-RCP-05-03 複数組の確認と登録", async ({ page }) => {
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
   await expect(itemRow(page, "鶏卵")).toHaveCount(1);
 });
+
+test("TC-FR-RCP-06-03 ml の換算を確認して修正し、負数を登録しない", async ({
+  page,
+}) => {
+  await page.goto("#/receipt");
+  await paste(page, "• にんじん,200mL 鶏卵,−1/2個");
+  const row = page.locator(".receipt-review-row").first();
+  await expect(row).toContainText("量を確かめてください");
+  await expect(row).toContainText(
+    "ml を 1 ml ≒ 1 g の概算で換算しました。重さを確認してください",
+  );
+  await expect(page.getByText("鶏卵,−1/2個", { exact: true })).toBeVisible();
+  await row.getByRole("textbox", { name: "1 行目の 1 品目の量" }).fill("150");
+  await page.getByRole("button", { name: "1 件を登録" }).click();
+  const items = await savedItems(page);
+  expect(items).toHaveLength(1);
+  expect(items[0].quantity).toMatchObject({
+    kind: "weight",
+    grams: 150,
+    unit: "g",
+  });
+});
