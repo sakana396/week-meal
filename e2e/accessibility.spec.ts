@@ -115,6 +115,9 @@ test("TC-NFR-06-01 全画面と候補・削除通知・下書き・食品詳細�
   await expect(panel(page).getByRole("button").first()).toBeEnabled();
   await inspect(page, info, "home-candidates");
   await itemRow(page, "鶏卵")
+    .getByRole("button", { name: "鶏卵の詳細を開く" })
+    .click();
+  await itemRow(page, "鶏卵")
     .getByRole("button", { name: "鶏卵を削除", exact: true })
     .click();
   await expect(
@@ -198,6 +201,10 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
   await expect(heading).toBeFocused();
   await keyboardActivate(
     page,
+    itemRow(page, "鶏卵").getByRole("button", { name: "鶏卵の詳細を開く" }),
+  );
+  await keyboardActivate(
+    page,
     itemRow(page, "鶏卵").getByRole("button", {
       name: "鶏卵を削除",
       exact: true,
@@ -211,6 +218,10 @@ test("TC-NFR-06-02 候補・取り消し・折りたたみ・下書き・再登�
   await expect(
     itemRow(page, "鶏卵").getByRole("button", { name: "鶏卵を 0.5 減らす" }),
   ).toBeFocused();
+  await keyboardActivate(
+    page,
+    itemRow(page, "鶏卵").getByRole("button", { name: "鶏卵の詳細を開く" }),
+  );
   await keyboardActivate(
     page,
     itemRow(page, "鶏卵").getByRole("button", {
@@ -340,6 +351,7 @@ test("TC-NFR-06-04 行の量の切り替えを両画面でaxeとキーボード�
   await registerFood(page, "ひよこまめ");
   await openTab(page, "ホーム");
   const homeRow = itemRow(page, "ひよこまめ");
+  await homeRow.getByRole("button", { name: "ひよこまめの詳細を開く" }).click();
   await keyboardActivate(
     page,
     homeRow.getByRole("button", { name: "ひよこまめを g に切り替える" }),
@@ -360,6 +372,9 @@ test("TC-NFR-06-04 行の量の切り替えを両画面でaxeとキーボード�
   await expect(newShopping).toHaveCount(1);
   await newShopping.click();
   const detailRow = itemRow(page, "ひよこまめ");
+  await detailRow
+    .getByRole("button", { name: "ひよこまめの詳細を開く" })
+    .click();
   const countToggle = detailRow.getByRole("button", {
     name: "ひよこまめを 個 に切り替える",
   });

@@ -5,7 +5,7 @@ import { ItemRow } from "./ItemRow";
 
 it.each([
   [{ kind: "count", count: 2 }, ">2 つ（概算）</span>"],
-  [{ kind: "weight", grams: 2000, unit: "kg" }, 'value="2"'],
+  [{ kind: "weight", grams: 2000, unit: "kg" }, ">2 kg</span>"],
 ] as const)(
   "TC-NFR-03-05 行の再描画抑制後も量と操作を表示する %s",
   (quantity, visibleQuantity) => {
@@ -26,16 +26,16 @@ it.each([
     expect(html).toContain("試料");
     expect(html).toContain("手入力");
     expect(html).toContain(visibleQuantity);
-    expect(html).toContain("試料を削除");
+    expect(html).not.toContain("item-details");
   },
 );
 
 it.each([
-  ["06061", "キャベツ", "1 玉 ≒ 1200 g"],
-  ["manual-1", "試料", "1 単位 ≒ 100 g（概算）"],
+  ["06061", "キャベツ"],
+  ["manual-1", "試料"],
 ] as const)(
-  "TC-NFR-03-05 行の目安重量と操作の名前を保つ %s",
-  (foodId, displayName, hint) => {
+  "TC-NFR-03-05 閉じた行の操作の名前を保つ %s",
+  (foodId, displayName) => {
     const item: BasketEntry = {
       id: "item-1",
       foodId,
@@ -50,9 +50,8 @@ it.each([
         dispatch={vi.fn()}
       />,
     );
-    expect(html).toContain(hint);
     expect(html).toContain(`${displayName}を 0.5 増やす`);
-    expect(html).toContain(`${displayName}を削除`);
+    expect(html).not.toContain("item-details");
     expect(html).toContain('class="item-row"');
   },
 );

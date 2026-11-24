@@ -46,7 +46,7 @@ async function loadRows(page: Page, items: BasketEntry[]) {
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
-test("TC-NFR-03-06 行の実寸と幅ごとの中央値を記録する", async ({
+test("TC-NFR-03-06 TC-NFR-03-07 行の実寸と幅ごとの中央値を記録する", async ({
   page,
   browser,
 }, testInfo) => {

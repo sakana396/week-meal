@@ -290,7 +290,9 @@ test("TC-IF-02-01 モバイルのタップで登録から設定まで操作で�
     .tap();
   const cabbage = itemRow(page, "キャベツ");
   await expect(cabbage).toHaveCount(1);
-  await expect(cabbage.getByText("キャベツ", { exact: true })).toBeVisible();
+  await expect(
+    cabbage.getByRole("button", { name: "キャベツの詳細を開く" }),
+  ).toBeVisible();
   await expect(
     cabbage.getByRole("group", { name: "キャベツの個数" }),
   ).toHaveText("−1 玉＋");

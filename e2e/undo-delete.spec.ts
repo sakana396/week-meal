@@ -38,7 +38,7 @@ async function seed(
 }
 const undo = (page: Page) =>
   page.getByRole("button", { name: "元に戻す", exact: true });
-const names = (page: Page) => page.locator(".item-row .item-name strong");
+const names = (page: Page) => page.locator(".item-row button.item-name strong");
 const stored = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("weekmeal:state")!));
 
@@ -46,6 +46,9 @@ test("TC-FR-ING-14-01 中間行を1回で復元し通知とキーボードのフ
   page,
 }) => {
   await seed(page);
+  await itemRow(page, "中間")
+    .getByRole("button", { name: "中間の詳細を開く" })
+    .click();
   await itemRow(page, "中間")
     .getByRole("button", { name: "中間を削除", exact: true })
     .focus();
@@ -89,6 +92,9 @@ test("TC-FR-ING-14-02 手入力行を元の順序に戻し成分と来歴を保�
   await seed(page, entries, [manualFood]);
   await expect(names(page)).toHaveText(["先頭", "中間", "末尾"]);
   await itemRow(page, "中間")
+    .getByRole("button", { name: "中間の詳細を開く" })
+    .click();
+  await itemRow(page, "中間")
     .getByRole("button", { name: "中間を削除", exact: true })
     .click();
   await undo(page).click();
@@ -110,6 +116,9 @@ test("TC-FR-ING-14-03 連続削除は直前だけ取り消せ、画面移動で�
 }) => {
   await seed(page);
   for (const name of ["中間", "末尾"]) {
+    await itemRow(page, name)
+      .getByRole("button", { name: `${name}の詳細を開く` })
+      .click();
     await itemRow(page, name)
       .getByRole("button", { name: `${name}を削除`, exact: true })
       .click();
@@ -133,12 +142,18 @@ test("TC-FR-ING-14-03 有効な個数変更や登録で取り消し対象を破�
 }) => {
   await seed(page);
   await itemRow(page, "中間")
+    .getByRole("button", { name: "中間の詳細を開く" })
+    .click();
+  await itemRow(page, "中間")
     .getByRole("button", { name: "中間を削除", exact: true })
     .click();
   await itemRow(page, "先頭")
     .getByRole("button", { name: "先頭を 0.5 増やす" })
     .click();
   await expect(undo(page)).toHaveCount(0);
+  await itemRow(page, "末尾")
+    .getByRole("button", { name: "末尾の詳細を開く" })
+    .click();
   await itemRow(page, "末尾")
     .getByRole("button", { name: "末尾を削除", exact: true })
     .click();
@@ -152,6 +167,9 @@ test("TC-FR-ING-14-05 削除は保存し取り消し情報は保存せず再読�
   page,
 }) => {
   await seed(page);
+  await itemRow(page, "中間")
+    .getByRole("button", { name: "中間の詳細を開く" })
+    .click();
   await itemRow(page, "中間")
     .getByRole("button", { name: "中間を削除", exact: true })
     .click();

@@ -56,7 +56,7 @@ export function HomeScreen({
   const undoRef = useRef<HTMLButtonElement>(null);
   const previousRemoval = useRef<PendingRemoval | null>(pendingRemoval);
 
-  // 削除後は取り消しへ、復元時だけ戻った行へ移す（DES-UI-45）。
+  // 削除後は取り消しへ、復元時だけ戻った行へ移す（DES-UI-45、DES-UI-52）。
   // 初回表示に残る取り消しは新たな削除ではないため、画面移動のフォーカスを保つ。
   // 候補登録で取り消しが失効した場合は、候補見出しのフォーカスを保つ。
   useLayoutEffect(() => {
@@ -71,7 +71,7 @@ export function HomeScreen({
       (
         row?.querySelector<HTMLButtonElement>(
           ".item-count button:not(:disabled)",
-        ) ?? row?.querySelector<HTMLInputElement>(".item-weight-field input")
+        ) ?? row?.querySelector<HTMLButtonElement>(".item-name")
       )?.focus();
     }
     previousRemoval.current = pendingRemoval;

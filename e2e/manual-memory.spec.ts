@@ -68,6 +68,9 @@ test("TC-FR-ING-15-01 手入力を削除して再読み込みしても同じ食�
   );
   await openTab(page, "ホーム");
   await itemRow(page, "自家製スープ")
+    .getByRole("button", { name: "自家製スープの詳細を開く" })
+    .click();
+  await itemRow(page, "自家製スープ")
     .getByRole("button", { name: "自家製スープを削除", exact: true })
     .click();
   await expect

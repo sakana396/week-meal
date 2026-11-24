@@ -48,6 +48,12 @@ test("TC-FR-ING-06-23 分けた食材にパック単位の目安を示す", asyn
   await registerFood(page, "ミニトマト");
   await registerFood(page, "かいわれだいこん");
   await page.goto("#/");
+  await itemRow(page, "ミニトマト")
+    .getByRole("button", { name: "ミニトマトの詳細を開く" })
+    .click();
+  await itemRow(page, "かいわれだいこん")
+    .getByRole("button", { name: "かいわれだいこんの詳細を開く" })
+    .click();
   await expect(itemRow(page, "ミニトマト")).toContainText("1 パック ≒ 200 g");
   await expect(itemRow(page, "かいわれだいこん")).toContainText(
     "1 パック ≒ 50 g",
