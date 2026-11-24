@@ -49,7 +49,7 @@ function parseWeight(
   return { grams };
 }
 
-/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、DES-QTY-07、DES-PER-05）。 */
+/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、52、DES-QTY-07、DES-PER-05）。 */
 export const ItemRow = memo(function ItemRow({
   item,
   shoppingId,
@@ -76,6 +76,9 @@ export const ItemRow = memo(function ItemRow({
       ? draftState.value
       : weightText(item.quantity);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const fullName = detail ? `${item.displayName} ${detail}` : item.displayName;
+  const detailsId = `item-details-${item.id}`;
   const errorId = `weight-error-${item.id}`;
   const inputRef = useRef<HTMLInputElement>(null);
   const countFocusRef = useRef<HTMLButtonElement>(null);
@@ -132,103 +135,133 @@ export const ItemRow = memo(function ItemRow({
 
   return (
     <li className="item-row" data-entry-id={item.id}>
-      <div className="item-name">
-        <strong>{item.displayName}</strong>
-        {detail && <small>{detail}</small>}
-      </div>
-      <div className="item-quantity">
-        <div
-          className="item-unit-toggle"
-          role="group"
-          aria-label={`${item.displayName}の量の単位`}
+      <div className="item-summary">
+        <button
+          className="item-name"
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={detailsId}
+          aria-label={`${fullName}の詳細を${expanded ? "閉じる" : "開く"}`}
+          onClick={() => {
+            if (expanded && item.quantity.kind === "weight") {
+              const result = parseWeight(draft, item.quantity.unit);
+              if ("error" in result) {
+                setError(result.error);
+                inputRef.current?.focus();
+                return;
+              }
+              commitWeight();
+            }
+            setExpanded(!expanded);
+          }}
         >
-          {(["count", "g", "kg"] as const).map((to) => (
-            <button
-              key={to}
-              type="button"
-              aria-label={`${item.displayName}を ${to === "count" ? "個" : to} に切り替える`}
-              aria-pressed={selected === to}
-              onClick={() => changeUnit(to)}
-            >
-              {to === "count" ? "個" : to}
-            </button>
-          ))}
-        </div>
+          <strong>{item.displayName}</strong>
+          {detail && <small>{detail}</small>}
+        </button>
         {item.quantity.kind === "count" ? (
-          <>
-            <div
-              aria-label={`${item.displayName}の個数`}
-              className="item-count"
-              role="group"
+          <div
+            aria-label={`${fullName}の個数`}
+            className="item-count"
+            role="group"
+          >
+            <button
+              ref={decrementFocusRef}
+              aria-label={`${fullName}を 0.5 減らす`}
+              disabled={item.quantity.count <= minimumCount}
+              onClick={() =>
+                dispatch({ type: "decrement", shoppingId, id: item.id })
+              }
+              type="button"
             >
-              <button
-                ref={decrementFocusRef}
-                aria-label={`${item.displayName}を 0.5 減らす`}
-                disabled={item.quantity.count <= minimumCount}
-                onClick={() =>
-                  dispatch({ type: "decrement", shoppingId, id: item.id })
-                }
-                type="button"
-              >
-                −
-              </button>
-              <span>{`${formatCount(item.quantity.count)} ${unit}`}</span>
-              <button
-                ref={countFocusRef}
-                aria-label={`${item.displayName}を 0.5 増やす`}
-                disabled={item.quantity.count >= maximumCount}
-                onClick={() =>
-                  dispatch({ type: "increment", shoppingId, id: item.id })
-                }
-                type="button"
-              >
-                ＋
-              </button>
-            </div>
-            <small className="item-weight-hint">{hint}</small>
-          </>
-        ) : (
-          <div className="item-weight-field">
-            <label>
-              {item.displayName}の重さ
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="decimal"
-                value={draft}
-                aria-invalid={error ? "true" : undefined}
-                aria-describedby={error ? errorId : undefined}
-                onChange={(event) => {
-                  setDraftState({
-                    key: currentQuantityKey,
-                    value: event.target.value,
-                  });
-                  setError("");
-                }}
-                onBlur={commitWeight}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") event.currentTarget.blur();
-                }}
-              />
-            </label>
-            <span>{item.quantity.unit}</span>
-            {error && (
-              <small id={errorId} role="alert">
-                {error}
-              </small>
-            )}
+              −
+            </button>
+            <span>{`${formatCount(item.quantity.count)} ${unit}`}</span>
+            <button
+              ref={countFocusRef}
+              aria-label={`${fullName}を 0.5 増やす`}
+              disabled={item.quantity.count >= maximumCount}
+              onClick={() =>
+                dispatch({ type: "increment", shoppingId, id: item.id })
+              }
+              type="button"
+            >
+              ＋
+            </button>
           </div>
+        ) : (
+          <span className="item-weight-summary">
+            {weightText(item.quantity)} {item.quantity.unit}
+          </span>
         )}
       </div>
-      <div className="item-actions">
-        <button
-          aria-label={`${item.displayName}を削除`}
-          className="danger-button"
-          onClick={() => dispatch({ type: "remove", shoppingId, id: item.id })}
-          type="button"
-        >
-          削除
-        </button>
+      <div id={detailsId} hidden={!expanded} className="item-details">
+        <p className="item-full-name">{fullName}</p>
+        {item.quantity.kind === "count" && (
+          <small className="item-weight-hint">{hint}</small>
+        )}
+        <div className="item-quantity">
+          <div
+            className="item-unit-toggle"
+            role="group"
+            aria-label={`${item.displayName}の量の単位`}
+          >
+            {(["count", "g", "kg"] as const).map((to) => (
+              <button
+                key={to}
+                type="button"
+                aria-label={`${item.displayName}を ${to === "count" ? "個" : to} に切り替える`}
+                aria-pressed={selected === to}
+                onClick={() => changeUnit(to)}
+              >
+                {to === "count" ? "個" : to}
+              </button>
+            ))}
+          </div>
+          {item.quantity.kind === "weight" && (
+            <div className="item-weight-field">
+              <label>
+                {item.displayName}の重さ
+                <input
+                  ref={inputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={draft}
+                  aria-invalid={error ? "true" : undefined}
+                  aria-describedby={error ? errorId : undefined}
+                  onChange={(event) => {
+                    setDraftState({
+                      key: currentQuantityKey,
+                      value: event.target.value,
+                    });
+                    setError("");
+                  }}
+                  onBlur={commitWeight}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                  }}
+                />
+              </label>
+              <span>{item.quantity.unit}</span>
+              {error && (
+                <small id={errorId} role="alert">
+                  {error}
+                </small>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="item-actions">
+          <button
+            aria-label={`${item.displayName}を削除`}
+            className="danger-button"
+            onClick={() =>
+              dispatch({ type: "remove", shoppingId, id: item.id })
+            }
+            type="button"
+          >
+            削除
+          </button>
+        </div>
       </div>
     </li>
   );

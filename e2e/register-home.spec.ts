@@ -128,6 +128,7 @@ test("TC-FR-ING-10-07 個数を 0.5 ずつ増減でき、0.5 では減らせず�
   await expect(
     row.getByRole("button", { name: "にんじんを 0.5 減らす" }),
   ).toBeDisabled();
+  await row.getByRole("button", { name: "にんじんの詳細を開く" }).click();
   await row.getByRole("button", { name: "にんじんを削除" }).click();
   await expect(itemRow(page, "にんじん")).toHaveCount(0);
   await expect(itemRow(page, "キャベツ")).toHaveCount(1);

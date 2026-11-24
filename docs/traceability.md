@@ -82,6 +82,7 @@
 | FR-UI-06 | #27, #28 | DES-UI-20, 22, 41 | TC-FR-UI-05-07 | src/ui/components/BalancePanel.tsx, src/ui/screens/BalanceDetailScreen.tsx | 実装済み |
 | FR-UI-08 | #34 | DES-UI-24 | TC-FR-UI-08-01 | src/ui/screens/FoodsScreen.tsx | 実装済み |
 | FR-UI-09 | #29 | DES-UI-23 | TC-FR-STP-01-02 | src/ui/screens/SettingsScreen.tsx | 実装済み |
+| FR-UI-10 | #162 | DES-UI-52 | TC-FR-UI-10-01〜03、TC-NFR-03-07 | src/ui/components/ItemRow.tsx, src/ui/App.css, src/ui/screens/HomeScreen.tsx, src/ui/screens/HistoryDetailScreen.tsx, e2e/compact-row.spec.ts, e2e/history.spec.ts, e2e/accessibility.spec.ts, e2e/row-quantity.spec.ts, e2e/undo-delete.spec.ts, e2e/row-layout.spec.ts, e2e/performance.spec.ts, docs/04_test/performance-measurement-it08.md | 実装済み。機能 E2E 235 件成功・1 件スキップ、性能 E2E 19 件成功。CPU 4 倍の再計測で登録 151.7 ms の超過あり。詳細は計測記録を参照 |
 | FR-SYS-01 | #24, #25, #26, #56 | DES-STO-01〜07, DES-UI-13, DES-STO-08, 09、DES-UI-50 | TC-FR-SYS-01-01〜10、TC-NFR-13-12〜14 | src/core/basket.ts, src/core/storage.ts, src/ui/storage.ts, src/ui/App.tsx, e2e/manual-memory.spec.ts | 実装済み（版 2。移行の E2E 成功（ローカル・CI）） |
 | FR-SYS-02 | #26 | DES-UI-13 | （査閲: ログインの画面・外部の認証を持たない） | src/ui/App.tsx | 実装済み |
 | IF-01〜05 | #26, #30 | DES-UI-20〜24, DES-E2E-02, 05 | TC-IF-02-01, 02, TC-IF-03-01 | src/ui/App.css, src/ui/components/Navigation.tsx, e2e/screens.spec.ts | 実装済み（IF-01 は査閲、IF-02 の主な流れはタップ・キーボードで確認、IF-03〜05 は E2E） |

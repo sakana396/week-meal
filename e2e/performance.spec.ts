@@ -211,6 +211,7 @@ for (const size of [3, 30, 100]) {
           "register",
           "candidate",
           "increment",
+          "decrement",
           "remove",
         ] as const) {
           const values: number[] = [];
@@ -271,6 +272,11 @@ for (const size of [3, 30, 100]) {
                     openingStart,
                   )
                 : null;
+            if (operation === "remove") {
+              await itemRow(page, "キャベツ")
+                .getByRole("button", { name: "キャベツの詳細を開く" })
+                .click();
+            }
             const button =
               operation === "register"
                 ? page
@@ -283,7 +289,9 @@ for (const size of [3, 30, 100]) {
                       name:
                         operation === "increment"
                           ? "キャベツを 0.5 増やす"
-                          : "キャベツを削除",
+                          : operation === "decrement"
+                            ? "キャベツを 0.5 減らす"
+                            : "キャベツを削除",
                       exact: true,
                     });
             // Playwright のスクロール・待機は計測開始より前。捕捉対象の次の click だけを測る。
@@ -520,7 +528,7 @@ const shoppingOperations = [
 for (const size of [3, 30, 100]) {
   for (const historyCount of [0, 100]) {
     for (const rate of [1, 4]) {
-      test(`TC-NFR-03-04 TC-NFR-03-05 TC-NFR-03-06 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
+      test(`TC-NFR-03-04 TC-NFR-03-05 TC-NFR-03-06 TC-NFR-03-07 ${size}行 別履歴${historyCount}件 CPU${rate}倍`, async ({
         page,
         browser,
       }, testInfo) => {
@@ -632,6 +640,11 @@ for (const size of [3, 30, 100]) {
               );
               if (changeDate) {
                 await page.getByLabel("買い物の日付").fill("2026-10-29");
+              }
+              if (operation.startsWith("remove")) {
+                await itemRow(page, "キャベツ")
+                  .getByRole("button", { name: "キャベツの詳細を開く" })
+                  .click();
               }
               const button = register
                 ? page

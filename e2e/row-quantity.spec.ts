@@ -9,6 +9,7 @@ test("TC-FR-QTY-07-04 行で重さを編集し、単位変更と再読み込み�
   await page.goto("#/");
   const before = await page.getByLabel("栄養バランスの判定").innerText();
   const row = itemRow(page, "にんじん");
+  await row.getByRole("button", { name: "にんじんの詳細を開く" }).click();
   await row.getByRole("button", { name: "にんじんを g に切り替える" }).click();
   const input = row.getByRole("textbox", { name: "にんじんの重さ" });
   await expect(input).toBeFocused();
@@ -45,6 +46,9 @@ test("TC-FR-QTY-07-04 行で重さを編集し、単位変更と再読み込み�
     )
     .toEqual({ kind: "weight", grams: 2000, unit: "kg" });
   await page.reload();
+  await itemRow(page, "にんじん")
+    .getByRole("button", { name: "にんじんの詳細を開く" })
+    .click();
   await expect(
     itemRow(page, "にんじん").getByRole("textbox", { name: "にんじんの重さ" }),
   ).toHaveValue("2");
@@ -56,6 +60,7 @@ test("TC-FR-QTY-08-01 個数行の目安重量と重さ行での非表示", asyn
   await registerFood(page, "ひよこまめ");
   await page.goto("#/");
   const row = itemRow(page, "ひよこまめ");
+  await row.getByRole("button", { name: "ひよこまめの詳細を開く" }).click();
   await expect(row).toContainText("1 パック ≒ 120 g");
   await row
     .getByRole("button", { name: "ひよこまめを g に切り替える" })
@@ -91,6 +96,7 @@ test("TC-NFR-03-05 画面外の行へ焦点を移して操作できる", async (
   );
   await page.reload();
   const lastRow = itemRow(page, "試料99");
+  await lastRow.getByRole("button", { name: "試料99の詳細を開く" }).click();
   const unitButton = lastRow.getByRole("button", {
     name: "試料99を g に切り替える",
   });
@@ -155,6 +161,7 @@ for (const [grams, count, direction] of [
     );
     await page.reload();
     const row = itemRow(page, "焦点試料");
+    await row.getByRole("button", { name: "焦点試料の詳細を開く" }).click();
     await row
       .getByRole("button", { name: "焦点試料を 個 に切り替える" })
       .click();

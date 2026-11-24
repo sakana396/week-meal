@@ -110,6 +110,9 @@ test("TC-FR-ING-19-02 前の買い物の登録・増減・削除はほかの買�
     itemRow(page, "にんじん").getByRole("group", { name: "にんじんの個数" }),
   ).toContainText("1");
   await itemRow(page, "キャベツ")
+    .getByRole("button", { name: "キャベツの詳細を開く" })
+    .click();
+  await itemRow(page, "キャベツ")
     .getByRole("button", { name: "キャベツを削除" })
     .click();
   await page.getByRole("button", { name: "この買い物に食材を登録" }).click();
@@ -136,6 +139,9 @@ test("TC-FR-ING-14-06 行削除は操作した詳細で取り消し、画面を�
   await seed(page);
   await openOld(page);
   await itemRow(page, "にんじん")
+    .getByRole("button", { name: "にんじんの詳細を開く" })
+    .click();
+  await itemRow(page, "にんじん")
     .getByRole("button", { name: "にんじんを削除" })
     .click();
   const undo = page.getByRole("button", { name: "元に戻す" });
@@ -143,6 +149,19 @@ test("TC-FR-ING-14-06 行削除は操作した詳細で取り消し、画面を�
   await expect(undo).toHaveAccessibleDescription("にんじんを削除しました");
   await undo.click();
   await expect(itemRow(page, "にんじん")).toHaveCount(1);
+  await expect(
+    itemRow(page, "にんじん").getByRole("button", {
+      name: "にんじんの詳細を開く",
+    }),
+  ).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    itemRow(page, "にんじん").getByRole("button", {
+      name: "にんじんを 0.5 減らす",
+    }),
+  ).toBeFocused();
+  await itemRow(page, "にんじん")
+    .getByRole("button", { name: "にんじんの詳細を開く" })
+    .click();
   await itemRow(page, "にんじん")
     .getByRole("button", { name: "にんじんを削除" })
     .click();
@@ -190,6 +209,9 @@ test("TC-FR-ING-19-05 前の買い物の未判定から同じ買い物へ登録�
 }) => {
   await seed(page);
   await openOld(page);
+  await itemRow(page, "豚肉")
+    .getByRole("button", { name: "豚肉の詳細を開く" })
+    .click();
   await itemRow(page, "豚肉")
     .getByRole("button", { name: "豚肉を削除" })
     .click();

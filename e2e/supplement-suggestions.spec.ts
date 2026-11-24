@@ -443,6 +443,9 @@ test("TC-FR-BAL-06-08 削除の取り消し表示中に候補を登録しても�
   await seed(page, rotating);
   await ready(page);
   await itemRow(page, "キャベツ")
+    .getByRole("button", { name: "キャベツの詳細を開く" })
+    .click();
+  await itemRow(page, "キャベツ")
     .getByRole("button", { name: "キャベツを削除" })
     .click();
   await expect(

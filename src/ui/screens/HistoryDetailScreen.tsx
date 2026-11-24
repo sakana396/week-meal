@@ -67,7 +67,7 @@ export function HistoryDetailScreen({
       (
         row?.querySelector<HTMLButtonElement>(
           ".item-count button:not(:disabled)",
-        ) ?? row?.querySelector<HTMLInputElement>(".item-weight-field input")
+        ) ?? row?.querySelector<HTMLButtonElement>(".item-name")
       )?.focus();
     }
     previousRemoval.current = pendingRemoval;

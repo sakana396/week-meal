@@ -89,7 +89,11 @@ test("TC-FR-NUT-07-01 ホームと買い物詳細はそれぞれの食材だけ�
     page.getByRole("heading", { name: "判定する栄養素（14 種）" }),
   ).toBeVisible();
   await page.goto(`#/history/${firstId}`);
-  await expect(page.getByText("にんじん", { exact: false })).toBeVisible();
+  await expect(
+    itemRow(page, "にんじん").getByRole("button", {
+      name: "にんじんの詳細を開く",
+    }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole("region", { name: "栄養バランスの判定" })
