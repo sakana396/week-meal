@@ -114,9 +114,9 @@ export function ReceiptScreen({
   );
   const [text, setText] = useState("");
   const [rows, setRows] = useState<ReviewRow[]>([]);
-  const [unmatched, setUnmatched] = useState<{ line: number; text: string }[]>(
-    [],
-  );
+  const [unmatched, setUnmatched] = useState<
+    { line: number; itemOrder?: number; text: string }[]
+  >([]);
   const [read, setRead] = useState(false);
   const [copyFallback, setCopyFallback] = useState(false);
   const fallbackRef = useRef<HTMLTextAreaElement>(null);
@@ -308,7 +308,10 @@ export function ReceiptScreen({
           {rows.length === 0 && <p>登録できる食材は見つかりませんでした。</p>}
           <ul className="receipt-review-list">
             {rows.map((row, index) => (
-              <li className="receipt-review-row" key={`${row.line}-${index}`}>
+              <li
+                className="receipt-review-row"
+                key={`${row.line}-${row.itemOrder ?? 1}`}
+              >
                 <label>
                   <input
                     type="checkbox"
@@ -317,11 +320,17 @@ export function ReceiptScreen({
                       update(index, { enabled: event.target.checked })
                     }
                   />
-                  {row.line} 行目を登録する
+                  {row.line} 行目
+                  {row.itemOrder ? `の ${row.itemOrder} 品目` : ""}を登録する
                 </label>
                 <label className="form-field">
                   食材名
                   <input
+                    aria-label={
+                      row.itemOrder
+                        ? `${row.line} 行目の ${row.itemOrder} 品目の食材名`
+                        : undefined
+                    }
                     list="receipt-names"
                     value={row.nameDraft}
                     onChange={(event) =>
@@ -343,7 +352,7 @@ export function ReceiptScreen({
                 <div className="receipt-quantity">
                   <div
                     role="group"
-                    aria-label={`${row.line} 行目の量の単位`}
+                    aria-label={`${row.line} 行目${row.itemOrder ? `の ${row.itemOrder} 品目` : ""}の量の単位`}
                     className="item-unit-toggle"
                   >
                     {(["count", "g", "kg"] as const).map((unit) => (
@@ -387,6 +396,11 @@ export function ReceiptScreen({
                         if (element) amountRefs.current.set(index, element);
                         else amountRefs.current.delete(index);
                       }}
+                      aria-label={
+                        row.itemOrder
+                          ? `${row.line} 行目の ${row.itemOrder} 品目の量`
+                          : undefined
+                      }
                       inputMode="decimal"
                       value={row.amountDraft}
                       onChange={(event) =>
@@ -432,7 +446,9 @@ export function ReceiptScreen({
               <h4>登録しない物 {unmatched.length} 件</h4>
               <ul>
                 {unmatched.map((item) => (
-                  <li key={item.line}>{item.text}</li>
+                  <li key={`${item.line}-${item.itemOrder ?? 1}`}>
+                    {item.text}
+                  </li>
                 ))}
               </ul>
             </div>
