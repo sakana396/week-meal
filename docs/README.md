@@ -8,8 +8,8 @@
 | 企画 | 企画書 | [01_concept/concept.md](01_concept/concept.md) | ドラフト |
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
-| 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.8 確定 |
-| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.11（E-140 を反映） |
+| 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.10（IT08 の要求文は本人未確認） |
+| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.12（IT08 の計画を追加） |
 | 計画 | 反復の進め方（エージェント向けの手順、PLAN-002） | [00_plan/iteration-workflow.md](00_plan/iteration-workflow.md) | v0.1 |
 | 反復 | 反復 1 振り返り | [iterations/it01/retrospective.md](iterations/it01/retrospective.md) | 1.0 確定 |
 | 反復 | 反復 2 振り返り | [iterations/it02/retrospective.md](iterations/it02/retrospective.md) | 0.2 案（本人の記入待ち） |
@@ -33,6 +33,7 @@
 | 反復 | 反復 7 レシート貼り付けの実地検証記録 | [iterations/it07/receipt-validation.md](iterations/it07/receipt-validation.md) | v0.1（本人の試用 1 回。H-17・H-18 は未検証） |
 | 反復 | 反復 7 炭水化物の不足判定の再調査記録 | [iterations/it07/carbohydrate-investigation.md](iterations/it07/carbohydrate-investigation.md) | v0.1（本人の買い物での再計算は未実施。直さない、E-138） |
 | 反復 | 反復 7 振り返り | [iterations/it07/retrospective.md](iterations/it07/retrospective.md) | v0.1（E-131〜E-142 を反映。M8 完了） |
+| 反復 | 反復 8（貼り付けと食材一覧の改善）計画書 | [iterations/it08/plan.md](iterations/it08/plan.md) | v0.1（書き起こしは本人未確認） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
