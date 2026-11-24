@@ -47,6 +47,8 @@ export type AnalysisResult =
     }
   | {
       kind: "judged";
+      /** 主食を除く判定に使った登録行数（DES-BAL-08） */
+      itemCount: number;
       results: BalanceResult[];
       pfc: Pfc | null;
       /** 目安重量がなく、1 単位 = 100g の概算で数えた食材名 */
@@ -153,6 +155,7 @@ export function analyzeBasket(
   );
   return {
     kind: "judged",
+    itemCount: active.length,
     results,
     pfc,
     approximateItems,
