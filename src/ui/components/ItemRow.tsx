@@ -140,7 +140,7 @@ export const ItemRow = memo(function ItemRow({
           className="item-name"
           type="button"
           aria-expanded={expanded}
-          aria-controls={detailsId}
+          aria-controls={expanded ? detailsId : undefined}
           aria-label={`${fullName}の詳細を${expanded ? "閉じる" : "開く"}`}
           onClick={() => {
             if (expanded && item.quantity.kind === "weight") {
@@ -194,75 +194,77 @@ export const ItemRow = memo(function ItemRow({
           </span>
         )}
       </div>
-      <div id={detailsId} hidden={!expanded} className="item-details">
-        <p className="item-full-name">{fullName}</p>
-        {item.quantity.kind === "count" && (
-          <small className="item-weight-hint">{hint}</small>
-        )}
-        <div className="item-quantity">
-          <div
-            className="item-unit-toggle"
-            role="group"
-            aria-label={`${item.displayName}の量の単位`}
-          >
-            {(["count", "g", "kg"] as const).map((to) => (
-              <button
-                key={to}
-                type="button"
-                aria-label={`${item.displayName}を ${to === "count" ? "個" : to} に切り替える`}
-                aria-pressed={selected === to}
-                onClick={() => changeUnit(to)}
-              >
-                {to === "count" ? "個" : to}
-              </button>
-            ))}
-          </div>
-          {item.quantity.kind === "weight" && (
-            <div className="item-weight-field">
-              <label>
-                {item.displayName}の重さ
-                <input
-                  ref={inputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={draft}
-                  aria-invalid={error ? "true" : undefined}
-                  aria-describedby={error ? errorId : undefined}
-                  onChange={(event) => {
-                    setDraftState({
-                      key: currentQuantityKey,
-                      value: event.target.value,
-                    });
-                    setError("");
-                  }}
-                  onBlur={commitWeight}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") event.currentTarget.blur();
-                  }}
-                />
-              </label>
-              <span>{item.quantity.unit}</span>
-              {error && (
-                <small id={errorId} role="alert">
-                  {error}
-                </small>
-              )}
-            </div>
+      {expanded && (
+        <div id={detailsId} className="item-details">
+          <p className="item-full-name">{fullName}</p>
+          {item.quantity.kind === "count" && (
+            <small className="item-weight-hint">{hint}</small>
           )}
+          <div className="item-quantity">
+            <div
+              className="item-unit-toggle"
+              role="group"
+              aria-label={`${item.displayName}の量の単位`}
+            >
+              {(["count", "g", "kg"] as const).map((to) => (
+                <button
+                  key={to}
+                  type="button"
+                  aria-label={`${item.displayName}を ${to === "count" ? "個" : to} に切り替える`}
+                  aria-pressed={selected === to}
+                  onClick={() => changeUnit(to)}
+                >
+                  {to === "count" ? "個" : to}
+                </button>
+              ))}
+            </div>
+            {item.quantity.kind === "weight" && (
+              <div className="item-weight-field">
+                <label>
+                  {item.displayName}の重さ
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    inputMode="decimal"
+                    value={draft}
+                    aria-invalid={error ? "true" : undefined}
+                    aria-describedby={error ? errorId : undefined}
+                    onChange={(event) => {
+                      setDraftState({
+                        key: currentQuantityKey,
+                        value: event.target.value,
+                      });
+                      setError("");
+                    }}
+                    onBlur={commitWeight}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                    }}
+                  />
+                </label>
+                <span>{item.quantity.unit}</span>
+                {error && (
+                  <small id={errorId} role="alert">
+                    {error}
+                  </small>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="item-actions">
+            <button
+              aria-label={`${item.displayName}を削除`}
+              className="danger-button"
+              onClick={() =>
+                dispatch({ type: "remove", shoppingId, id: item.id })
+              }
+              type="button"
+            >
+              削除
+            </button>
+          </div>
         </div>
-        <div className="item-actions">
-          <button
-            aria-label={`${item.displayName}を削除`}
-            className="danger-button"
-            onClick={() =>
-              dispatch({ type: "remove", shoppingId, id: item.id })
-            }
-            type="button"
-          >
-            削除
-          </button>
-        </div>
-      </div>
+      )}
     </li>
   );
 });

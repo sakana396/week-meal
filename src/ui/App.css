@@ -915,7 +915,6 @@ h3 {
   background: transparent;
   padding: 0;
   gap: 2px;
-  min-width: 0;
 }
 
 .item-name strong,
@@ -940,10 +939,6 @@ h3 {
 .item-weight-summary {
   overflow-wrap: anywhere;
   text-align: center;
-}
-
-.item-details[hidden] {
-  display: none;
 }
 
 .item-details > * {

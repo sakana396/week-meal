@@ -14,7 +14,7 @@
 
 ## CPU 4 倍・100 行（TC-NFR-03-07）
 
-2026-11-24、変更を含む `0415e57569cfcd3b62989292a924f4af32199e7c` で計測。Linux WSL2、Intel Core i5-10400F、Chromium 156.0.8078.4、360 × 740 px、CPU 4 倍、覚えた食品 100 件。操作のクリックから判定 commit 後の 2 回目の描画まで、各 5 回の値（ms）を記録する。詳細は `test-results` の `performance.json`。
+2026-11-24、`0415e57` に本 Issue の未コミットの変更を加えた状態で計測。Linux WSL2、Intel Core i5-10400F、Chromium 156.0.8078.4、360 × 740 px、CPU 4 倍、覚えた食品 100 件。操作のクリックから判定 commit 後の 2 回目の描画まで、各 5 回の値（ms）を記録する。詳細は `test-results` の `performance.json`。
 
 | 操作 | 5 回の値（ms） | 最大（ms） |
 | --- | --- | --- |
@@ -43,79 +43,24 @@
 
 ## 変更前との比較（Claude Code が計測、2026-11-24）
 
-上の計測は、別のワークツリーで Codex が単体テストなどを同時に動かしていた時間に行った。負荷の影響を除くため、ほかの作業を止めた状態で、変更前（`0415e57`、ワークツリーの変更なし）と変更後（`0415e57` ＋本 Issue の未コミットの変更）の性能 E2E（`--project=performance --workers=1`）を続けて実行した。どちらも 19 件成功（18.0 分・18.5 分）。環境は上と同じ PC・Chromium。下の表は CPU 4 倍の条件の各 5 回の最大で、準備（試料の書き込み）の時間を除く。performance.json の減少（decrement）は変更後に足した操作のため、変更前の値はない。
+上の計測は、別のワークツリーで Codex が単体テストなどを同時に動かしていた時間に行った。負荷の影響を減らすため、ほかの作業を止めた状態で、変更前（`0415e57`、ワークツリーの変更なし）と変更後を、同じ PC・Chromium で続けて計測した。
 
-| 記録 | 条件 | 操作 | 変更前の最大（ms） | 変更後の最大（ms） |
-| --- | --- | --- | ---: | ---: |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | changeLatestDate | 161.2 | 216.4 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | decrementLatest | 27.3 | 39.7 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | decrementPrevious | 32.5 | 30.1 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | incrementLatest | 37.2 | 46.9 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | incrementPrevious | 29.4 | 44.2 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | registerLatest | 46.8 | 60.8 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | registerPrevious | 52.2 | 66.4 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | removeLatest | 59.2 | 62.9 |
-| performance-it04.json | 100行-別履歴0件-CPU4倍 | removePrevious | 51.1 | 39.8 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | changeLatestDate | 165.2 | 174.2 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | decrementLatest | 33.9 | 34.7 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | decrementPrevious | 30.2 | 31.5 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | incrementLatest | 35.1 | 33.5 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | incrementPrevious | 29.2 | 33.0 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | registerLatest | 60.9 | 40.5 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | registerPrevious | 33.6 | 40.4 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | removeLatest | 45.9 | 36.5 |
-| performance-it04.json | 100行-別履歴100件-CPU4倍 | removePrevious | 40.4 | 33.2 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | changeLatestDate | 74.2 | 109.8 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | decrementLatest | 29.6 | 37.5 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | decrementPrevious | 28.3 | 27.2 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | incrementLatest | 39.5 | 31.6 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | incrementPrevious | 20.3 | 27.5 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | registerLatest | 46.8 | 38.2 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | registerPrevious | 60.6 | 29.2 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | removeLatest | 42.6 | 38.8 |
-| performance-it04.json | 30行-別履歴0件-CPU4倍 | removePrevious | 38.1 | 50.1 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | changeLatestDate | 198.0 | 124.5 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | decrementLatest | 30.5 | 34.1 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | decrementPrevious | 18.4 | 21.8 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | incrementLatest | 33.4 | 36.2 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | incrementPrevious | 22.8 | 16.8 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | registerLatest | 48.6 | 55.9 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | registerPrevious | 37.5 | 33.8 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | removeLatest | 39.4 | 35.5 |
-| performance-it04.json | 30行-別履歴100件-CPU4倍 | removePrevious | 33.6 | 31.3 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | changeLatestDate | 67.0 | 42.7 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | decrementLatest | 21.8 | 36.1 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | decrementPrevious | 20.9 | 22.8 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | incrementLatest | 30.5 | 26.9 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | incrementPrevious | 28.4 | 20.2 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | registerLatest | 35.7 | 38.6 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | registerPrevious | 37.2 | 25.8 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | removeLatest | 62.6 | 23.7 |
-| performance-it04.json | 3行-別履歴0件-CPU4倍 | removePrevious | 23.5 | 23.2 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | changeLatestDate | 39.6 | 41.7 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | decrementLatest | 23.7 | 21.6 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | decrementPrevious | 19.6 | 26.2 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | incrementLatest | 27.1 | 25.5 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | incrementPrevious | 36.3 | 16.0 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | registerLatest | 41.4 | 39.3 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | registerPrevious | 29.8 | 40.9 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | removeLatest | 33.4 | 47.3 |
-| performance-it04.json | 3行-別履歴100件-CPU4倍 | removePrevious | 21.0 | 24.9 |
-| performance.json | 100行-CPU4倍 | candidate | 70.0 | 65.3 |
-| performance.json | 100行-CPU4倍 | decrement | — | 50.6 |
-| performance.json | 100行-CPU4倍 | increment | 46.3 | 36.8 |
-| performance.json | 100行-CPU4倍 | register | 47.8 | 52.7 |
-| performance.json | 100行-CPU4倍 | remove | 58.5 | 42.3 |
-| performance.json | 30行-CPU4倍 | candidate | 43.1 | 42.6 |
-| performance.json | 30行-CPU4倍 | decrement | — | 32.2 |
-| performance.json | 30行-CPU4倍 | increment | 28.3 | 30.2 |
-| performance.json | 30行-CPU4倍 | register | 33.3 | 43.8 |
-| performance.json | 30行-CPU4倍 | remove | 39.3 | 43.3 |
-| performance.json | 3行-CPU4倍 | candidate | 39.6 | 36.2 |
-| performance.json | 3行-CPU4倍 | decrement | — | 28.2 |
-| performance.json | 3行-CPU4倍 | increment | 20.7 | 20.8 |
-| performance.json | 3行-CPU4倍 | register | 35.8 | 42.6 |
-| performance.json | 3行-CPU4倍 | remove | 75.0 | 29.8 |
+- 1 回目: 性能 E2E の全件（`--project=performance --workers=1`）。変更前・変更後（閉じた詳細も DOM に描画していた前回の版）とも 19 件成功
+- 2 回目: REV-083 #1 を受けて、閉じた詳細を描画しない版に直したあと、`-g "NFR-03-04.*CPU4倍"` の 6 件だけを、変更前・変更後とも実行。どちらも 6 件成功
 
-- 登録・候補登録・増加・減少・削除は、変更前・変更後とも 100 ms 以内だった。上の計測の「30 行・別履歴 0 件の登録 151.7 ms」は、この計測では再現しなかった
-- 日付の変更（changeLatestDate）は、変更前から 100 ms を超えていた（変更前の最大 198.0 ms）。変更後は条件により増えたものと減ったものがあり、本 Issue の変更による悪化とは判断できない。IT06 の計測（最大約 92.1 ms）より遅い原因は確かめていない。NFR-03 の超過として振り返りに残す
+下の表は、日付の変更（`changeLatestDate`）の CPU 4 倍・各 5 回の最大（ms）。準備（試料の書き込み）の時間を除く。
+
+| 条件 | 変更前 1 回目 | 変更前 2 回目 | 変更後（前回の版） | 変更後（閉じた詳細を描画しない版） |
+| --- | ---: | ---: | ---: | ---: |
+| 100行-別履歴0件-CPU4倍 | 161.2 | 138.5 | 216.4 | 96.0 |
+| 100行-別履歴100件-CPU4倍 | 165.2 | 201.5 | 174.2 | 114.3 |
+| 30行-別履歴0件-CPU4倍 | 74.2 | 59.9 | 109.8 | 44.6 |
+| 30行-別履歴100件-CPU4倍 | 198.0 | 64.7 | 124.5 | 44.9 |
+| 3行-別履歴0件-CPU4倍 | 67.0 | 39.9 | 42.7 | 28.6 |
+| 3行-別履歴100件-CPU4倍 | 39.6 | 36.1 | 41.7 | 30.3 |
+
+- 変更前の 2 回の計測でも、同じ条件の最大が 198.0 ms と 64.7 ms のように大きく違った。各 5 回・各 1〜2 回の計測なので、数十 ms の差は計測のぶれと区別できない
+- 前回の版（閉じた詳細も描画）は、30 行・別履歴 0 件で 2 回とも 100 ms を超えた（109.8 ms、本記録の前節の Codex の計測では 132.3 ms）。変更前はこの条件で 2 回とも 100 ms 以内だった。前回の版で悪化した可能性は否定できない
+- 閉じた詳細を描画しない版は、6 条件すべてで変更前の 2 回の計測より小さかった。ただし 100 行・別履歴 100 件は 114.3 ms で、NFR-03 の 100 ms を超えた。変更前もこの条件で 2 回とも超えていた（165.2 ms、201.5 ms）
+- 2 回目の計測では、登録・増加・減少・削除は、変更前・変更後とも最大 58.6 ms 以内だった（変更後の最大は削除の 54.1 ms）
+- 日付の変更が IT06 の計測（最大約 92.1 ms）より遅い原因は確かめていない。100 行・別履歴 100 件の超過は、本 Issue の前からある NFR-03 の超過として IT08 の振り返りに残す

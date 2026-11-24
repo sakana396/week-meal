@@ -52,6 +52,7 @@ export function HistoryDetailScreen({
   const removeRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  // 削除後と復元後の焦点を移す（DES-UI-45、DES-UI-52）。
   useLayoutEffect(() => {
     const previous = previousRemoval.current;
     if (

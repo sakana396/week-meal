@@ -61,16 +61,18 @@ test("TC-FR-UI-10-03 閉じた詳細はフォーカスできず操作後も正�
   await page.goto("#/");
   const row = itemRow(page, "にんじん");
   const toggle = row.locator("button.item-name");
-  const detailsId = await toggle.getAttribute("aria-controls");
-  expect(detailsId).toBeTruthy();
-  await expect(page.locator(`[id="${detailsId}"]`)).toBeHidden();
+  await expect(toggle).not.toHaveAttribute("aria-controls");
+  await expect(row.locator(".item-details")).toHaveCount(0);
   await toggle.focus();
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const detailsId = await toggle.getAttribute("aria-controls");
+  expect(detailsId).toBeTruthy();
   await expect(page.locator(`[id="${detailsId}"]`)).toBeVisible();
   await page.keyboard.press("Space");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  await expect(page.locator(`[id="${detailsId}"]`)).toBeHidden();
+  await expect(toggle).not.toHaveAttribute("aria-controls");
+  await expect(page.locator(`[id="${detailsId}"]`)).toHaveCount(0);
 });
 
 test("TC-FR-UI-10-02 TC-FR-UI-10-03 同名行の詳細名と操作名を区別する", async ({
@@ -154,6 +156,9 @@ for (const screen of ["home", "history"] as const) {
     await page.reload();
     if (screen === "history") await page.goto("#/history/old");
     const row = itemRow(page, "にんじん");
+    await expect(
+      row.getByRole("button", { name: /にんじんを 0\.5 (増やす|減らす)/ }),
+    ).toHaveCount(0);
     await row.getByRole("button", { name: "にんじんの詳細を開く" }).click();
     await row
       .getByRole("button", { name: "にんじんを kg に切り替える" })
@@ -198,5 +203,66 @@ test("TC-FR-UI-10-03 閉じた行と開いた行の axe を検査する", async 
         ({ impact }) => impact === "critical" || impact === "serious",
       ),
     ).toEqual([]);
+  }
+});
+
+test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto("#/");
+  const name = "目安重量の定義がない長い食材名の測定用試料";
+  await page.evaluate((name) => {
+    const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
+    state.manualFoods = [
+      {
+        id: "manual-1",
+        name,
+        category: "手入力",
+        refusePct: null,
+        nutrientsPer100g: {},
+      },
+    ];
+    state.shoppings = [
+      {
+        id: "long",
+        date: "2026-11-24",
+        origin: "normal",
+        items: [
+          {
+            id: "long-item",
+            foodId: "manual-1",
+            displayName: name,
+            quantity: { kind: "count", count: 998.5 },
+          },
+        ],
+      },
+    ];
+    localStorage.setItem("weekmeal:state", JSON.stringify(state));
+  }, name);
+  await page.reload();
+  const row = page.locator(".item-row");
+  const toggle = row.getByRole("button", { name: `${name}の詳細を開く` });
+  await expect(row).toContainText("998.5 つ（概算）");
+  const text = toggle.locator("strong");
+  expect(
+    await text.evaluate(
+      (el) =>
+        el.scrollWidth > el.clientWidth &&
+        getComputedStyle(el).textOverflow === "ellipsis",
+    ),
+  ).toBe(true);
+  for (const expanded of [false, true]) {
+    if (expanded) {
+      await toggle.click();
+      await expect(row.locator(".item-full-name")).toHaveText(name);
+    }
+    for (const button of await row.getByRole("button").all()) {
+      const box = await button.boundingBox();
+      expect(box && box.width >= 44 && box.height >= 44).toBeTruthy();
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
   }
 });
