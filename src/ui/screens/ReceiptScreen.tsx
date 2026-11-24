@@ -412,6 +412,7 @@ export function ReceiptScreen({
                       aria-describedby={
                         [
                           row.needsCheck ? `receipt-check-${index}` : "",
+                          row.convertedFromMl ? `receipt-ml-${index}` : "",
                           errors[index] && exactName(row.nameDraft)
                             ? `receipt-error-${index}`
                             : "",
@@ -424,6 +425,12 @@ export function ReceiptScreen({
                 </div>
                 {row.needsCheck && (
                   <p id={`receipt-check-${index}`}>量を確かめてください</p>
+                )}
+                {row.convertedFromMl && (
+                  <p id={`receipt-ml-${index}`}>
+                    ml を 1 ml ≒ 1 g
+                    の概算で換算しました。重さを確認してください
+                  </p>
                 )}
                 {errors[index] && (
                   <p id={`receipt-error-${index}`} role="alert">

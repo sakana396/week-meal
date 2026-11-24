@@ -249,6 +249,58 @@ describe("レシート読み取り（DES-RCP-03）", () => {
     });
   });
 
+  it.each([
+    ["にんじん,1/2個", { kind: "count", count: 0.5 }],
+    ["にんじん,1/4g", { kind: "weight", grams: 1, unit: "g" }],
+    ["にんじん,1/2kg", { kind: "weight", grams: 500, unit: "kg" }],
+    ["にんじん,1/2ml", { kind: "weight", grams: 1, unit: "g" }],
+    ["にんじん,1/0個", { kind: "count", count: 1 }],
+    ["にんじん,2000/1個", { kind: "count", count: 999 }],
+  ])("TC-FR-RCP-06-01 分数と単位 %#", (line, quantity) => {
+    expect(parseReceiptText(line, catalog).candidates[0]).toMatchObject({
+      quantity,
+      needsCheck: true,
+    });
+  });
+  it("TC-FR-RCP-06-01 分割した組の分数も単位付きで読む", () => {
+    const result = parseReceiptText("にんじん,1/2個 にんじん,1/2kg", catalog);
+    expect(
+      result.candidates.map(({ quantity, needsCheck }) => ({
+        quantity,
+        needsCheck,
+      })),
+    ).toEqual([
+      { quantity: { kind: "count", count: 0.5 }, needsCheck: true },
+      {
+        quantity: { kind: "weight", grams: 500, unit: "kg" },
+        needsCheck: true,
+      },
+    ]);
+  });
+  it.each(["ml", "mL", "ML"])("TC-FR-RCP-06-02 ml の換算 %s", (unit) => {
+    expect(
+      parseReceiptText(`• にんじん,200${unit}`, catalog).candidates[0],
+    ).toMatchObject({
+      quantity: { kind: "weight", grams: 200, unit: "g" },
+      needsCheck: true,
+      convertedFromMl: true,
+    });
+    expect(
+      parseReceiptText(`にんじん,200${unit} にんじん,1`, catalog).candidates[0],
+    ).toMatchObject({ convertedFromMl: true });
+  });
+  it.each(["-1", "−1/2個", "-200ml", "−0"])(
+    "TC-FR-RCP-06-02 負の量 %s",
+    (amount) => {
+      const line = `にんじん,${amount}`;
+      expect(parseReceiptText(line, catalog).unmatched).toEqual([
+        { line: 1, text: line },
+      ]);
+      expect(parseReceiptText(`${line} にんじん,1`, catalog).unmatched).toEqual(
+        [{ line: 1, itemOrder: 1, text: line }],
+      );
+    },
+  );
   it("TC-FR-RCP-01-01 囲みや見出しを飛ばし、同名は登録一覧・新しい手入力を優先する", () => {
     const result = parseReceiptText(
       "# 見出し\n```\nにんじん,1\nはるさめ（乾燥）,2\n手作り豆腐,1\n```\n\n洗剤,1",

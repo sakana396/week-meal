@@ -17,6 +17,7 @@ export type ReceiptCandidate = {
   foodId: string;
   quantity: Quantity;
   needsCheck: boolean;
+  convertedFromMl?: boolean;
   aliasFrom?: string;
 };
 
@@ -48,10 +49,9 @@ const escapedWords = unitWords.map((word) =>
   word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
 );
 const quantityPattern = new RegExp(
-  `^(.*?)[\\s,、\\t]*(\\d+(?:\\.\\d+)?)\\s*(kg|g|${escapedWords.join("|")})?$`,
+  `^(.*?)[\\s,、\\t]*([+\\-−]?)(\\d+(?:\\.\\d+)?)(?:/(\\d+))?\\s*(kg|g|ml|${escapedWords.join("|")})?$`,
   "i",
 );
-const fractionPattern = /^(.*?)[\s,、\t]*(\d+)\/(\d+)\s*$/;
 
 function parsedQuantity(
   value: number,
@@ -59,18 +59,27 @@ function parsedQuantity(
 ): { quantity: Quantity; needsCheck: boolean } {
   if (!Number.isFinite(value))
     return { quantity: { kind: "count", count: 1 }, needsCheck: true };
-  if (unit?.toLowerCase() === "g" || unit?.toLowerCase() === "kg") {
-    const grams = Math.round(value * (unit.toLowerCase() === "kg" ? 1000 : 1));
+  if (["g", "kg", "ml"].includes(unit?.toLowerCase() ?? "")) {
+    // 外部資料による値ではない概算。本人の査閲待ち。
+    const mlToGrams = 1;
+    const factor =
+      unit?.toLowerCase() === "kg"
+        ? 1000
+        : unit?.toLowerCase() === "ml"
+          ? mlToGrams
+          : 1;
+    const grams = Math.round(value * factor);
     const bounded = Math.max(1, Math.min(100000, grams));
     return {
       quantity: {
         kind: "weight",
         grams: bounded,
-        unit: unit.toLowerCase() as "g" | "kg",
+        unit: unit?.toLowerCase() === "kg" ? "kg" : "g",
       },
       needsCheck:
         grams !== bounded ||
-        value * (unit.toLowerCase() === "kg" ? 1000 : 1) !== grams,
+        value * factor !== grams ||
+        unit?.toLowerCase() === "ml",
     };
   }
   const rounded = Math.round(value * 2) / 2;
@@ -165,20 +174,27 @@ export function parseReceiptText(
         .trim();
       if (!pairs.length)
         value = value
-          .replace(/^(?:[-*・]\s*|\d+\.\s*)/, "")
+          .replace(/^(?:[-*・•]\s*|\d+\.\s*)/, "")
           .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
       const itemOrder = pairs.length ? pairIndex + 1 : undefined;
-      const fraction = value.match(fractionPattern);
-      const match = fraction ?? value.match(quantityPattern);
+      const match = value.match(quantityPattern);
       const name = match ? match[1].replace(/[\s,、\t]+$/, "").trim() : value;
-      const amount = fraction
-        ? parsedQuantity(Number(fraction[2]) / Number(fraction[3]), undefined)
-        : match
-          ? parsedQuantity(Number(match[2]), match[3])
-          : {
-              quantity: { kind: "count" as const, count: 1 },
-              needsCheck: true,
-            };
+      if (match && (match[2] === "-" || match[2] === "−")) {
+        unmatched.push({
+          line,
+          ...(itemOrder ? { itemOrder } : {}),
+          text: pairs.length ? raw : original,
+        });
+        return;
+      }
+      const fraction = Boolean(match?.[4]);
+      const convertedFromMl = match?.[5]?.toLowerCase() === "ml";
+      const amount = match
+        ? parsedQuantity(
+            fraction ? Number(match[3]) / Number(match[4]) : Number(match[3]),
+            match[5],
+          )
+        : { quantity: { kind: "count" as const, count: 1 }, needsCheck: true };
       const key = normalizeSearchText(name.normalize("NFKC"));
       const direct = names.get(key);
       const aliasedName = direct ? undefined : aliases.get(key);
@@ -201,7 +217,8 @@ export function parseReceiptText(
         displayName: found.displayName,
         foodId: found.foodId,
         quantity: amount.quantity,
-        needsCheck: amount.needsCheck || Boolean(fraction),
+        needsCheck: amount.needsCheck || fraction,
+        ...(convertedFromMl ? { convertedFromMl: true } : {}),
         ...(aliasedName ? { aliasFrom: name } : {}),
       });
     });
