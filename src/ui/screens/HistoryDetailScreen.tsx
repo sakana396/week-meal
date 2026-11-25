@@ -5,7 +5,7 @@ import type {
   BasketSessionAction,
   PendingRemoval,
 } from "../../core/basketSession";
-import { foodPresentation } from "../../core/catalog";
+import { itemNames } from "../itemNames";
 import type { Profile } from "../../core/profile";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
@@ -102,19 +102,7 @@ export function HistoryDetailScreen({
       (event.shiftKey ? last : first).focus();
     }
   };
-  const nameCounts = new Map<string, number>();
-  for (const item of shopping.items)
-    nameCounts.set(
-      item.displayName,
-      (nameCounts.get(item.displayName) ?? 0) + 1,
-    );
-  const detailOf = (foodId: string, displayName: string) => {
-    if ((nameCounts.get(displayName) ?? 0) < 2) return null;
-    const food = findFood(foodId);
-    if (!food) return null;
-    if (food.id.startsWith("manual-")) return "手入力";
-    return foodPresentation(food.name, food.category).details || food.name;
-  };
+  const names = itemNames(shopping.items, findFood);
   return (
     <div className="screen-stack" aria-label="買い物詳細画面">
       <header className="screen-header">
@@ -155,12 +143,13 @@ export function HistoryDetailScreen({
           <p>登録した食材がありません</p>
         ) : (
           <ul className="item-list" ref={listRef}>
-            {shopping.items.map((item) => (
+            {shopping.items.map((item, index) => (
               <ItemRow
                 key={item.id}
                 item={item}
                 shoppingId={shopping.id}
-                detail={detailOf(item.foodId, item.displayName)}
+                detail={names[index].detail}
+                accessibleName={names[index].name}
                 dispatch={dispatch}
               />
             ))}
