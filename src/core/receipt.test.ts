@@ -156,6 +156,44 @@ describe("レシート読み取り（DES-RCP-03）", () => {
     },
   );
   it.each([
+    ["1/2個", { kind: "count", count: 0.5 }, true, false],
+    ["1,000g", { kind: "weight", grams: 1000, unit: "g" }, false, false],
+    ["200ml", { kind: "weight", grams: 200, unit: "g" }, true, true],
+  ])(
+    "TC-FR-RCP-05-04 空白付きの組の量と要確認を読む: %s",
+    (amount, quantity, needsCheck, convertedFromMl) => {
+      const result = parseReceiptText(
+        `にんじん, ${amount} にんじん, 1`,
+        catalog,
+      );
+      expect(result.unmatched).toEqual([]);
+      expect(result.candidates).toHaveLength(2);
+      expect(result.candidates[0]).toMatchObject({
+        line: 1,
+        itemOrder: 1,
+        quantity,
+        needsCheck,
+      });
+      expect(result.candidates[0].convertedFromMl === true).toBe(
+        convertedFromMl,
+      );
+    },
+  );
+  it.each(["−1", "−1/2個", "−200ml"])(
+    "TC-FR-RCP-05-04 空白付きの負の量は未一致にする: %s",
+    (amount) => {
+      const result = parseReceiptText(
+        `にんじん, ${amount} にんじん, 1`,
+        catalog,
+      );
+      expect(result.unmatched).toEqual([
+        { line: 1, itemOrder: 1, text: `にんじん, ${amount}` },
+      ]);
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0]).toMatchObject({ line: 1, itemOrder: 2 });
+    },
+  );
+  it.each([
     ", 1 にんじん, 1",
     "にんじん, にんじん, 1",
     "にんじん, 1,2 にんじん, 1",
@@ -168,6 +206,21 @@ describe("レシート読み取り（DES-RCP-03）", () => {
       parseReceiptText(input, { foods: [], manualFoods: [] }).unmatched,
     ).toEqual([{ line: 1, text: input }]);
   });
+  it.each([200, 201])(
+    "TC-FR-RCP-05-05 分割できない %i 文字の行の上限を扱う",
+    (length) => {
+      const input = `にんじん, ${"1".repeat(length - 6)}`;
+      expect(input).toHaveLength(length);
+      const result = parseReceiptText(input, catalog);
+      if (length === 200) {
+        expect(result.candidates).toHaveLength(1);
+        expect(result.unmatched).toEqual([]);
+      } else {
+        expect(result.candidates).toEqual([]);
+        expect(result.unmatched).toEqual([{ line: 1, text: input }]);
+      }
+    },
+  );
   it("TC-FR-RCP-05-05 空白を含む組の長さと長い空白を扱う", () => {
     const valid = `${"x".repeat(197)}, 1 にんじん, 1`;
     const invalid = `${"x".repeat(198)}, 1 にんじん, 1`;
