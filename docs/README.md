@@ -43,7 +43,7 @@
 | 設計 | 設計書（反復 5）: レシートの貼り付けと重さでの登録 | [03_design/design-it05.md](03_design/design-it05.md) | v0.1 設計案 |
 | 設計 | 設計書（反復 6）: レシートの当てはめと判定の点検 | [03_design/design-it06.md](03_design/design-it06.md) | v0.1 設計案 |
 | 設計 | 設計書（反復 7）: 実際の買い物での検証と判定の再調査 | [03_design/design-it07.md](03_design/design-it07.md) | v0.1 設計案 |
-| 設計 | 設計書（反復 8）: 貼り付けと食材一覧の改善 | [03_design/design-it08.md](03_design/design-it08.md) | v0.5 |
+| 設計 | 設計書（反復 8）: 貼り付けと食材一覧の改善 | [03_design/design-it08.md](03_design/design-it08.md) | v0.5 下書き |
 | 設計 | レシートの貼り付けの方式 ADR | [adr/0006-receipt-paste.md](adr/0006-receipt-paste.md) | 設計案（2026-11-03 に言い換えの表を追記） |
 | 試験 | テスト仕様書（反復 2） | [04_test/test-spec-it02.md](04_test/test-spec-it02.md) | 追記中 |
 | 試験 | テスト仕様書（反復 3） | [04_test/test-spec-it03.md](04_test/test-spec-it03.md) | 骨組み |
@@ -51,7 +51,7 @@
 | 試験 | テスト仕様書（反復 5） | [04_test/test-spec-it05.md](04_test/test-spec-it05.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 6） | [04_test/test-spec-it06.md](04_test/test-spec-it06.md) | v0.3（#133 の行の実測・画面外の行・焦点・性能準備を具体化） |
 | 試験 | テスト仕様書（反復 7） | [04_test/test-spec-it07.md](04_test/test-spec-it07.md) | v0.3（実地検証を実施。再調査は本人の買い物での再計算が未実施のまま終了） |
-| 試験 | テスト仕様書（反復 8） | [04_test/test-spec-it08.md](04_test/test-spec-it08.md) | v0.6 |
+| 試験 | テスト仕様書（反復 8） | [04_test/test-spec-it08.md](04_test/test-spec-it08.md) | v0.6 骨組み |
 | 試験 | IT08 行の高さ・性能の計測記録 | [04_test/performance-measurement-it08.md](04_test/performance-measurement-it08.md) | 記録（日付の変更の NFR-03 超過は E-153 で記録だけ残す） |
 | 試験 | IT06 行の高さ・画面外の行・性能の計測記録 | [04_test/performance-measurement-it06.md](04_test/performance-measurement-it06.md) | 記録中 |
 | 試験 | 日付変更の性能計測（反復 5） | [04_test/performance-measurement-it05.md](04_test/performance-measurement-it05.md) | 記録中 |
