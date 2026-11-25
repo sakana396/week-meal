@@ -170,7 +170,7 @@ async function arm(page: Page, trackCandidates = false) {
 
 for (const size of [3, 30, 100]) {
   for (const rate of [1, 4]) {
-    test(`TC-NFR-03-01${size === 100 && rate === 4 ? " TC-NFR-03-03" : ""} ${size}行 CPU${rate}倍の判定と候補を計測`, async ({
+    test(`TC-NFR-03-01${size === 100 && rate === 4 ? " TC-NFR-03-03 TC-NFR-03-08" : ""} ${size}行 CPU${rate}倍の判定と候補を計測`, async ({
       page,
       browser,
     }, testInfo) => {
