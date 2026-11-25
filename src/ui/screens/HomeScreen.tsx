@@ -9,7 +9,7 @@ import {
   validShoppingDate,
   type AppState,
 } from "../../core/basket";
-import { foodPresentation } from "../../core/catalog";
+import { itemNames } from "../itemNames";
 import type { FoodItem } from "../../types";
 import { BalancePanel } from "../components/BalancePanel";
 import { SupplementSuggestions } from "../components/SupplementSuggestions";
@@ -87,20 +87,7 @@ export function HomeScreen({
       ? dateDraft.date
       : (shopping?.date ?? "");
   const items = shopping?.items ?? [];
-  const nameCounts = new Map<string, number>();
-  for (const item of items) {
-    nameCounts.set(
-      item.displayName,
-      (nameCounts.get(item.displayName) ?? 0) + 1,
-    );
-  }
-  const detailOf = (foodId: string, displayName: string) => {
-    if ((nameCounts.get(displayName) ?? 0) < 2) return null;
-    const food = findFood(foodId);
-    if (!food) return null;
-    if (food.id.startsWith("manual-")) return "手入力";
-    return foodPresentation(food.name, food.category).details || food.name;
-  };
+  const names = itemNames(items, findFood);
   const ordered = items;
 
   return (
@@ -187,9 +174,10 @@ export function HomeScreen({
           </div>
         ) : (
           <ul className="item-list" ref={listRef}>
-            {ordered.map((item) => (
+            {ordered.map((item, index) => (
               <ItemRow
-                detail={detailOf(item.foodId, item.displayName)}
+                detail={names[index].detail}
+                accessibleName={names[index].name}
                 dispatch={dispatch}
                 item={item}
                 shoppingId={shopping?.id ?? ""}

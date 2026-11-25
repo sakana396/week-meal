@@ -905,8 +905,10 @@ h3 {
   min-width: 0;
 }
 
+/* 食材名の開閉ボタン（DES-UI-53） */
 .item-name {
-  display: grid;
+  display: flex;
+  align-items: center;
   flex: 1;
   min-height: 44px;
   min-width: 44px;
@@ -915,6 +917,20 @@ h3 {
   background: transparent;
   padding: 0;
   gap: 2px;
+}
+
+.item-name-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name-chevron {
+  flex: none;
+}
+
+.item-name strong {
+  text-decoration: underline;
 }
 
 .item-name strong,

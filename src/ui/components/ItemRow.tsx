@@ -49,16 +49,18 @@ function parseWeight(
   return { grams };
 }
 
-/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、52、DES-QTY-07、DES-PER-05）。 */
+/** 登録した食材 1 行の量・目安重量・削除（DES-UI-40、49、52、53、DES-QTY-07、DES-PER-05）。 */
 export const ItemRow = memo(function ItemRow({
   item,
   shoppingId,
   detail,
+  accessibleName,
   dispatch,
 }: {
   item: BasketEntry;
   shoppingId: string;
   detail: string | null;
+  accessibleName?: string;
   dispatch: (action: BasketAction) => void;
 }) {
   const weight = unitWeightFor(item.foodId, item.displayName);
@@ -77,7 +79,9 @@ export const ItemRow = memo(function ItemRow({
       : weightText(item.quantity);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
-  const fullName = detail ? `${item.displayName} ${detail}` : item.displayName;
+  const fullName =
+    accessibleName ??
+    (detail ? `${item.displayName} ${detail}` : item.displayName);
   const detailsId = `item-details-${item.id}`;
   const errorId = `weight-error-${item.id}`;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -155,8 +159,13 @@ export const ItemRow = memo(function ItemRow({
             setExpanded(!expanded);
           }}
         >
-          <strong>{item.displayName}</strong>
-          {detail && <small>{detail}</small>}
+          <span className="item-name-text">
+            <strong>{item.displayName}</strong>
+            {detail && <small>{detail}</small>}
+          </span>
+          <span className="item-name-chevron" aria-hidden="true">
+            {expanded ? "⌃" : "⌄"}
+          </span>
         </button>
         {item.quantity.kind === "count" ? (
           <div
@@ -204,13 +213,13 @@ export const ItemRow = memo(function ItemRow({
             <div
               className="item-unit-toggle"
               role="group"
-              aria-label={`${item.displayName}の量の単位`}
+              aria-label={`${fullName}の量の単位`}
             >
               {(["count", "g", "kg"] as const).map((to) => (
                 <button
                   key={to}
                   type="button"
-                  aria-label={`${item.displayName}を ${to === "count" ? "個" : to} に切り替える`}
+                  aria-label={`${fullName}を ${to === "count" ? "個" : to} に切り替える`}
                   aria-pressed={selected === to}
                   onClick={() => changeUnit(to)}
                 >
@@ -221,7 +230,7 @@ export const ItemRow = memo(function ItemRow({
             {item.quantity.kind === "weight" && (
               <div className="item-weight-field">
                 <label>
-                  {item.displayName}の重さ
+                  {fullName}の重さ
                   <input
                     ref={inputRef}
                     type="text"
@@ -253,7 +262,7 @@ export const ItemRow = memo(function ItemRow({
           </div>
           <div className="item-actions">
             <button
-              aria-label={`${item.displayName}を削除`}
+              aria-label={`${fullName}を削除`}
               className="danger-button"
               onClick={() =>
                 dispatch({ type: "remove", shoppingId, id: item.id })

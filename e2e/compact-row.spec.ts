@@ -122,6 +122,13 @@ test("TC-FR-UI-10-02 TC-FR-UI-10-03 同名行の詳細名と操作名を区別�
     await expect(
       row.getByRole("button", { name: `${fullName}を 0.5 減らす` }),
     ).toBeVisible();
+    await toggle.click();
+    await expect(
+      row.getByRole("button", { name: `${fullName}を削除` }),
+    ).toBeVisible();
+    await expect(
+      row.getByRole("group", { name: `${fullName}の量の単位` }),
+    ).toBeVisible();
     const box = await toggle.boundingBox();
     expect(box && box.width >= 44 && box.height >= 44).toBeTruthy();
   }
@@ -219,7 +226,9 @@ test("TC-FR-UI-10-03 閉じた行と開いた行の axe を検査する", async 
   }
 });
 
-test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({ page }) => {
+test("TC-FR-UI-10-02 TC-FR-UI-10-04 長い名前と量の操作領域と省略表示", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("#/");
   await expect
@@ -259,6 +268,12 @@ test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({
   const toggle = row.getByRole("button", { name: `${name}の詳細を開く` });
   await expect(row).toContainText("998.5 つ（概算）");
   const text = toggle.locator("strong");
+  await expect(text).toHaveCSS("text-decoration-line", "underline");
+  await expect(toggle.locator(".item-name-chevron")).toHaveText("⌄");
+  await expect(toggle.locator(".item-name-chevron")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
   expect(
     await text.evaluate(
       (el) =>
@@ -269,6 +284,11 @@ test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({
   for (const expanded of [false, true]) {
     if (expanded) {
       await toggle.click();
+      await expect(
+        row
+          .getByRole("button", { name: `${name}の詳細を閉じる` })
+          .locator(".item-name-chevron"),
+      ).toHaveText("⌃");
       await expect(row.locator(".item-full-name")).toHaveText(name);
     }
     for (const button of await row.getByRole("button").all()) {
@@ -282,3 +302,88 @@ test("TC-FR-UI-10-02 長い名前と量の操作領域と省略表示", async ({
     ).toBe(true);
   }
 });
+
+for (const screen of ["home", "history"] as const) {
+  test(`TC-FR-UI-10-05 ${screen} の同名行の操作名と番号を区別する`, async ({
+    page,
+  }) => {
+    await page.goto("#/");
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("weekmeal:state")))
+      .not.toBeNull();
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem("weekmeal:state")!);
+      const items = [
+        { id: "loin", foodId: "11123", displayName: "豚肉" },
+        { id: "belly", foodId: "11129", displayName: "豚肉" },
+        { id: "manual-a", foodId: "manual-a", displayName: "豚肉" },
+        { id: "manual-b", foodId: "manual-b", displayName: "豚肉" },
+        { id: "unique", foodId: "06212", displayName: "にんじん" },
+      ].map((item) => ({ ...item, quantity: { kind: "count", count: 1 } }));
+      state.manualFoods = ["manual-a", "manual-b"].map((id) => ({
+        id,
+        name: "豚肉",
+        category: "手入力",
+        refusePct: null,
+        nutrientsPer100g: {},
+      }));
+      state.shoppings = [
+        { id: "old", date: "2026-10-01", origin: "normal", items },
+        {
+          id: "new",
+          date: "2026-10-02",
+          origin: "normal",
+          items: items.map((item) => ({ ...item, id: `new-${item.id}` })),
+        },
+      ];
+      localStorage.setItem("weekmeal:state", JSON.stringify(state));
+    });
+    await page.reload();
+    if (screen === "history") await page.goto("#/history/old");
+    const rows = page.locator(".item-row");
+    const names = [
+      "豚肉 ぶた・大型種肉・ロース・脂身つき・生",
+      "豚肉 ぶた・大型種肉・ばら・脂身つき・生",
+      "豚肉 手入力 3 行目",
+      "豚肉 手入力 4 行目",
+      "にんじん",
+    ];
+    for (const [index, name] of names.entries()) {
+      const row = rows.nth(index);
+      const toggle = row.getByRole("button", { name: `${name}の詳細を開く` });
+      await expect(
+        row.getByRole("button", { name: `${name}を 0.5 増やす` }),
+      ).toBeVisible();
+      await expect(
+        row.getByRole("button", { name: `${name}を 0.5 減らす` }),
+      ).toBeVisible();
+      await toggle.click();
+      await expect(
+        row.getByRole("group", { name: `${name}の量の単位` }),
+      ).toBeVisible();
+      for (const unit of ["個", "g", "kg"])
+        await expect(
+          row.getByRole("button", { name: `${name}を ${unit} に切り替える` }),
+        ).toBeVisible();
+      await expect(
+        row.getByRole("button", { name: `${name}を削除` }),
+      ).toBeVisible();
+    }
+    const row = rows.nth(2);
+    await row
+      .getByRole("button", { name: "豚肉 手入力 3 行目を g に切り替える" })
+      .click();
+    await expect(
+      row.getByRole("textbox", { name: "豚肉 手入力 3 行目の重さ" }),
+    ).toBeFocused();
+    await row.getByRole("button", { name: "豚肉 手入力 3 行目を削除" }).click();
+    await expect(
+      rows.nth(2).getByRole("button", { name: "豚肉 手入力の詳細を閉じる" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "元に戻す" }).click();
+    await expect(rows.nth(2)).toHaveAttribute(
+      "data-entry-id",
+      screen === "home" ? "new-manual-a" : "manual-a",
+    );
+  });
+}
