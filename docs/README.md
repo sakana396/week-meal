@@ -8,8 +8,8 @@
 | 企画 | 企画書 | [01_concept/concept.md](01_concept/concept.md) | ドラフト |
 | 設計 | データ設計 | [data-design.md](data-design.md) | 現行 |
 | 参考 | スーパーの売場分類の参考資料 | [references/supermarket-shelves.md](references/supermarket-shelves.md) | 現行 |
-| 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.10（IT08 の要求文は本人未確認） |
-| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.12（IT08 の計画を追加） |
+| 要求 | 要求仕様書 (SRS) | [02_requirements/srs.md](02_requirements/srs.md) | v0.10（IT08 の要求文は本人が読まずに承認。E-154） |
+| 計画 | プロジェクト計画書 | [00_plan/project-plan.md](00_plan/project-plan.md) | v0.13（E-154 を反映） |
 | 計画 | 反復の進め方（エージェント向けの手順、PLAN-002） | [00_plan/iteration-workflow.md](00_plan/iteration-workflow.md) | v0.1 |
 | 反復 | 反復 1 振り返り | [iterations/it01/retrospective.md](iterations/it01/retrospective.md) | 1.0 確定 |
 | 反復 | 反復 2 振り返り | [iterations/it02/retrospective.md](iterations/it02/retrospective.md) | 0.2 案（本人の記入待ち） |
@@ -33,7 +33,8 @@
 | 反復 | 反復 7 レシート貼り付けの実地検証記録 | [iterations/it07/receipt-validation.md](iterations/it07/receipt-validation.md) | v0.1（本人の試用 1 回。H-17・H-18 は未検証） |
 | 反復 | 反復 7 炭水化物の不足判定の再調査記録 | [iterations/it07/carbohydrate-investigation.md](iterations/it07/carbohydrate-investigation.md) | v0.1（本人の買い物での再計算は未実施。直さない、E-138） |
 | 反復 | 反復 7 振り返り | [iterations/it07/retrospective.md](iterations/it07/retrospective.md) | v0.1（E-131〜E-142 を反映。M8 完了） |
-| 反復 | 反復 8（貼り付けと食材一覧の改善）計画書 | [iterations/it08/plan.md](iterations/it08/plan.md) | v0.1（書き起こしは本人未確認） |
+| 反復 | 反復 8（貼り付けと食材一覧の改善）計画書 | [iterations/it08/plan.md](iterations/it08/plan.md) | v0.1（IT08 完了。E-154） |
+| 反復 | 反復 8 振り返り | [iterations/it08/retrospective.md](iterations/it08/retrospective.md) | v0.1（E-150〜E-154 を反映。M9 完了） |
 | 設計 | 設計書（反復 2）: 状態・保存・画面・E2E | [03_design/design-it02.md](03_design/design-it02.md) | v0.1 採用 |
 | 設計 | 設計書（反復 3）: 提案と仕上げ | [03_design/design-it03.md](03_design/design-it03.md) | v0.2 採用 |
 | 設計 | 設計書（反復 4）: 買い物の単位と公開 | [03_design/design-it04.md](03_design/design-it04.md) | v0.2 設計案 |
@@ -42,7 +43,7 @@
 | 設計 | 設計書（反復 5）: レシートの貼り付けと重さでの登録 | [03_design/design-it05.md](03_design/design-it05.md) | v0.1 設計案 |
 | 設計 | 設計書（反復 6）: レシートの当てはめと判定の点検 | [03_design/design-it06.md](03_design/design-it06.md) | v0.1 設計案 |
 | 設計 | 設計書（反復 7）: 実際の買い物での検証と判定の再調査 | [03_design/design-it07.md](03_design/design-it07.md) | v0.1 設計案 |
-| 設計 | 設計書（反復 8）: 貼り付けと食材一覧の改善 | [03_design/design-it08.md](03_design/design-it08.md) | v0.1 下書き |
+| 設計 | 設計書（反復 8）: 貼り付けと食材一覧の改善 | [03_design/design-it08.md](03_design/design-it08.md) | v0.5 |
 | 設計 | レシートの貼り付けの方式 ADR | [adr/0006-receipt-paste.md](adr/0006-receipt-paste.md) | 設計案（2026-11-03 に言い換えの表を追記） |
 | 試験 | テスト仕様書（反復 2） | [04_test/test-spec-it02.md](04_test/test-spec-it02.md) | 追記中 |
 | 試験 | テスト仕様書（反復 3） | [04_test/test-spec-it03.md](04_test/test-spec-it03.md) | 骨組み |
@@ -50,7 +51,8 @@
 | 試験 | テスト仕様書（反復 5） | [04_test/test-spec-it05.md](04_test/test-spec-it05.md) | v0.1 骨組み |
 | 試験 | テスト仕様書（反復 6） | [04_test/test-spec-it06.md](04_test/test-spec-it06.md) | v0.3（#133 の行の実測・画面外の行・焦点・性能準備を具体化） |
 | 試験 | テスト仕様書（反復 7） | [04_test/test-spec-it07.md](04_test/test-spec-it07.md) | v0.3（実地検証を実施。再調査は本人の買い物での再計算が未実施のまま終了） |
-| 試験 | テスト仕様書（反復 8） | [04_test/test-spec-it08.md](04_test/test-spec-it08.md) | v0.1 骨組み |
+| 試験 | テスト仕様書（反復 8） | [04_test/test-spec-it08.md](04_test/test-spec-it08.md) | v0.6 |
+| 試験 | IT08 行の高さ・性能の計測記録 | [04_test/performance-measurement-it08.md](04_test/performance-measurement-it08.md) | 記録（日付の変更の NFR-03 超過は E-153 で記録だけ残す） |
 | 試験 | IT06 行の高さ・画面外の行・性能の計測記録 | [04_test/performance-measurement-it06.md](04_test/performance-measurement-it06.md) | 記録中 |
 | 試験 | 日付変更の性能計測（反復 5） | [04_test/performance-measurement-it05.md](04_test/performance-measurement-it05.md) | 記録中 |
 | 試験 | テスト仕様書（反復 1） | [04_test/test-spec-it01.md](04_test/test-spec-it01.md) | 追記中 |
