@@ -314,6 +314,32 @@ test("TC-FR-RCP-05-03 複数組の確認と登録", async ({ page }) => {
   await expect(itemRow(page, "鶏卵")).toHaveCount(1);
 });
 
+test("TC-FR-RCP-05-06 空白付きの組を確認し重複を加算する", async ({ page }) => {
+  await page.goto("#/receipt");
+  await paste(page, "にんじん, 1 未知, 2 にんじん, 2 鶏卵, 1");
+  const rows = page.locator(".receipt-review-row");
+  await expect(rows).toHaveCount(3);
+  for (const order of [1, 3, 4]) {
+    await expect(
+      page.getByRole("checkbox", { name: `1 行目の ${order} 品目を登録する` }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("group", { name: `1 行目の ${order} 品目の量の単位` }),
+    ).toHaveCount(1);
+  }
+  await expect(page.getByText("未知, 2", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "3 件を登録" }).click();
+  await expect
+    .poll(
+      async () =>
+        (await savedItems(page)).find(
+          (item: { displayName: string }) => item.displayName === "にんじん",
+        )?.quantity,
+    )
+    .toEqual({ kind: "count", count: 3 });
+  await expect.poll(() => savedItems(page)).toHaveLength(2);
+});
+
 test("TC-FR-RCP-06-03 ml の換算を確認して修正し、負数を登録しない", async ({
   page,
 }) => {
