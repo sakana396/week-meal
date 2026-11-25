@@ -91,7 +91,7 @@ function parsedQuantity(
   };
 }
 
-/** 物理行を「名前,量」の組に分ける（DES-RCP-09）。 */
+/** 物理行を「名前,量」の組に分ける（DES-RCP-09、11）。 */
 function splitPairs(value: string): string[] {
   const tokens = value.matchAll(/[^ \t]+/g);
   const pairs: string[] = [];
@@ -100,23 +100,37 @@ function splitPairs(value: string): string[] {
     `^[+\\-−]?\\d+(?:\\.\\d+)?(?:/\\d+)?(?:kg|g|ml|${escapedWords.join("|")})?$`,
     "i",
   );
+  let awaitingAmount = false;
   for (const match of tokens) {
     const token = match[0];
+    if (awaitingAmount) {
+      if (!amountPattern.test(token)) return [];
+      pairs.push(value.slice(start, match.index + token.length).trim());
+      start = match.index + token.length;
+      awaitingAmount = false;
+      continue;
+    }
     const comma = token.indexOf(",");
     if (comma < 0) {
       continue;
     }
     if (
       token.indexOf(",", comma + 1) >= 0 ||
-      !amountPattern.test(token.slice(comma + 1))
+      (comma + 1 < token.length && !amountPattern.test(token.slice(comma + 1)))
     )
       return [];
     const name = value.slice(start, match.index + comma).trim();
     if (!name) return [];
-    pairs.push(value.slice(start, match.index + token.length).trim());
-    start = match.index + token.length;
+    if (comma + 1 === token.length) {
+      awaitingAmount = true;
+    } else {
+      pairs.push(value.slice(start, match.index + token.length).trim());
+      start = match.index + token.length;
+    }
   }
-  return !value.slice(start).trim() && pairs.length > 1 ? pairs : [];
+  return !awaitingAmount && !value.slice(start).trim() && pairs.length > 1
+    ? pairs
+    : [];
 }
 
 /** 行ごとに読み、直接一致・一段の言い換え・一覧にない物を返す（DES-RCP-03、06、09、DES-RCP-10）。 */
